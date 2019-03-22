@@ -5,8 +5,8 @@ uid=$1 #${1:-1000}
 executionMode=$2 #${2:-"normal"}
 shift; shift;
 
-baseDir="/home/user/shoal-cluster-dockers/python-pi"
-baseCmd="./pi.py $@"
+baseDir="/home/user/Badoit"
+baseCmd="python3 exec_gp_qd.py $@"
 
 useradd -d /home/user -Ms /bin/bash -u $uid user
 chown -R $uid /home/user
