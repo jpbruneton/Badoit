@@ -11,7 +11,7 @@ from State import State
 # -------------------------------------------------------------------------- #
 def init_grid(reinit_grid, u):
 
-    file_path = '/home/assisi/Desktop/gpdata/QD_pool' + str(u)+ '.txt'
+    file_path = '/home/user/QD_pool' + str(u)+ '.txt'
     if reinit_grid:
         if os.path.exists(file_path):
             os.remove(file_path)
@@ -150,7 +150,7 @@ def exec(which_target, train_target, test_target, voc, iteration, tolerance, gp)
         # save results and print
         saveme = printresults(test_target, voc)
         valreward = saveme.saveresults(newbin, replacements, i, gp.QD_pool, gp.maxa, tolerance, which_target, alleqs)
-        filename = '/home/assisi/Desktop/gpdata/QD_pool' + str(which_target) + '.txt'
+        filename = '/home/user/QD_pool' + str(which_target) + '.txt'
         with open(filename, 'wb') as file:
             pickle.dump(gp.QD_pool, file)
         file.close()
@@ -226,7 +226,7 @@ def eval_previous_eqs(which_target, train_target, test_target, voc_a, tolerance,
     # save results and print
     saveme = printresults(test_target, voc_a)
     valreward = saveme.saveresults(newbin, replacements, -1, gp.QD_pool, gp.maxa, tolerance, which_target, alleqs)
-    filename = '/home/assisi/Desktop/gpdata/QD_pool' + str(which_target) + '.txt'
+    filename = '/home/user/QD_pool' + str(which_target) + '.txt'
     with open(filename, 'wb') as file:
         pickle.dump(gp.QD_pool, file)
     file.close()

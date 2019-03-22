@@ -13,10 +13,8 @@
 import numpy as np
 import config
 from scipy.optimize import least_squares
-import math
 import copy
 import cma
-import time
 
 
 # ============================ CLASS: Evaluate_Fit ================================ #
