@@ -100,7 +100,7 @@ def evalme(onestate):
 
 
 # -------------------------------------------------------------------------- #
-def exec(which_target, train_target, test_target, voc, iteration, tolerance, gp):
+def exec(which_target, train_target, test_target, voc, iteration, tolerance, gp, prefix):
 
     # init all eqs seen so far
     alleqs = {}
@@ -149,7 +149,7 @@ def exec(which_target, train_target, test_target, voc, iteration, tolerance, gp)
 
         # save results and print
         saveme = printresults(test_target, voc)
-        valreward = saveme.saveresults(newbin, replacements, i, gp.QD_pool, gp.maxa, tolerance, which_target, alleqs)
+        valreward = saveme.saveresults(newbin, replacements, i, gp.QD_pool, gp.maxa, tolerance, which_target, alleqs, prefix)
         filename = '/home/user/QD_pool' + str(which_target) + '.txt'
         with open(filename, 'wb') as file:
             pickle.dump(gp.QD_pool, file)
@@ -194,7 +194,7 @@ def convert_eqs(qdpool, voc_a, voc_no_a, diff):
     return initpool
 
 # -----------------------------------------------#
-def eval_previous_eqs(which_target, train_target, test_target, voc_a, tolerance, initpool, gp):
+def eval_previous_eqs(which_target, train_target, test_target, voc_a, tolerance, initpool, gp, prefix):
 
     # init all eqs seen so far
     alleqs = {}
@@ -225,7 +225,7 @@ def eval_previous_eqs(which_target, train_target, test_target, voc_a, tolerance,
 
     # save results and print
     saveme = printresults(test_target, voc_a)
-    valreward = saveme.saveresults(newbin, replacements, -1, gp.QD_pool, gp.maxa, tolerance, which_target, alleqs)
+    valreward = saveme.saveresults(newbin, replacements, -1, gp.QD_pool, gp.maxa, tolerance, which_target, alleqs, prefix)
     filename = '/home/user/QD_pool' + str(which_target) + '.txt'
     with open(filename, 'wb') as file:
         pickle.dump(gp.QD_pool, file)
@@ -322,10 +322,11 @@ def main():
         gp = GP_QD(which_target, delete_ar1_ratio, p_mutate, p_cross, maximal_size, poolsize, train_target, voc_no_a, tolerance,
                    extend_ratio, maxa, bina, maxl, binl, maxf, binf, maxp, binp, maxtrig, bintrig, maxexp, binexp,
                    addrandom, None, None)
-
+        import time
+        prefix = str(int(10000000*time.time()))
         # run evolution :
         iteration_no_a = 15
-        stop, qdpool = exec(which_target, train_target, test_target, voc_no_a, iteration_no_a, tolerance, gp)
+        stop, qdpool = exec(which_target, train_target, test_target, voc_no_a, iteration_no_a, tolerance, gp, prefix)
         # ------------------- step 2 -----------------------#
         #if target has not already been found, stop is None; then launch evoltion with free scalars A:
         if stop is None:
@@ -338,13 +339,13 @@ def main():
             gp = GP_QD(which_target, delete_ar1_ratio, p_mutate, p_cross, maximal_size, poolsize, train_target,
                        voc_with_a, tolerance, extend_ratio, maxa, bina, maxl, binl, maxf, binf, maxp, binp, maxtrig, bintrig, maxexp, binexp,
                        addrandom, None, initpool)
-            alleqs, QD_pool, stop = eval_previous_eqs(which_target, train_target, test_target, voc_with_a, tolerance, initpool, gp)
+            alleqs, QD_pool, stop = eval_previous_eqs(which_target, train_target, test_target, voc_with_a, tolerance, initpool, gp, prefix)
 
             # this might directly provide the exact solution : if not, stop is None, and thus, run evolution
             if stop is None:
                 gp.QD_pool = QD_pool
                 iteration_a = 50
-                exec(which_target, train_target, test_target, voc_with_a, iteration_a, tolerance, gp)
+                exec(which_target, train_target, test_target, voc_with_a, iteration_a, tolerance, gp, prefix)
 
 
 # -----------------------------------------------#
