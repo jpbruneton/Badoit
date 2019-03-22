@@ -11,7 +11,7 @@
 configFile=${1:-conf/configuration.yaml}
 priorityLevel=${2:-"low"}
 executionMode=${3:-"normal"}
-imageName=${4:-"badoit:latest"}
+imageName=${4:-"jpbruneton/badoit:latest"}
 hostsNames=${5:-"shoal1,shoal2,shoal3,shoal4,shoal5,shoal6,shoal7,shoal8"}
 
 expeName="Badoit" # TO ADAPT
