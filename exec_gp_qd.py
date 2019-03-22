@@ -291,8 +291,8 @@ def init_everything_else(which_target):
     diff = sizenoa - sizea
 
     # init file of results
-    if os.path.exists('results_target_' + str(which_target) + '.txt'):
-        os.remove('results_target_' + str(which_target) + '.txt')
+    if os.path.exists('home/user/results/results_target_' + str(which_target) + '.txt'):
+        os.remove('home/user/results/results_target_' + str(which_target) + '.txt')
 
     return poolsize, delete_ar1_ratio, extend_ratio, p_mutate, p_cross, maximal_size, bina, maxa, binl, maxl, binf, maxf, \
            binp, maxp, bintrig, maxtrig, binexp, maxexp, addrandom, train_target, test_target, voc_with_a, voc_no_a, diff
