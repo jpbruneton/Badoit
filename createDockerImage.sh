@@ -1,6 +1,6 @@
 #!/bin/sh
 
-imageName=${1:-Badoit:latest}
+imageName=${1:-badoit:latest}
 
 inDockerGroup=`id -Gn | grep docker`
 if [ -z "$inDockerGroup" ]; then
