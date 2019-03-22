@@ -300,7 +300,7 @@ def init_everything_else(which_target):
 # -----------------------------------------------#
 def main():
 
-    for u in range(0,4):
+    for u in range(0,6):
 
         # init target, dictionnaries, and meta parameters
         which_target = u
@@ -324,7 +324,7 @@ def main():
                    addrandom, None, None)
 
         # run evolution :
-        iteration_no_a = 5
+        iteration_no_a = 15
         stop, qdpool = exec(which_target, train_target, test_target, voc_no_a, iteration_no_a, tolerance, gp)
         # ------------------- step 2 -----------------------#
         #if target has not already been found, stop is None; then launch evoltion with free scalars A:
