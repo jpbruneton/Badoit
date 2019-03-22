@@ -7,13 +7,13 @@ RUN \
     rm -rf /var/lib/apt/lists/*
 
 # Install python dependencies
-RUN pip3 --no-cache-dir install numpy scoop
+RUN pip3 --no-cache-dir install numpy scoop scipy cma
 
 RUN mkdir -p /home/user
 
 ENTRYPOINT ["/home/user/shoal-cluster-dockers/python-pi/entrypoint.sh"]
 
-RUN git clone https://gitlab.com/leo.cazenille/shoal-cluster-dockers.git /home/user/shoal-cluster-dockers
+RUN git clone https://github.com/jpbruneton/Badoit.git /home/user/Badoit
 
 # MODELINE	"{{{1
 # vim:expandtab:softtabstop=4:shiftwidth=4:fileencoding=utf-8
