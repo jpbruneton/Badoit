@@ -11,10 +11,10 @@
 configFile=${1:-conf/configuration.yaml}
 priorityLevel=${2:-"low"}
 executionMode=${3:-"normal"}
-imageName=${4:-"shoal-python-pi:latest"}
+imageName=${4:-"Badoit:latest"}
 hostsNames=${5:-"shoal1,shoal2,shoal3,shoal4,shoal5,shoal6,shoal7,shoal8"}
 
-expeName="shoal-python-pi" # TO ADAPT
+expeName="Badoit" # TO ADAPT
 networkName="net-$expeName"
 memoryLimit=8G
 resultsPath=$(pwd)/results
