@@ -12,7 +12,7 @@ MAX_DEPTH = 1
 only_scalar_in_power = True
 
 
-tworunsineval = False
+tworunsineval = True
 popsize = '20*N'
 timelimit = '7*N'
 
