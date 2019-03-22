@@ -272,7 +272,7 @@ class printresults():
         return rename
 
 
-    def saveresults(self, newbin, replacements, i, QD_pool, maxa, tolerance, target_number, alleqs):
+    def saveresults(self, newbin, replacements, i, QD_pool, maxa, tolerance, target_number, alleqs, prefix):
 
         # rank by number of free parameters
         bests = []
@@ -323,7 +323,7 @@ class printresults():
         avg_validation_reward /= len(rank)
 
 
-        with open('/home/user/results/results_target_' + str(target_number) + '.txt', 'a') as myfile:
+        with open('/home/user/results/' + 'prefix' + 'results_target_' + str(target_number) + '.txt', 'a') as myfile:
             myfile.write('iteration ' + str(i) + ': we have seen ' + str(len(alleqs)) + ' different eqs')
             myfile.write("\n")
             myfile.write(
