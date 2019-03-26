@@ -1,4 +1,4 @@
-from game_env import Game, randomeqs
+from game_env import randomeqs, complete_eq_with_random
 import numpy as np
 import copy
 import random
@@ -6,6 +6,8 @@ import config
 from operator import itemgetter
 from generate_offsprings import generate_offsprings
 from Evaluate_fit import Evaluatefit
+import time
+import multiprocessing as mp
 
 # ============================  QD version ====================================#
 
@@ -13,7 +15,7 @@ from Evaluate_fit import Evaluatefit
 class GP_QD():
 
     # ---------------------------------------------------------------------------- #
-    def __init__(self, target_number, delete_ar1_ratio, p_mutate, p_cross, maximal_size, poolsize,  target, voc, tolerance,
+    def __init__(self, target_number, delete_ar1_ratio, p_mutate, p_cross, poolsize, voc, tolerance,
                   extend_ratio, maxa, bina, maxl, binl, maxf, binf, maxp, binp, maxtrig, bintrig, maxexp, binexp, addrandom, qdpool, pool = None):
 
         self.target_number = target_number
@@ -26,10 +28,9 @@ class GP_QD():
         self.QD_pool = qdpool
         self.pool_to_eval = []
         self.tolerance = tolerance
-        self.maximal_size = maximal_size
+        self.maximal_size = voc.maximal_size
         self.extend = extend_ratio
         self.addrandom = addrandom
-
         self.voc = voc
         self.maxa = maxa
         self.bina = bina
@@ -46,7 +47,6 @@ class GP_QD():
         self.maxexp = maxexp
         self.binexp = binexp
 
-
     # ---------------------------------------------------------------------------- #
     #creates or extend self.pool
     def extend_pool(self, alleqs):
@@ -55,7 +55,7 @@ class GP_QD():
             self.pool = []
 
             while len(self.pool) < self.poolsize:
-                newgame = randomeqs(self.voc, self.maximal_size)
+                newgame = randomeqs(self.voc)
                 newrdeq = newgame.state
 
                 if self.voc.infinite_number not in newrdeq.reversepolish :
@@ -72,19 +72,34 @@ class GP_QD():
                 all_states.append(self.QD_pool[str(bin_id)][1])
 
             # +add new rd eqs for diversity. We add half the qd_pool size of random eqs
-            if self.addrandom:
+            addsmartrandom = True
+
+            if self.addrandom and addsmartrandom == False:
                 toadd = int(len(self.QD_pool)/2)
 
                 for i in range(toadd):
-                    newgame = randomeqs(self.voc, self.maximal_size)
+                    newgame = randomeqs(self.voc)
                     newrdeq = newgame.state
                     if self.voc.infinite_number not in newrdeq.reversepolish:
                         all_states.append(newrdeq)
+
+            if addsmartrandom and self.addrandom:
+                toadd = int(len(self.QD_pool)/2)
+                c=0
+                while c < toadd:
+                    index = np.random.randint(0, len(all_states))
+                    state = all_states[index]
+                    if len(state.reversepolish) < self.maximal_size - 5:
+                        newgame = complete_eq_with_random(self.voc, state)
+                        if self.voc.infinite_number not in newgame.state.reversepolish:
+                            all_states.append(newgame.state)
+                            c+=1
 
             #then mutate and crossover
             newpool = []
 
             while len(newpool) < int(self.extend*len(self.QD_pool)):
+
                 index = np.random.randint(0, len(all_states))
                 state = all_states[index]
                 u = random.random()
@@ -96,7 +111,7 @@ class GP_QD():
 
                 elif u <= self.p_cross:
                     index = np.random.randint(0, len(all_states))
-                    otherstate = all_states[index] #this might crossover with itself : why not!
+                    otherstate = all_states[index]  # this might crossover with itself : why not!
                     state1, state2 = gp_motor.crossover(state, otherstate)
 
                     if str(state1.reversepolish) not in alleqs:
@@ -116,6 +131,7 @@ class GP_QD():
                     if str(state2.reversepolish) not in alleqs:
                         newpool.append(state2)
 
+
             #update self.pool
             self.pool = newpool
             return self.pool
@@ -123,76 +139,81 @@ class GP_QD():
     # ---------------------------------------------------------------------------- #
     # bin the results
     def bin_pool(self, results):
-        Ls = []
+
         results_by_bin = {}
 
         # rescale and print which bin
         for oneresult in results:
             reward, state, allA, Anumber, L, function_number, powernumber, trignumber, explognumber = oneresult
 
-            if L <= self.maximal_size:
-                Ls.append(L)
+            if state.reversepolish[-1] == 1:
+                L = L - 1
 
+            #needs to be computed if mode 'noA'
+            if self.voc.modescalar == 'noA':
                 Anumber = 0
                 for char in state.reversepolish:
                     if char in self.voc.pure_numbers:
                         Anumber+=1
 
-                if Anumber >= self.maxa:
-                    bin_a = self.bina
-                else:
-                    bins_for_a = np.linspace(0, self.maxa, num=self.bina+1)
-                    for i in range(len(bins_for_a) -1):
-                        if Anumber >= bins_for_a[i] and Anumber < bins_for_a[i + 1]:
-                            bin_a = i
+            if Anumber >= self.maxa:
+                bin_a = self.bina
+            else:
+                bins_for_a = np.linspace(0, self.maxa, num=self.bina+1)
+                for i in range(len(bins_for_a) -1):
+                    if Anumber >= bins_for_a[i] and Anumber < bins_for_a[i + 1]:
+                        bin_a = i
 
-                if L >= self.maxl:
-                    bin_l = self.binl
-                else:
-                    bins_for_l = np.linspace(0, self.maxl, num=self.binl+1)
-                    for i in range(len(bins_for_l) - 1):
-                        if L >= bins_for_l[i] and L < bins_for_l[i + 1]:
-                            bin_l = i
+            if L >= self.maxl:
+                bin_l = self.binl
+            else:
+                bins_for_l = np.linspace(0, self.maxl, num=self.binl+1)
 
-                if function_number >= self.maxf:
-                    bin_f = self.binf
-                else:
-                    bins_for_f = np.linspace(0, self.maxf, num = self.binf+1)
-                    for i in range(len(bins_for_f) - 1):
-                        if function_number >= bins_for_f[i] and function_number < bins_for_f[i + 1]:
-                            bin_f = i
+                for i in range(len(bins_for_l) - 1):
+                    if L >= bins_for_l[i] and L < bins_for_l[i + 1]:
+                        bin_l = i
 
-                if powernumber >= self.maxp:
-                    bin_p = self.binp
-                else:
-                    bins_for_p = np.linspace(0, self.maxp, num=self.binp + 1)
-                    for i in range(len(bins_for_p) - 1):
-                        if powernumber >= bins_for_p[i] and powernumber < bins_for_p[i + 1]:
-                            bin_p = i
+            if function_number >= self.maxf:
+                bin_f = self.binf
+            else:
+                bins_for_f = np.linspace(0, self.maxf, num = self.binf+1)
+                for i in range(len(bins_for_f) - 1):
+                    if function_number >= bins_for_f[i] and function_number < bins_for_f[i + 1]:
+                        bin_f = i
 
-                if trignumber >= self.maxtrig:
-                    bin_trig = self.bintrig
-                else:
-                    bins_for_trig = np.linspace(0, self.maxtrig, num=self.bintrig + 1)
-                    for i in range(len(bins_for_trig) - 1):
-                        if trignumber >= bins_for_trig[i] and trignumber < bins_for_trig[i + 1]:
-                            bin_trig = i
+            if powernumber >= self.maxp:
+                bin_p = self.binp
+            else:
+                bins_for_p = np.linspace(0, self.maxp, num=self.binp + 1)
+                for i in range(len(bins_for_p) - 1):
+                    if powernumber >= bins_for_p[i] and powernumber < bins_for_p[i + 1]:
+                        bin_p = i
 
-                if explognumber >= self.maxexp:
-                    bin_exp = self.binexp
-                else:
-                    bins_for_exp = np.linspace(0, self.maxexp, num=self.binexp + 1)
-                    for i in range(len(bins_for_exp) - 1):
-                        if explognumber >= bins_for_exp[i] and explognumber < bins_for_exp[i + 1]:
-                            bin_exp = i
+            if trignumber >= self.maxtrig:
+                bin_trig = self.bintrig
+            else:
+                bins_for_trig = np.linspace(0, self.maxtrig, num=self.bintrig + 1)
+                for i in range(len(bins_for_trig) - 1):
+                    if trignumber >= bins_for_trig[i] and trignumber < bins_for_trig[i + 1]:
+                        bin_trig = i
 
-                if str([bin_a, bin_l, bin_exp, bin_trig, bin_p, bin_f]) not in results_by_bin:
+            if explognumber >= self.maxexp:
+                bin_exp = self.binexp
+            else:
+                bins_for_exp = np.linspace(0, self.maxexp, num=self.binexp + 1)
+                for i in range(len(bins_for_exp) - 1):
+                    if explognumber >= bins_for_exp[i] and explognumber < bins_for_exp[i + 1]:
+                        bin_exp = i
+
+            #print('bins are', [bin_a, bin_l, bin_exp, bin_trig, bin_p, bin_f])
+
+            if str([bin_a, bin_l, bin_exp, bin_trig, bin_p, bin_f]) not in results_by_bin:
+                results_by_bin.update({str([bin_a, bin_l, bin_exp, bin_trig, bin_p, bin_f]): [reward, state, allA]})
+
+            else:
+                prev_reward = results_by_bin[str([bin_a, bin_l, bin_exp, bin_trig, bin_p, bin_f])][0]
+                if reward > prev_reward:
                     results_by_bin.update({str([bin_a, bin_l, bin_exp, bin_trig, bin_p, bin_f]): [reward, state, allA]})
-
-                else:
-                    prev_reward = results_by_bin[str([bin_a, bin_l, bin_exp, bin_trig, bin_p, bin_f])][0]
-                    if reward > prev_reward:
-                        results_by_bin.update({str([bin_a, bin_l, bin_exp, bin_trig, bin_p, bin_f]): [reward, state, allA]})
 
         return results_by_bin
 
@@ -258,6 +279,7 @@ class printresults():
                     replace_by = '(' + str(As[i]) + ')'
                     rename = rename.replace(to_replace, replace_by)
             else:
+
                 for i in range(A_count):
                     to_replace = 'A[' + str(i) + ']'
                     replace_by = '(' + str(As[i]) + ')'
@@ -273,6 +295,7 @@ class printresults():
 
 
     def saveresults(self, newbin, replacements, i, QD_pool, maxa, tolerance, target_number, alleqs, prefix):
+
 
         # rank by number of free parameters
         bests = []
@@ -304,9 +327,19 @@ class printresults():
 
         evaluate = Evaluatefit(best_formula, self.voc, self.target, tolerance, 'test')
         evaluate.rename_formulas()
+
         validation_reward = evaluate.eval_reward(with_a_best)
         useful_form = self.finalrename(best_formula, with_a_best)
 
+        if rank[0][0] > 0.999:
+            print(best_formula, with_a_best)
+            print(evaluate.formulas)
+            print(validation_reward)
+            print('again')
+            validation_reward = evaluate.eval_reward(with_a_best)
+            print('val2', validation_reward)
+        if rank[0][0] == 1.0:
+            validation_reward = 1.0
         #other statistics
         avgreward = sum([x[0] for x in rank]) / len(rank)
         #avg validation reward:
@@ -322,8 +355,10 @@ class printresults():
             avg_validation_reward += evaluate.eval_reward(with_a)
         avg_validation_reward /= len(rank)
 
+        timespent = time.time() - eval(prefix)/10000000
+        with open('/home/user/results/'+ prefix+ 'results_target_' + str(target_number) + '.txt', 'a') as myfile:
+        #with open('./' + prefix + 'results_target_' + str(target_number) + '.txt', 'a') as myfile:
 
-        with open('/home/user/results/' + prefix + 'results_target_' + str(target_number) + '.txt', 'a') as myfile:
             myfile.write('iteration ' + str(i) + ': we have seen ' + str(len(alleqs)) + ' different eqs')
             myfile.write("\n")
             myfile.write(
@@ -348,6 +383,9 @@ class printresults():
             myfile.write('and bests eqs by free parameter number are:')
             myfile.write("\n")
             myfile.write(str(bests))
+            myfile.write("\n")
+            myfile.write("\n")
+            myfile.write('time spent (in secs):' + str(timespent))
             myfile.write("\n")
             myfile.write("\n")
             myfile.write("---------------=============================----------------")

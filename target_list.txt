@@ -10,274 +10,184 @@
 
 #  ------------------- initial tests -------------------
 #test planck
-1, 1, x**3/(np.exp(x) -1), E, 0.01, 8, 1, U, 0, 9, 100
+#1, 1, x**3/(np.exp(x) -1), E, 0.01, 8, 0.1, U, 0, 9, 100, 15
 
 #test 2 var
-1, 2, x*y, U, -1, 1, 20, U, -1, 1, 20, U, -1, 1, 20, U, -1, 1, 100
+#1, 2, x*y, U, -1, 1, 20, U, -1, 1, 20, U, -1, 1, 20, U, -1, 1, 100, 15
 
 #test 3 var
-1, 3, x*y*z, U, -1, 1, 10, U, -1, 1, 20, U, -1, 1, 10, U, -1, 1, 100, U, 1, 2, 10, U, 1, 2, 100
+#1, 3, x*y*z, U, -1, 1, 10, U, -1, 1, 20, U, -1, 1, 10, U, -1, 1, 100, U, 1, 2, 10, U, 1, 2, 100, 15
 
 
-#  -------------------trivial targets (found at first iteration all the time -------------------
+#  -------------------trivial targets (found at first iteration all the time) -------------------
 
 
-# target Keijszer-10 : trivial, not considered anymore
-1, 2, x**y, U, 0, 1, 10, E, 0, 1, 0.1, U, 0, 1, 10, U, 0, 1, 100
+# target Keijszer-10 :
+#1, 2, x**y, U, 0, 1, 10, E, 0, 1, 0.1, U, 0, 1, 10, U, 0, 1, 100
 
 
-# target  Nguyen-1: trivial, not considered anymore
-1, 1, x + x**2 + x**3, U, 0, 1, 40, U, -2, 2, 200
+# target  Nguyen-1:
+#1, 1, x + x**2 + x**3, U, 0, 1, 40, U, -2, 2, 200
 
-# target : Keijszer-13 : trivial, not considered anymore
-1, 2, 6*np.sin(x)*np.sin(y), U, -3, 3, 20, E, -3, 3, 0.1, U, -3, 3, 20, E, -3, 3, 0.1
+# target : Keijszer-13 :
+#1, 2, 6*np.sin(x)*np.sin(y), U, -3, 3, 20, E, -3, 3, 0.1, U, -3, 3, 20, E, -3, 3, 0.1
 
-# target : Korns-7 : (becomes trivial thanks to the auto rescaling on unit range, otherwise not)
-1, 1, 213.80940889*(1 - np.exp(-0.54723748542*x)), U, -50, 50, 100, U, -50, 50, 100
-
-
-# target 18 : Nguyen-10: : trivial, not considered anymore
-1, 2,  2*np.sin(x)*np.sin(y), U, -1, 1, 20, U, -1, 1, 10, U, -1, 1, 20, U, -1, 1, 10
+# target : Korns-7 : (becomes trivial thanks to the auto rescaling on unit range, otherwise is probably not)
+#1, 1, 213.80940889*(1 - np.exp(-0.54723748542*x)), U, -50, 50, 100, U, -50, 50, 100
 
 
-
-#  ------------------- actual targets -------------------
-
-# target 0 : Burks
-1, 1, 4*x**4 + 3*x**3 + 2*x**2 + x, U, 0, 1, 40, U, 0, 2, 200
-# run 1 : found at iteration 36: we have seen 11681 different eqs
-# run 2 : found at iteration 37: we have seen 20467 different eqs
-# run 3 : found at iteration 20: we have seen 9043 different eqs
-# run 4 (new method) iteration 12: we have seen 6178 different eqs
-# run against pure random : fail after seen more than 120000 different (rds) eqs in size L= 24
-# run pure GP found at iteration 12: we have seen 19116 different eqs
+# target 18 : Nguyen-10:
+# 1, 2,  2*np.sin(x)*np.sin(y), U, -1, 1, 20, U, -1, 1, 10, U, -1, 1, 20, U, -1, 1, 10
 
 
-# target 1 : Keijzer-1
-1, 1, 0.3*x*np.sin(2*np.pi*x), E, 0, 1, 0.05, E, 0, 10, 0.01
-# run 1 : found at iteration 52: we have seen 20001 different eqs
-# run 2 : found at iteration 14: we have seen 5712 different eqs
-# run 3 : found at iteration 90: we have seen 58557 different eqs
-#run 4 (idem) : iteration 17: we have seen 7950 different eqs
-# run pure GP : found at iteration 14: we have seen 21761 different eqs
+
+#  ------------------- actual targets : Very easy ones in L=15 -------------------
+
+# target 0 : Nguyen-2:
+1, 1, x + x**2 + x**3 + x**4, U, 0, 1, 20, U, 0, 2, 200, 15
 
 
-# target 2 : Keijzer-2
-1, 1, 0.3*x*np.sin(2*np.pi *x), E, 0, 2, 0.05, E, 0, 4, 0.01
-# run 1 : found at iteration iteration 20: we have seen 6158 different eqs
-# run 2 : found at iteration 18: we have seen 7407 different eqs
-# run 3 : found at iteration 30: we have seen 15240 different eqs
-# run 4 : (idem) iteration 5: we have seen 1993 different eqs
-# run pure GP found at
+# target 1 : Koza-3:
+1, 1, x**6 -2*x**4 + x**2, U, 0, 1, 20, U, 0, 2, 200, 15
 
 
-# target 3 : Keijzer-3
-1, 1, 0.3*x*np.sin(2*np.pi *x), E, 0, 3, 0.05, E, 0, 4, 0.01
-# run 1 : found at iteration 40: we have seen 13564 different eqs
-# run 2 : found at iteration 17: we have seen 7355 different eqs
-# run 3 : found at iteration 34: we have seen 18622 different eqs
-# run 4 : (idem) iteration 2: we have seen 823 different eqs
-# run pure GP found at iteration 17: we have seen 26515 different eqs
+# target 2 : Meier-3:
+1, 2, (x**2)*(y**2)/(x+y), U, 0, 1, 20, U, 0, 2, 50,  U, 0, 1, 20, U, 0.01, 2, 50, 15
 
 
-# target 4 : Nguyen-2:
-1, 1, x + x**2 + x**3 + x**4, U, 0, 1, 40, U, 0, 2, 200
-# run 1 : found at iteration 24: we have seen 12768 different eqs
-# run 2 : found at iteration 25: we have seen 11132 different eqs
-# run 3 (idem) :iteration 5: we have seen 2120 different eqs
+# target 3 : Meier-4:
+1, 2, (x**5)/(y**3), U, 0, 1, 20, U, 0, 2, 50,  U, 0, 1, 20, U, 0.01, 2, 50, 15
 
 
-# target 5 : Keijszer-14 :
-1, 2, 8/(2 + x**2 + y**2), U, 0, 3, 20, E, 0, 4, 0.1, U, 0, 3, 20, E, 0, 4, 0.1
-# run 1 : found at iteration 59: we have seen 45758 different eqs
-# run 2 : (idem)  found at iteration 31: we have seen 17203 different eqs
-# run pure GP fail at iteration 99: we have seen 183481 different eqs
+# target 4 : Nguyen-9:
+1, 2, np.sin(x)+ np.sin(y**2), U, 0, 1, 20, U, 0, 2, 100, U, 0, 1, 20, U, 0.01, 2, 100, 15
 
 
-# target 6 : Koza-3:
-1, 1, x**6 -2*x**4 + x**2, U, 0, 1, 40, U, 0, 2, 200
-# run 1 : found at iteration 64: we have seen 41169 different eqs
-# run 2 : (idem) iteration 31: we have seen 15673 different eqs
-# run pure GP found at
+#  ------------------- actual targets : easy ones in L = 15 -------------------
+
+# target 5 : Burks
+1, 1, 4*x**4 + 3*x**3 + 2*x**2 + x, U, 0, 1, 20, U, 0, 3, 200, 15
 
 
-# target 7 : Meier-3:
-1, 2, (x**2)*(y**2)/(x+y), U, 0, 1, 20, U, 0, 2, 50,  U, 0, 1, 20, U, 0, 2, 50
-# run 1 : found at iteration 21: we have seen 12366 different eqs
-# run 2 : found at iteration 42: we have seen 31897 different eqs
-# run 3 (idem) : iteration 27: we have seen 13587 different eqs
+# target 6 : Keijzer-1
+1, 1, 0.3*x*np.sin(2*np.pi*x), E, 0, 1, 0.05, E, 0, 10, 0.05, 15
 
 
-# target 8 : Meier-4:
-1, 2, (x**5)/(y**3), U, 0, 1, 20, U, 0, 2, 50,  U, 0, 1, 20, U, 0, 2, 50
-# fail early stopping on wrong target -> extend range of test to 1.5
-# run 1 : found at iteration 58: we have seen 45264 different eqs
-# run 2 : found at
+# target 7 : Keijzer-2
+1, 1, 0.3*x*np.sin(2*np.pi *x), E, 0, 2, 0.05, E, 0, 4, 0.05, 15
+
+
+# target 8 : Keijzer-3
+1, 1, 0.3*x*np.sin(2*np.pi *x), E, 0, 3, 0.05, E, 0, 4, 0.05, 15
 
 
 # target 9 : Nguyen-5:
-1, 1, np.sin(x**2)*np.cos(x) -1, U, 0, 1, 40, U, 0, 2, 200
-# run 1 : found at iteration 31: we have seen 16183 different eqs
-# run 2 : found at iteration 40: we have seen 22067 different eqs
+1, 1, np.sin(x**2)*np.cos(x) -1, U, 0, 1, 20, U, 0, 1.2, 200, 15
 
 
 # target 10 : Nguyen-6:
-1, 1, np.sin(x)+ np.sin(x + x**2), U, 0, 1, 40, U, 0, 2, 200
-# run 1 : found at iteration 31: we have seen 15650 different eqs
-# run 2 : found at iteration 43: we have seen 23634 different eqs
+1, 1, np.sin(x)+ np.sin(x + x**2), U, 0, 1, 20, U, 0, 1.2, 200, 15
 
 
 # target 11 : Sine (the same, different interval):
-1, 1,  np.sin(x) + np.sin(x + x**2), E, 0, 6.2, 0.1, U, 0, 10, 100
-# run 1 : found at iteration 22: we have seen 10466 different eqs
-# run 2 : found at iteration 5: we have seen 2815 different eqs
+1, 1,  np.sin(x) + np.sin(x + x**2), E, 0, 6.2, 0.1, U, 0, 10, 100, 15
 
 
-# target 12 : Nguyen-9:
-1, 2, np.sin(x)+ np.sin(y**2), U, 0, 1, 20, U, 0, 2, 100, U, 0, 1, 20, U, 0, 2, 100
-# run 1 : found at iteration 58: we have seen 44560 different eqs
-# run 2 : found at
+# target 12 : Koza-2:
+1, 1, x**5 -2*x**3 + x, U, 0, 1, 20, U, 0, 2, 200, 15
 
 
-# target 13 : Nguyen-3:
-1, 1, x + x**2 + x**3 + x**4 + x**5, U, 0, 1, 40, U, 0, 2, 200
-# run 1 : found at iteration 48: we have seen 28759 different eqs
-# run 2 : found at iteration 23: we have seen 11296 different eqs
+# -------------------- 20
+
+# target 13 : Keijszer-14 :
+1, 2, 8/(2 + x**2 + y**2), U, 0, 3, 20, E, 0, 4, 0.1, U, 0, 3, 20, E, 0, 4, 0.1, 20
 
 
-# target 14 : R1:
-1, 1,  ((x+1)**3)/(x**2 - x +1), E, 0, 1, 0.05, U, 0, 4, 100
-# run 1 : found at iteration 31: we have seen 16985 different eqs
-# run 2 : found at
+# target 14 : Nguyen-3:
+1, 1, x + x**2 + x**3 + x**4 + x**5, U, 0, 1, 20, U, 0, 2, 200, 20
 
 
-# target 15 : Koza-2:
-1, 1, x**5 -2*x**3 + x, U, 0, 1, 40, U, 0, 3, 200
-# run 1 : found at iteration 31: we have seen 18369 different eqs
-# run 2 :
-# run pure GP found at iteration 42: we have seen 64752 different eqs
+# target 15 : Nguyen-7:
+1, 1, np.log(1+x) + np.log(1+ x**2), U, 0, 2, 20, U, 0, 3, 200, 25
 
 
-# target 16 : Keijzer-5 # this is way to big intervals for cmaes!!! (and not required : i will subsample!!)
-# 1, 3, 30*x*z/((x-10)*y**2), U, -1, 1, 1000, U, -1, 1, 10000, U, -1, 1, 1000, U, -1, 1, 10000, U, 1, 2, 1000, U, 1, 2, 10000
-1, 3, 30*x*z/((x-10)*y**2), U, -1, 1, 10, U, -1, 1, 20, U, -1, 1, 10, U, -1, 1, 20, U, 1, 2, 10, U, 1, 2, 20
-# run 1 : iteration 24: we have seen 12065 different eqs
-# run pure GP found at iteration 71: we have seen 143771 different eqs
+# target 16 : Keijszer-9 :
+1, 1, np.log(x + np.sqrt(1+ x**2)), E, 0.01, 100, 1, U, 0.01, 200, 1000, 25
 
 
-# target 17 : Keijszer-11 :
-1, 2, x*y + np.sin((x-1)*(y-1)), U, -3, 3, 10, E, -3, 3, 0.1, U, -3, 3, 10, E, -3, 3, 0.1
-# run 1 : found at iteration 59: we have seen 51301 different eqs
-# run 2 : found at iteration 66: we have seen 56011 different eqs
-# run pure GP fail at iteration 99: we have seen 183343 different eqs (L=12)
+# -------------------- 25
+
+# target 17 : R1:
+1, 1,  ((x+1)**3)/(x**2 - x +1), E, 0, 2, 0.1, U, 0, 3, 100, 25
 
 
-# --------- difficult ones ---------------
-
-# target 18 : Keijszer-9 :
-1, 1, np.log(x + np.sqrt(1+ x**2)), E, 0, 100, 1, U, 0, 200, 1000
-# run 1 : found at
-# run 2 : found at
-# run pure GP fail at iteration 99: we have seen 150135 different eqs
-
-# target 19 : Keijszer-12 :
-1, 2, x**4 - x**3 + (y**2)/2 - y, U, 0, 3, 20, E, 0, 4, 0.1, U, 0, 3, 20, E, 0, 4, 0.1
-# run 1 : fail at iteration 99 (max) : we have seen 82427 different eqs
-# best was 1.00280786201364*x**4 - 0.996991576413959*x**3 - 1.00280786201364*y + 1.00280786201364*sin(y - 1.5367) + 1.5075 #todo run again, increase iterations/maybe also Length
-# run 2 : found at
-# run pure GP fail at iteration 99: we have seen 184361 different eqs
+# target 18 : R2:
+1, 1,  (x**5 - 3*x**3 +1)/(x**2 +1), E, 0, 2, 0.1, U, 0, 3, 100, 25
 
 
-# target 20 : Keijszer-15 :
-1, 2, (x**3)/5 + (y**3)/2 - y - x, U, 0, 3, 20, E, 0, 4, 0.1, U, 0, 3, 20, E, 0, 4, 0.1
-# run 1 : fail at iteration 99 : we have seen 86897 different eqs
-# best was 0.5*y**3 - 0.99995*y - sin(x) + 0.0995  #todo run again, increase iterations/maybe also Length
-# run 2 : found at
-# run pure GP fail at iteration 99: we have seen 182843 different eqs
-
-# target 21 : Korns-11 :
-1, 1, 6.87 + 11* np.cos(7.23*x**3), U, 0, 50, 100, U, 0, 60, 1000
-# run 1 :
-# run 2 : found at
-# run pure GP fail at iteration 99: we have seen 149406 different eqs
+# target 19 : Keijzer-5
+1, 3, 30*x*z/((x-10)*y**2), U, 0, 2, 20, U, 0, 3, 20, U, 0, 2, 20, U, 0, 3, 20, U, 1, 2, 10, U, 0, 2, 25
 
 
-# target 22 : Nguyen-4:
-1, 1, x + x**2 + x**3+ x**4 + x**5 + x**6, U, 0, 1, 40, U, 0, 1.5, 200
-# run 1 : fail at iteration 99 iteration 99: we have seen 63059 different eqs
-# todo extend length
-# run 2 : found at
-
-# target 23 : R3:
-1, 1,  (x**6 + x**5)/(x**4 + x**3 +x**2 + x +1), E, 0, 1, 0.05, U, 0, 2, 100
-# run 1 : found at
-# run 2 : found at
-
-# target 24 : Keijzer-4
-1, 1, x**3*np.exp(-x)*np.cos(x)*np.sin(x)*(np.cos(x)*np.sin(x)**2-1), E, 0, 10, 0.1, E, 0, 20, 0.05
-# directly tried in lenght 20. Certainly the most difficult one. and with extend = 2
-# run 1 : found exactly at iteration 28: we have seen 120732 different eqs
-# run 2 :
+# target 20 : Keijszer-12 :
+1, 2, x**4 - x**3 + (y**2)/2 - y, U, 0, 3, 20, E, 0, 4, 0.1, U, 0, 3, 20, E, 0, 4, 0.1, 25
 
 
-# --------- difficult ones ---------------
+# target 21 : Keijszer-15 :
+1, 2, (x**3)/5 + (y**3)/2 - y - x, U, 0, 3, 20, E, 0, 4, 0.1, U, 0, 3, 20, E, 0, 4, 0.1, 25
+
+
+# target 22 : Keijszer-11 :
+1, 2, x*y + np.sin((x-1)*(y-1)), U, 0, 3, 20, E, 0, 4, 0.1, U, 0, 3, 20, E, 0, 4, 0.1, 25
+
+
+# target 23 : Korns-11 :
+1, 1, 6.87 + 11*np.cos(7.23*x**3), U, 0, 50, 1000, U, 0, 10, 5000, 25
+
+
+# target 24 : Nguyen-4:
+1, 1, x + x**2 + x**3+ x**4 + x**5 + x**6, U, 0, 1, 40, U, 0, 1.5, 200, 25
+
 
 # target 25 : Pagie 1:
-1, 2,  1/(1 + x**(-4)) + 1/(1+ y**(-4)), E, 0, 5, 0.2, U, -6, 6, 10, E, 0, 5, 0.2, U, -6, 6, 10
-# run 1 : fail at iteration 99: we have seen 82209 different eqs
-# run 2 : found at
+1, 2,  1/(1 + x**(-4)) + 1/(1+ y**(-4)), E, 0, 5, 0.2, U, 0, 6, 20, E, 0, 5, 0.2, U, 0, 6, 20, 25
+
+
+# -------------------- 30
+
+# target 26 : R3:
+1, 1,  (x**6 + x**5)/(x**4 + x**3 +x**2 + x +1), E, 0, 1, 0.05, U, 0, 2, 100, 30
+
+
+# target 27 : Vladislavleva 7 :
+1, 2, (x-3)*(y-3) + 2*np.sin((x-4)*(y-4)), U, 0.05, 6.05, 20, U, 0, 12.35, 100, U, 0.05, 6.05, 20, U, 0, 12.35, 100, 30
+
+
+# target 28 : Vladislavleva 1 :
+1, 2, np.exp(-(x-1)**2)/(1.2 + (y-2.5)**2), U, 0.3, 4, 20, E, 0, 8, 0.1, U, 0.3, 4, 20, E, 0, 8, 0.1, 30
+
+
+# target 29 : Vladislavleva 5 :
+1, 3, 30*(x-1)*(z-1)/((x-10)*y**2), U, 0.05, 2, 10, E, 0, 10, 0.5, U, 1, 2, 10, E, 0, 10, 0.5, U, 0.05, 2, 10, E, 0, 3, 0.5, 30
+
+
+# -------------------- 35
+
+# target 30 : Keijzer-4
+1, 1, x**3*np.exp(-x)*np.cos(x)*np.sin(x)*(np.cos(x)*np.sin(x)**2-1), E, 0, 10, 0.1, E, 0, 20, 0.05, 35
+
+
+# target 31 : Nonic
+1, 1, x + x**2 + x**3 + x**4 + x**5 + x**6 + x**7 + x**8 + x**9, E, 0, 1, 0.05, U, 0, 2, 100, 35
+
+
+# -------------------- 40
+# target 32 : Vladislavleva 3 :
+1, 2, x**3*np.exp(-x)*np.cos(x)*np.sin(x)*(np.cos(x)*np.sin(x)**2-1)*(y-5), E, 0.05, 10, 0.1, E, 0, 10, 0.1, E, 0.05, 10.05, 2, E, 0, 10, 0.5, 40
+
+
+# target 33 : Vladislavleva 8 :
+1, 2, ((x-3)**4 + (y-3)**3 -(y-3))/((y-2)**4 + 10), U, 0.05, 6.05, 20, E, 0, 12.35, 0.2,  U, 0.05, 6.05, 20, E, 0, 12.35, 0.2, 40
 
 
 
-
-# target 18 : Vladislavleva 7 :
-1, 2, (x-3)*(y-3) + 2*np.sin((x-4)*(y-4)), U, 0.05, 6.05, 20, U, -25, 6.35, 100, U, 0.05, 6.05, 20, U, -25, 6.35, 100
-# run 1 : found at
-# run 2 : found at
-
-# target 18 : Vladislavleva 1 :
-1, 2, np.exp(-(x-1)**2)/(1.2 + (y-2.5)**2), U, 0.3, 4, 20, E, -2, 4.2, 0.1, U, 0.3, 4, 20, E, -2, 4.2, 0.1
-# run 1 : found at iteration 196: we have seen 391597 different eqs
-# really not great
-# run 2 : found at iteration 66: we have seen 249376 different eqs (12h)
-
-# target 19 : Vladislavleva 5 :
-1, 3, 30*(x-1)*(z-1)/((x-10)*y**2), U, 0.05, 2, 10, E, -0.05, 10.5, 0.15, U, 1, 2, 10, E, 0.95, 2.05, 0.1, U, 0.05, 2, 10, E, -1.5, 3.1, 0.15
-# run 1 : found at
-# run 2 : found at
-
-
-# target 21 : Nonic
-1, 1, x + x**2 + x**3 + x**4 + x**5 + x**6 + x**7 + x**8 + x**9, E, 0, 1, 0.05, U, -1.5, 1.5, 20
-# run 1 : found at
-# run 2 : found at
-
-
-# target 23 : Vladislavleva 3 :
-1, 2, x**3*np.exp(-x)*np.cos(x)*np.sin(x)*(np.cos(x)*np.sin(x)**2-1)*(y-5), E, 0.05, 10, 0.1, E, -0.05, 10.5, 0.1, E, 0.05, 10.05, 2, E, -0.05, 10.5, 0.5
-# run 1 : found at
-# run 2 : found at
-
-
-
-
-# target 27 : Vladislavleva 8 :
-1, 2, ((x-3)**4 + (y-3)**3 -(y-3))/((y-2)**4 + 10), U, 0.05, 6.05, 30, E, -1.25, 6.35, 0.2,  U, 0.05, 6.05, 30, E, -1.25, 6.35, 0.2
-# run 1 : found at
-# run 2 : found at
-
-# tough ones :
-
-
-
-
-
-# target 32 : Nguyen-7:
-1, 1, np.log(1+x) + np.log(1+ x**2), U, 0, 2, 20, U, -1, 3, 200
-# run 1 : fail at iteration 99: we have seen 64628 different eqs
-# run 2 : found at
-
-# target 33 : R2:
-1, 1,  (x**5 - 3*x**3 +1)/(x**2 +1), E, 0, 1, 0.05, U, -2, 2, 100
-# run 1 : fail at iteration 99: we have seen 64263 different eqs
-# run 2 : found at

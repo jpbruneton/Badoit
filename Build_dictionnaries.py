@@ -95,7 +95,10 @@ def get_dic(n_targets, n_variables, modescalar):
     else:
         exp_number = None
 
+
     explognumbers = (exp_number, log_number)
+
+
 
     if 'np.sin(' in my_dic_functions:
         sin_number = 2 + a0 + [x for x in range(len(my_dic_functions)) if my_dic_functions[x] == 'np.sin('][0]
@@ -174,4 +177,4 @@ def get_dic(n_targets, n_variables, modescalar):
     return numbers_to_formula_dict, arity0symbols, arity1symbols, arity2symbols, true_zero_number, neutral_element, \
            infinite_number, emptysymbol, terminalsymbol, OUTPUTDIM, pure_numbers, arity2symbols_no_power, \
            arity1symbols_no_diff, arity1symbols_no_functions, arity0symbols_no_target, power_number, arity1symbols_diff, \
-           arity0symbols_var_and_tar, var_numbers, plusnumber, minusnumber, multnumber, divnumber, log_number, exp_number, explognumbers, trignumbers
+           arity0symbols_var_and_tar, var_numbers, plusnumber, minusnumber, multnumber, divnumber, log_number, exp_number, explognumbers, trignumbers, sin_number, cos_number

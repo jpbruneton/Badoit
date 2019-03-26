@@ -21,6 +21,19 @@ class Target:
         self.which_target = which_target
         self.mode = mode #'test' or 'train'
         self.target = self._define_target()
+        self.mytarget = self.returntarget()
+
+    def returntarget(self):
+        with open('target_list.txt') as myfile:
+            count = 0
+            for line in myfile:
+                if line[0] != '#' and line[0] != '\n':
+                    if count == self.which_target:
+                        mytarget = line
+                        count+=1
+                    else:
+                        count+=1
+        return mytarget
 
     def _define_target(self):
         ''' Initialize game : builds the target given by its number (of line) in target_list.txt '''
@@ -44,6 +57,7 @@ class Target:
         n_targets = int(mytarget[0])
         n_variables = int(mytarget[1])
         target_function = mytarget[2] #is a string, ok
+        maximal_size = int(mytarget[-1])
 
         # ----------------------------------#
         train_set_type_x = mytarget[3]
@@ -186,9 +200,9 @@ class Target:
             #also schrink the x interval to -1, 1
             if self.mode == 'train':
                 #return n_targets, n_variables, [x_train/range_x], [x_test/range_x], [f0_train], [f0_test], f_normalization, [range_x]
-                return n_targets, n_variables, [x_train / range_x_train], f0_train, f_normalization_train, [range_x_train]
+                return n_targets, n_variables, [x_train / range_x_train], f0_train, f_normalization_train, [range_x_train], maximal_size
             else:
-                return n_targets, n_variables,  [x_test/range_x_test], f0_test, f_normalization_test, [range_x_test]
+                return n_targets, n_variables,  [x_test/range_x_test], f0_test, f_normalization_test, [range_x_test], maximal_size
         # ------------------------------------------------#
         elif n_variables == 2:
 
@@ -228,9 +242,9 @@ class Target:
 
             if self.mode == 'train':
                 #return n_targets, n_variables, [X_train/range_x, Y_train/range_y], [X_test/range_x, Y_test/range_y], [f0_train], [f0_test], f_normalization, [range_x, range_y]
-                return n_targets, n_variables, [X_train/range_x_train, Y_train/range_y_train], f0_train, f_normalization_train, [range_x_train, range_y_train]
+                return n_targets, n_variables, [X_train/range_x_train, Y_train/range_y_train], f0_train, f_normalization_train, [range_x_train, range_y_train], maximal_size
             else:
-                return n_targets, n_variables, [X_test/range_x_test, Y_test/range_y_test], f0_test, f_normalization_test, [range_x_test, range_y_test]
+                return n_targets, n_variables, [X_test/range_x_test, Y_test/range_y_test], f0_test, f_normalization_test, [range_x_test, range_y_test], maximal_size
 
 
 
@@ -274,9 +288,9 @@ class Target:
             f0_test = f0_test / f_normalization_test
             if self.mode == 'train':
             #return n_targets, n_variables, [X_train/range_x, Y_train/range_y, Z_train/range_z], [X_test/range_x, Y_test/range_y, Z_test/range_z], [f0_train], [f0_test], f_normalization, [range_x, range_y, range_z]
-                return n_targets, n_variables, [X_train / range_x_train, Y_train / range_y_train, Z_train / range_z_train], f0_train, f_normalization_train, [range_x_train, range_y_train, range_z_train]
+                return n_targets, n_variables, [X_train / range_x_train, Y_train / range_y_train, Z_train / range_z_train], f0_train, f_normalization_train, [range_x_train, range_y_train, range_z_train], maximal_size
             else:
-                return n_targets, n_variables, [X_test/range_x_test, Y_test/range_y_test, Z_test/range_z_test], f0_test, f_normalization_test, [range_x_test, range_y_test, range_z_test]
+                return n_targets, n_variables, [X_test/range_x_test, Y_test/range_y_test, Z_test/range_z_test], f0_test, f_normalization_test, [range_x_test, range_y_test, range_z_test], maximal_size
 
 
 class Voc():
@@ -284,15 +298,20 @@ class Voc():
 
         self.modescalar = modescalar
         self.target = target.target
+        if self.modescalar == 'noA':
+            self.maximal_size = 10 + self.target[-1]
+        else:
+            self.maximal_size = self.target[-1]
 
         self.numbers_to_formula_dict, self.arity0symbols, self.arity1symbols, self.arity2symbols, self.true_zero_number, self.neutral_element, \
         self.infinite_number, self.emptysymbol, self.terminalsymbol, self.OUTPUTDIM, self.pure_numbers, self.arity2symbols_no_power, \
         self.arity1symbols_no_diff, self.arity1symbols_no_functions, self.arity0symbols_no_target, self.power_number, self.arity1symbols_diff, \
         self.arity0symbols_var_and_tar, self.var_numbers, self.plusnumber, self.minusnumber, self.multnumber, self.divnumber, self.log_number, \
-        self.exp_number, self.explognumbers, self.trignumbers \
+        self.exp_number, self.explognumbers, self.trignumbers, self.sin_number, self.cos_number \
             = Build_dictionnaries.get_dic(self.target[0], self.target[1], modescalar)
 
         self.mysimplificationrules, self.maxrulesize = self.create_dic_of_simplifs()
+        print(self.mysimplificationrules)
 
     def replacemotor(self, toreplace,replaceby, k):
         firstlist = []
@@ -328,7 +347,14 @@ class Voc():
                 firstlist.append(self.log_number)
             elif elem == 'exp':
                 firstlist.append(self.exp_number)
-
+            elif elem == 'sin':
+                firstlist.append(self.sin_number)
+            elif elem == 'cos':
+                firstlist.append(self.cos_number)
+            elif elem == '1':
+                firstlist.append(self.pure_numbers[0])
+            elif elem == '2':
+                firstlist.append(self.pure_numbers[1])
             else:
                 print('bug1', elem)
 
@@ -365,7 +391,14 @@ class Voc():
                 secondlist.append(self.log_number)
             elif elem == 'exp':
                 secondlist.append(self.exp_number)
-
+            elif elem == 'sin':
+                secondlist.append(self.sin_number)
+            elif elem == 'cos':
+                secondlist.append(self.cos_number)
+            elif elem == '1':
+                secondlist.append(self.pure_numbers[0])
+            elif elem == '2':
+                secondlist.append(self.pure_numbers[1])
             else:
                 print('bug2', elem)
 
@@ -374,45 +407,76 @@ class Voc():
 
 
     def create_dic_of_simplifs(self):
-        mydic_simplifs = {}
-        for x in Simplification_rules.mysimplificationrules:
-            toreplace = x[0]
-            replaceby = x[1]
 
-            if 'variable' in toreplace:
-                for k in range(self.target[1]):
-                    firstlist, secondlist = self.replacemotor(toreplace, replaceby, k)
+        if self.modescalar == 'A':
+            mydic_simplifs = {}
+            for x in Simplification_rules.mysimplificationrules_with_A:
+                toreplace = x[0]
+                replaceby = x[1]
+
+                if 'variable' in toreplace:
+                    for k in range(self.target[1]):
+                        firstlist, secondlist = self.replacemotor(toreplace, replaceby, k)
+                        mydic_simplifs.update(({str(firstlist): secondlist}))
+
+                elif 'arity0' in toreplace:
+                    for k in range(len(self.arity0symbols)):
+                        firstlist, secondlist = self.replacemotor(toreplace, replaceby, k)
+                        mydic_simplifs.update(({str(firstlist): secondlist}))
+
+                elif 'fonction' in toreplace:
+                    for k in range(len(self.arity1symbols_no_diff)):
+                        firstlist, secondlist = self.replacemotor(toreplace, replaceby, k)
+                        mydic_simplifs.update(({str(firstlist): secondlist}))
+
+                elif 'allops' in toreplace:
+                    for k in range(len(self.arity2symbols)):
+                        firstlist, secondlist = self.replacemotor(toreplace, replaceby, k)
+                        mydic_simplifs.update(({str(firstlist): secondlist}))
+                else:
+                    firstlist, secondlist = self.replacemotor(toreplace, replaceby, 0)
                     mydic_simplifs.update(({str(firstlist): secondlist}))
 
-            elif 'arity0' in toreplace:
-                for k in range(len(self.arity0symbols)):
-                    firstlist, secondlist = self.replacemotor(toreplace, replaceby, k)
+            maxrulesize = 0
+            for i in range(len(Simplification_rules.mysimplificationrules_with_A)):
+                if len(Simplification_rules.mysimplificationrules_with_A[i][0]) > maxrulesize:
+                    maxrulesize = len(Simplification_rules.mysimplificationrules_with_A[i][0])
+
+            return mydic_simplifs, maxrulesize
+
+        if self.modescalar == 'noA':
+            mydic_simplifs = {}
+            for x in Simplification_rules.mysimplificationrules_no_A:
+                toreplace = x[0]
+                replaceby = x[1]
+                if 'variable' in toreplace:
+                    for k in range(self.target[1]):
+                        firstlist, secondlist = self.replacemotor(toreplace, replaceby, k)
+                        mydic_simplifs.update(({str(firstlist): secondlist}))
+
+                elif 'arity0' in toreplace:
+                    for k in range(len(self.arity0symbols)):
+                        firstlist, secondlist = self.replacemotor(toreplace, replaceby, k)
+                        mydic_simplifs.update(({str(firstlist): secondlist}))
+
+                elif 'fonction' in toreplace:
+                    for k in range(len(self.arity1symbols_no_diff)):
+                        firstlist, secondlist = self.replacemotor(toreplace, replaceby, k)
+                        mydic_simplifs.update(({str(firstlist): secondlist}))
+
+                elif 'allops' in toreplace:
+                    for k in range(len(self.arity2symbols)):
+                        firstlist, secondlist = self.replacemotor(toreplace, replaceby, k)
+                        mydic_simplifs.update(({str(firstlist): secondlist}))
+
+                else:
+                    firstlist, secondlist = self.replacemotor(toreplace, replaceby, 0)
                     mydic_simplifs.update(({str(firstlist): secondlist}))
 
-           # elif 'target' in toreplace:
-            #    if config.target_equals_something == False:
-             #       for k in range(self.target[0]):
-              #          firstlist, secondlist = self.replacemotor(toreplace, replaceby, k)
-               #         mydic_simplifs.update(({str(firstlist): secondlist}))
-                #else : do nothing
+            maxrulesize = 0
 
-            elif 'fonction' in toreplace:
-                for k in range(len(self.arity1symbols_no_diff)):
-                    firstlist, secondlist = self.replacemotor(toreplace, replaceby, k)
-                    mydic_simplifs.update(({str(firstlist): secondlist}))
+            for i in range(len(Simplification_rules.mysimplificationrules_no_A)):
+                if len(Simplification_rules.mysimplificationrules_no_A[i][0]) > maxrulesize:
+                    maxrulesize = len(Simplification_rules.mysimplificationrules_no_A[i][0])
 
-            elif 'allops' in toreplace:
-                for k in range(len(self.arity2symbols)):
-                    firstlist, secondlist = self.replacemotor(toreplace, replaceby, k)
-                    mydic_simplifs.update(({str(firstlist): secondlist}))
-            else:
-                firstlist, secondlist = self.replacemotor(toreplace, replaceby, 0)
-                mydic_simplifs.update(({str(firstlist): secondlist}))
-
-        maxrulesize = 0
-        for i in range(len(Simplification_rules.mysimplificationrules)):
-            if len(Simplification_rules.mysimplificationrules[i][0]) > maxrulesize:
-                maxrulesize = len(Simplification_rules.mysimplificationrules[i][0])
-
-        return mydic_simplifs, maxrulesize
-
+            return mydic_simplifs, maxrulesize

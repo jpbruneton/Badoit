@@ -25,10 +25,10 @@ class Game:
     # ---------------------------------------------------------------------------- #
     # init a game with optional state.
 
-    def __init__(self, voc, maxL, state = None):
+    def __init__(self, voc, state = None):
 
         self.voc = voc
-        self.maxL = maxL
+        self.maxL = voc.maximal_size
         if state is None:
             self.stateinit = []
             self.state = State(voc, self.stateinit)
@@ -142,7 +142,7 @@ class Game:
         #use the same stack as everywhere else but only keep in the stack the number of nested functions encountered so far
         stack = []
         for number in self.state.reversepolish:
-            if number in self.voc.arity0symbols:
+            if number in self.voc.arity0symbols or number == self.voc.true_zero_number or number == self.voc.neutral_element:
                 stack += [0]
 
             elif number in self.voc.arity1symbols:
@@ -227,13 +227,11 @@ class Game:
 
     # ---------------------------------------------------------
     def simplif_eq(self):
-        if self.voc.modescalar == 'A':
-            prevstate = copy.deepcopy(self.state.reversepolish)
 
-            change = 1
-            while change == 1:
-                change, rpn = self.state.one_simplif()
-                self.state = State(self.voc, rpn)
+        change = 1
+        while change == 1:
+            change, rpn = self.state.one_simplif()
+            self.state = State(self.voc, rpn)
 
 
     # ---------------------------------------------------------
@@ -261,8 +259,27 @@ class Game:
 
 # ---------------------------------------------------------------------------- #
 # create random eqs + simplify it with my rules
-def randomeqs(voc, maxL):
-    game = Game(voc, maxL)
+def randomeqs(voc):
+    game = Game(voc)
+
+    while game.isterminal() == 0:
+        nextchar = np.random.choice(game.allowedmoves())
+        game.takestep(nextchar)
+
+    game.simplif_eq()
+    return game
+
+# ---------------------------------------------------------------------------- #
+# takes a non maximal size and completes it with random + simplify it with my rules
+def complete_eq_with_random(voc, state):
+
+    if state.reversepolish[-1] == 1:
+        newstate = State(voc, state.reversepolish[:-1])
+
+    else :
+        newstate = copy.deepcopy(state)
+
+    game = Game(voc, newstate)
 
     while game.isterminal() == 0:
         nextchar = np.random.choice(game.allowedmoves())
@@ -284,7 +301,7 @@ def game_evaluate(rpn, formulas, tolerance, voc, target, mode):
 
 # -------------------------------------------------------------------------- #
 #automatic calculation of tolerance : rd eqs should have mean reward of around 0 (between -1 and 1)
-def calculatetolerance(initialguess, target, voc, maxL):
+def calculatetolerance(initialguess, target, voc):
     print('automatic calculation of tolerance for reward estimate...')
 
     budget = 10
@@ -298,7 +315,7 @@ def calculatetolerance(initialguess, target, voc, maxL):
         p = 10
 
         for i in range(p):
-            game = randomeqs(voc, maxL)
+            game = randomeqs(voc)
             newrdeq = game.state
             if voc.infinite_number not in newrdeq.reversepolish :
                 newreward, _, _ =  game_evaluate(game.state.reversepolish, game.state.formulas, tolerance, voc, target, 'train')

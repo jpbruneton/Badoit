@@ -28,7 +28,7 @@ class Evaluatefit:
         self.voc = voc
         self.mode = mode
 
-        self.n_targets, self.n_variables, self.variables, self.targets, self.f_renormalization, self.ranges = target.target
+        self.n_targets, self.n_variables, self.variables, self.targets, self.f_renormalization, self.ranges, self.maximal_size = target.target
         self.xsize = self.variables[0].shape[0]
         if self.n_variables > 1:
             self.ysize = self.variables[0].shape[1]
@@ -40,7 +40,6 @@ class Evaluatefit:
         ''' index all the scalar 'A' by a A1, A2, etc, rename properly the differentials, and finally resize as it must '''
 
         neweq = ''
-
         # rename the A's
         scalar_numbers = self.formulas.count('A')
         A_count = 0
@@ -50,7 +49,6 @@ class Evaluatefit:
                 A_count += 1
             else:
                 neweq += char
-
         # rename by hand: this transforms x0 into x0[:] if one variable ... or into x0[:,:,:] if three variables
         arr = ''
         for j in range(self.n_variables):
@@ -97,7 +95,7 @@ class Evaluatefit:
             else:
                 return True, toreturn
 
-        except (RuntimeWarning, RuntimeError, ValueError, ZeroDivisionError, OverflowError, AttributeError):
+        except (RuntimeWarning, RuntimeError, ValueError, ZeroDivisionError, OverflowError, SystemError):#, AttributeError):
             return False, None
 
     # ---------------------------------------------------------------------------- #
@@ -175,7 +173,7 @@ class Evaluatefit:
             for u in range(reco.size):
                 rec.append(reco[u])
 
-        except (RuntimeWarning, RuntimeError, ValueError, ZeroDivisionError, OverflowError, AttributeError):
+        except (RuntimeWarning, RuntimeError, ValueError, ZeroDivisionError, OverflowError, SystemError):#, AttributeError):
             return False, [0]*scalar_numbers
 
         return True, rec
@@ -186,7 +184,7 @@ class Evaluatefit:
         try:
             ls_attempt = self.fit(reco)
 
-        except (RuntimeWarning, RuntimeError, ValueError, ZeroDivisionError, OverflowError, AttributeError):
+        except (RuntimeWarning, RuntimeError, ValueError, ZeroDivisionError, OverflowError, SystemError):#, AttributeError):
             return False, []
 
         success = ls_attempt.success
@@ -249,13 +247,11 @@ class Evaluatefit:
         #init stuff
         np.seterr(all = 'ignore')
         allA = []
-        allA_ls = []
         failure_reward = -1
 
         # ---------------------------------------------------------------------------- #
         #rename formulas and return the number of A's
         scalar_numbers = self.rename_formulas()
-
         #----------------------------------------------------------------------------- #
         # First consider the simple case where there are no generic scalars:
         if scalar_numbers == 0:
@@ -264,17 +260,14 @@ class Evaluatefit:
 
         # else: cmaes fit : ---------------------------------------------------------- #
         success, allA = self.best_A_cmaes(scalar_numbers)
-
         if success == False:
             return failure_reward, scalar_numbers, allA
 
         # ---------------------------------------------------------------------------- #
         #else, compute some actual reward:
         reward_cmaes = self.eval_reward(allA)
-
         #now we can refine with least squares
         success_ls, allA_ls = self.best_A_least_squares(allA)
-
         if success_ls == False:
             reward_ls = failure_reward
             reward_ls_round = failure_reward
@@ -290,15 +283,16 @@ class Evaluatefit:
 
             c=0
             for a in allA_ls:
-                if np.abs(a - int(a)) < 0.001:
-                    allA_ls_round[c] = int(a)
+                if np.abs(round(a) - a) < 0.1:
+                    allA_ls_round[c] = round(a)
                     change = True
+
                 c+=1
 
             if change:
                 reward_ls_round = self.eval_reward(allA_ls_round)
             else:
-                reward_ls_round = reward_ls
+                reward_ls_round = -2
 
         #now compare the three and chose the best
         allrewards=[reward_cmaes, reward_ls, reward_ls_round]

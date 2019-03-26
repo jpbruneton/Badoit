@@ -74,9 +74,12 @@ class generate_offsprings():
 
 
         if self.usesimplif:
-            game = Game(self.voc, self.maxL, state)
+            game = Game(self.voc, state)
+            #print('bf', game.state.formulas)
             game.simplif_eq()
+            #print('simplif?')
             state = game.state
+            #print('af', state.formulas)
 
         # mutation can lead to true zero division (after simplif) thus :
         if self.voc.infinite_number not in state.reversepolish :
@@ -94,8 +97,8 @@ class generate_offsprings():
         prev_state1 = copy.deepcopy(state1)
         prev_state2 = copy.deepcopy(state2)
 
-        game1 = Game(self.voc, self.maxL, prev_state1)
-        game2 = Game(self.voc, self.maxL, prev_state2)
+        game1 = Game(self.voc, prev_state1)
+        game2 = Game(self.voc, prev_state2)
 
         ast1 = game1.convert_to_ast()
         ast2 = game2.convert_to_ast()
@@ -116,7 +119,7 @@ class generate_offsprings():
 
         # topnode has the max absolute label, so you dont want it/ you want only subtrees, hence the [:-1]
         # subtrees can be scalars == leaves, hence >= 2
-        start = 2 + len(self.voc.arity0symbols)
+        start = 2 #+ len(self.voc.arity0symbols)
 
         #get all topnodes of possible subtrees
         positions1 = np.where(array1 >= start)[0][:-1]
@@ -158,6 +161,7 @@ class generate_offsprings():
             if len(rpn1) > self.maximal_size or len(rpn2)> self.maximal_size:
                 return prev_state1, prev_state2
 
+
         # else cant crossover
         else:
             return prev_state1, prev_state2
@@ -167,16 +171,40 @@ class generate_offsprings():
         state2 = State(self.voc, rpn2)
 
         if self.usesimplif:
-            game = Game(self.voc, self.maxL, state1)
-            game.simplif_eq()
-            state1 = game.state
+            game1 = Game(self.voc, state1)
+            game1.simplif_eq()
+            state1 = game1.state
 
-            game = Game(self.voc, self.maxL, state2)
-            game.simplif_eq()
-            state2 = game.state
+            game2 = Game(self.voc, state2)
+            game2.simplif_eq()
+            state2 = game2.state
+        toreturn = []
 
         #crossover can lead to true zero division thus :
-        if self.voc.infinite_number not in state1.reversepolish  and self.voc.infinite_number not in state2.reversepolish :
-            return state1, state2
+        if self.voc.infinite_number in state1.reversepolish :
+            toreturn.append(prev_state1)
+            #print('fail')
+
+        # also, if it returns too many nested functions, i dont want it (sort of parsimony)
+        elif game1.getnumberoffunctions() > config.MAX_DEPTH :
+            toreturn.append(prev_state1)
+            #print('fail')
         else:
-            return prev_state1, prev_state1
+            toreturn.append(state1)
+            #print('succes')
+
+        if self.voc.infinite_number in state2.reversepolish:
+            toreturn.append(prev_state2)
+            #print('fail')
+
+        elif game2.getnumberoffunctions() > config.MAX_DEPTH :
+            toreturn.append(prev_state2)
+            #print('fail')
+
+        else:
+            toreturn.append(state2)
+            #print('succes')
+
+
+        return toreturn[0], toreturn[1]
+

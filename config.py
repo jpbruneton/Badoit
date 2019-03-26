@@ -1,18 +1,19 @@
-cpus = 40
+
+import multiprocessing
+
+cpus = multiprocessing.cpu_count()
 
 # --------------  Taget related ---------------- #
 findtolerance = True
 
 # --------------------- SPECIAL SYNTAXIC RULES -------------- #
-# max lenght
-SENTENCELENGHT = 15
 # how many nested functions I authorize
 MAX_DEPTH = 1
 # power is taken only to a real number : avoid stuff like exp(x)^(x exp(x)) !!
 only_scalar_in_power = True
 
 
-tworunsineval = True
+tworunsineval = False
 popsize = '20*N'
 timelimit = '7*N'
 
@@ -30,5 +31,4 @@ use_simplif = True
 #after some tests, its better to use both the distance cost AND the derivative cost
 usederivativecost = 1  #or 0
 
-# -------------   important options ------------- #
-use_derivatives = False
+
