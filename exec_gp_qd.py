@@ -70,7 +70,7 @@ def evalme(onestate):
     reward, scalar_numbers, alla = game_env.game_evaluate(state.reversepolish, state.formulas, tolerance, voc, train_target, 'train')
     results.append([reward, scalar_numbers, alla])
 
-    if config.tworunsineval :
+    if config.tworunsineval and voc.modescalar == 'A':
         # run 2:
         reward, scalar_numbers, alla = game_env.game_evaluate(state.reversepolish, state.formulas, tolerance, voc, train_target, 'train')
         results.append([reward, scalar_numbers, alla])
