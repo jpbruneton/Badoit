@@ -82,27 +82,35 @@ def evalme(onestate):
 
     L = len(state.reversepolish)
 
-    function_number = 0
-    for char in voc.arity1symbols:
-        function_number += state.reversepolish.count(char)
+    try:
+        function_number = 0
+        for char in voc.arity1symbols:
+            function_number += state.reversepolish.count(char)
 
-    powernumber = 0
-    for char in state.reversepolish:
-        if char == voc.power_number:
-            powernumber += 1
+        powernumber = 0
+        #for char in state.reversepolish:
+        #    if char == voc.power_number:
+        #        powernumber += 1
 
-    trignumber = 0
-    for char in state.reversepolish:
-        if char in voc.trignumbers:
-            trignumber += 1
+        trignumber = 0
+        #for char in state.reversepolish:
+        #    if char in voc.trignumbers:
+        #        trignumber += 1
 
-    explognumber = 0
-    for char in state.reversepolish:
-        if char in voc.explognumbers:
-            explognumber += 1
+        explognumber = 0
+ #       for char in state.reversepolish:
+  #          if char in voc.explognumbers:
+   #             explognumber += 1
 
-    return reward, state, alla, scalar_numbers, L, function_number, powernumber, trignumber, explognumber
+        return reward, state, alla, scalar_numbers, L, function_number, powernumber, trignumber, explognumber
 
+
+    except (ValueError, IndexError, AttributeError, RuntimeError, RuntimeWarning):
+        print(state.formulas, state.reversepolish)
+        with open('bureport.txt') as myfile:
+            myfile.write(str(state.formulas) + str(state.reversepolish))
+        myfile.close()
+        return -1, state, [], 0, 0, 0, 0, 0, 0
 
 # -------------------------------------------------------------------------- #
 def exec(which_target, train_target, test_target, voc, iteration, tolerance, gp, prefix, alleqs):
@@ -154,8 +162,10 @@ def exec(which_target, train_target, test_target, voc, iteration, tolerance, gp,
         # save results and print
         saveme = printresults(test_target, voc)
         valreward = saveme.saveresults(newbin, replacements, i, gp.QD_pool, gp.maxa, tolerance, which_target, alleqs, prefix)
-        #filename = './gpdata/QD_pool'+ str(which_target) + '.txt'
-        filename = '/home/user/QD_pool' + str(which_target) + '.txt'
+        if config.uselocal:
+            filename = './gpdata/QD_pool'+ str(which_target) + '.txt'
+        else:
+            filename = '/home/user/QD_pool' + str(which_target) + '.txt'
         with open(filename, 'wb') as file:
             pickle.dump(gp.QD_pool, file)
         file.close()
@@ -233,8 +243,10 @@ def eval_previous_eqs(which_target, train_target, test_target, voc_a, tolerance,
     # save results and print
     saveme = printresults(test_target, voc_a)
     valreward = saveme.saveresults(newbin, replacements, -1, gp.QD_pool, gp.maxa, tolerance, which_target, alleqs, prefix)
-    #filename = './gpdata/QD_pool' + str(which_target) + '.txt'
-    filename = '/home/user/QD_pool' + str(which_target) + '.txt'
+    if config.uselocal:
+        filename = './gpdata/QD_pool' + str(which_target) + '.txt'
+    else:
+        filename = '/home/user/QD_pool' + str(which_target) + '.txt'
     with open(filename, 'wb') as file:
         pickle.dump(gp.QD_pool, file)
     file.close()
@@ -263,10 +275,6 @@ def init_everything_else(which_target):
     sizenoa = len(voc_no_a.numbers_to_formula_dict)
     diff = sizenoa - sizea
 
-    # init file of results
-    if os.path.exists('results_target_' + str(which_target) + '.txt'):
-        os.remove('results_target_' + str(which_target) + '.txt')
-
     # initial pool size of rd eqs at iteration 0
     poolsize = 4000
     # probability of dropping a function : cos(x) -> x
@@ -285,8 +293,10 @@ def init_everything_else(which_target):
     #QD grid parameters
     bina = 20  # number of bins for number of free scalars
     maxa = 20
-    binl = voc_no_a.maximal_size # number of bins for length of an eq
-    maxl = voc_no_a.maximal_size
+    binl_no_a = voc_no_a.maximal_size # number of bins for length of an eq
+    maxl_no_a = voc_no_a.maximal_size
+    binl_a = voc_with_a.maximal_size # number of bins for length of an eq
+    maxl_a = voc_with_a.maximal_size
     binf = 8 # number of bins for number of fonctions
     maxf = 8
     new = 0
@@ -301,29 +311,28 @@ def init_everything_else(which_target):
     addrandom = True
 
 
-    return poolsize, delete_ar1_ratio, extend_ratio, p_mutate, p_cross, bina, maxa, binl, maxl, binf, maxf, \
+    return poolsize, delete_ar1_ratio, extend_ratio, p_mutate, p_cross, bina, maxa, binl_no_a, maxl_no_a, binl_a, maxl_a, binf, maxf, \
            binp, maxp, bintrig, maxtrig, binexp, maxexp, addrandom, train_target, test_target, voc_with_a, voc_no_a, diff
 
 # -----------------------------------------------#
 def main():
-    #reinit results file for this new run :
-    file_path = './resultscsv_file.csv'
-    if os.path.exists(file_path):
-        os.remove(file_path)
+    id = str(int(10000000 * time.time()))
 
-
-    for target in range(0,34):
+    for target in range(0,13):
 
         # init target, dictionnaries, and meta parameters
         which_target = target
-        poolsize, delete_ar1_ratio, extend_ratio, p_mutate, p_cross, bina, maxa, binl, maxl, binf, maxf, \
+        poolsize, delete_ar1_ratio, extend_ratio, p_mutate, p_cross, bina, maxa,  binl_no_a, maxl_no_a, binl_a, maxl_a,  binf, maxf, \
         binp, maxp, bintrig, maxtrig, binexp, maxexp, addrandom, train_target, test_target, voc_with_a, voc_no_a, diff = init_everything_else(
             which_target)
 
         #init csv file
-        id = str(int(10000000 * time.time()))
         mytarget = train_target.mytarget
-        with open(str(id)+'resultcsv_file.csv', mode='a') as myfile:
+        if config.uselocal:
+            filepath = './' + str(id)+'resultcsv_file.csv'
+        else:
+            filepath = '/home/user/results/' + str(id)+'resultcsv_file.csv'
+        with open(filepath, mode='a') as myfile:
             writer = csv.writer(myfile, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
 
             writer.writerow(['target number' + str(which_target), mytarget])
@@ -349,19 +358,19 @@ def main():
 
             #init gp class:
             gp = GP_QD(which_target, delete_ar1_ratio, p_mutate, p_cross, poolsize, voc_no_a, tolerance,
-                       extend_ratio, maxa, bina, maxl, binl, maxf, binf, maxp, binp, maxtrig, bintrig, maxexp, binexp,
+                       extend_ratio, maxa, bina, maxl_no_a, binl_no_a, maxf, binf, maxp, binp, maxtrig, bintrig, maxexp, binexp,
                        addrandom, None, None)
 
             # trick for unique id of results file
             prefix = str(int(10000000 * time.time()))
 
             # run evolution :
-            iteration_no_a = 50
+            iteration_no_a = 100
             stop, qdpool, alleqs_no_a, iter_no_a = exec(which_target, train_target, test_target, voc_no_a, iteration_no_a, tolerance, gp, prefix, alleqs)
 
             #save csv
             if stop is not None:
-                with open('resultcsv_file.csv', mode='a') as myfile:
+                with open(filepath, mode='a') as myfile:
                     writer = csv.writer(myfile, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
                     timespent = (time.time() - eval(prefix) / 10000000)/60
                     writer.writerow([str(1), str(iter_no_a), str(len(alleqs_no_a)), '0', '0', '0', str(timespent)])
@@ -379,12 +388,12 @@ def main():
 
                 # reinit gp class with a:
                 gp = GP_QD(which_target, delete_ar1_ratio, p_mutate, p_cross, poolsize,
-                           voc_with_a, tolerance, extend_ratio, maxa, bina, maxl, binl, maxf, binf, maxp, binp, maxtrig, bintrig, maxexp, binexp,
+                           voc_with_a, tolerance, extend_ratio, maxa, bina, maxl_a, binl_a, maxf, binf, maxp, binp, maxtrig, bintrig, maxexp, binexp,
                            addrandom, None, initpool)
                 alleqs, QD_pool, stop = eval_previous_eqs(which_target, train_target, test_target, voc_with_a, tolerance, initpool, gp, prefix)
 
                 if stop is not None:
-                    with open('resultcsv_file.csv', mode='a') as myfile:
+                    with open(filepath, mode='a') as myfile:
                         writer = csv.writer(myfile, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
                         timespent = (time.time() - eval(prefix) / 10000000) / 60
                         writer.writerow([str(0), str(iter_no_a), str(len(alleqs_no_a)), '1', str(len(alleqs)), '0', str(timespent)])
@@ -393,7 +402,7 @@ def main():
                 # this might directly provide the exact solution : if not, stop is None, and thus, run evolution
                 if stop is None:
                     gp.QD_pool = QD_pool
-                    iteration_a = 50
+                    iteration_a = 100
                     stop, qdpool, alleqs_a, iter_a = exec(which_target, train_target, test_target, voc_with_a, iteration_a, tolerance, gp, prefix, alleqs)
 
                     if stop is None:
@@ -401,7 +410,7 @@ def main():
                     else:
                         success = 1
 
-                    with open('resultcsv_file.csv', mode='a') as myfile:
+                    with open(filepath, mode='a') as myfile:
                         writer = csv.writer(myfile, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
                         timespent = (time.time() - eval(prefix) / 10000000) / 60
                         writer.writerow(

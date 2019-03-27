@@ -311,7 +311,6 @@ class Voc():
             = Build_dictionnaries.get_dic(self.target[0], self.target[1], modescalar)
 
         self.mysimplificationrules, self.maxrulesize = self.create_dic_of_simplifs()
-        print(self.mysimplificationrules)
 
     def replacemotor(self, toreplace,replaceby, k):
         firstlist = []

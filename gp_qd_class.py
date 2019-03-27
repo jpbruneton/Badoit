@@ -7,7 +7,6 @@ from operator import itemgetter
 from generate_offsprings import generate_offsprings
 from Evaluate_fit import Evaluatefit
 import time
-import multiprocessing as mp
 
 # ============================  QD version ====================================#
 
@@ -356,8 +355,11 @@ class printresults():
         avg_validation_reward /= len(rank)
 
         timespent = time.time() - eval(prefix)/10000000
-        with open('/home/user/results/'+ prefix+ 'results_target_' + str(target_number) + '.txt', 'a') as myfile:
-        #with open('./' + prefix + 'results_target_' + str(target_number) + '.txt', 'a') as myfile:
+        if config.uselocal:
+            filepath = './' + prefix + 'results_target_' + str(target_number) + '.txt'
+        else:
+            filepath = '/home/user/results/'+ prefix+ 'results_target_' + str(target_number) + '.txt'
+        with open(filepath, 'a') as myfile:
 
             myfile.write('iteration ' + str(i) + ': we have seen ' + str(len(alleqs)) + ' different eqs')
             myfile.write("\n")

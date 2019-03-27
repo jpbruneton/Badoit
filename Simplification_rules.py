@@ -219,7 +219,9 @@ mysimplificationrules_no_A = \
  [['variable', '1', 'mult'], ['variable']],
  [['1', 'variable', 'mult'], ['variable']],
  [['fonction', '1', 'mult'], ['fonction']],
- [['1', 'log'], ['zero']],
+  [['1', 'fonction', 'mult'], ['fonction']],
+
+  [['1', 'log'], ['zero']],
   # size four
   [['variable', 'exp', '2', 'power'], ['variable', '2', 'mult', 'exp']],  # to avoid powers
 

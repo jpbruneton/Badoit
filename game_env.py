@@ -312,7 +312,7 @@ def calculatetolerance(initialguess, target, voc):
 
     while (meanreward < -0.8 or meanreward > -0.4) and count < budget:
         meanreward = 0
-        p = 10
+        p = 20
 
         for i in range(p):
             game = randomeqs(voc)
