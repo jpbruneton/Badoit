@@ -318,7 +318,7 @@ def init_everything_else(which_target):
 def main():
     id = str(int(10000000 * time.time()))
 
-    for target in range(0,13):
+    for target in range(0,33):
 
         # init target, dictionnaries, and meta parameters
         which_target = target
