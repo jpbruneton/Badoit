@@ -13,9 +13,10 @@ import csv
 
 # -------------------------------------------------------------------------- #
 def init_grid(reinit_grid, u):
-
-    #file_path = './gpdata/QD_pool' + str(u) + '.txt'
-    file_path = '/home/user/QD_pool' + str(u) + '.txt'
+    if config.uselocal:
+        file_path = './gpdata/QD_pool' + str(u) + '.txt'
+    else:
+        file_path = '/home/user/QD_pool' + str(u) + '.txt'
 
     if reinit_grid:
         if os.path.exists(file_path):
@@ -107,7 +108,11 @@ def evalme(onestate):
 
     except (ValueError, IndexError, AttributeError, RuntimeError, RuntimeWarning):
         print(state.formulas, state.reversepolish)
-        with open('bureport.txt') as myfile:
+        if config.uselocal:
+            filepath = './bureport.txt'
+        else:
+            filepath = '/home/user/results/bureport.txt'
+        with open(filepath, 'a') as myfile:
             myfile.write(str(state.formulas) + str(state.reversepolish))
         myfile.close()
         return -1, state, [], 0, 0, 0, 0, 0, 0
@@ -318,7 +323,7 @@ def init_everything_else(which_target):
 def main():
     id = str(int(10000000 * time.time()))
 
-    for target in range(0,33):
+    for target in range(10,21):
 
         # init target, dictionnaries, and meta parameters
         which_target = target
