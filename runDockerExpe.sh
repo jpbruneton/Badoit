@@ -16,7 +16,7 @@ hostsNames=${5:-"shoal1,shoal2,shoal3,shoal4,shoal5,shoal6,shoal7,shoal8"}
 
 expeName="Badoit" # TO ADAPT
 networkName="net-$expeName"
-memoryLimit=8G
+memoryLimit=32G
 resultsPath=$(pwd)/results
 resultsPathInContainer=/home/user/results
 uid=$(id -u)
