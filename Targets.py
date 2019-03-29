@@ -350,9 +350,9 @@ class Voc():
                 firstlist.append(self.sin_number)
             elif elem == 'cos':
                 firstlist.append(self.cos_number)
-            elif elem == '1':
+            elif elem == 'one':
                 firstlist.append(self.pure_numbers[0])
-            elif elem == '2':
+            elif elem == 'two':
                 firstlist.append(self.pure_numbers[1])
             else:
                 print('bug1', elem)
@@ -394,9 +394,9 @@ class Voc():
                 secondlist.append(self.sin_number)
             elif elem == 'cos':
                 secondlist.append(self.cos_number)
-            elif elem == '1':
+            elif elem == 'one':
                 secondlist.append(self.pure_numbers[0])
-            elif elem == '2':
+            elif elem == 'two':
                 secondlist.append(self.pure_numbers[1])
             else:
                 print('bug2', elem)

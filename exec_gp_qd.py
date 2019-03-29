@@ -64,7 +64,7 @@ def init_tolerance(target, voc):
 
 # -------------------------------------------------------------------------- #
 def evalme(onestate):
-    train_target, voc, state, tolerance= onestate[0], onestate[1], onestate[2], onestate[3]
+    train_target, voc, state, tolerance = onestate[0], onestate[1], onestate[2], onestate[3]
 
     #run 1:
     results = []
@@ -126,7 +126,7 @@ def exec(which_target, train_target, test_target, voc, iteration, tolerance, gp,
         print('')
         print('this is iteration', i, 'working with tolerance', tolerance)
         # this creates a pool of states or extends it before evaluation
-        pool = gp.extend_pool(alleqs)
+        pool = gp.extend_pool()
         print('pool creation/extension done')
 
         pool_to_eval = []
@@ -193,6 +193,8 @@ def convert_eqs(qdpool, voc_a, voc_no_a, diff):
         for char in state.reversepolish:
             if char == voc_no_a.terminalsymbol:
                 newstate.append(voc_a.terminalsymbol)
+            elif char == voc_no_a.neutral_element:
+                newstate.append(voc_a.pure_numbers[0])
             elif char in voc_no_a.pure_numbers:
                 newstate.append(voc_a.pure_numbers[0])
             else:
@@ -323,7 +325,7 @@ def init_everything_else(which_target):
 def main():
     id = str(int(10000000 * time.time()))
 
-    for target in range(10,21):
+    for target in range(17,33):
 
         # init target, dictionnaries, and meta parameters
         which_target = target

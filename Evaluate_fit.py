@@ -236,6 +236,9 @@ class Evaluatefit:
                 if reward < -1:
                     reward = -1
 
+        if np.isnan(reward) or np.isinf(reward):
+            reward =-1
+
         return reward
 
     # ------------------------------------------------------------------------------- #

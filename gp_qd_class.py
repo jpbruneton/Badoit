@@ -48,7 +48,7 @@ class GP_QD():
 
     # ---------------------------------------------------------------------------- #
     #creates or extend self.pool
-    def extend_pool(self, alleqs):
+    def extend_pool(self):
         # init : create random eqs
         if self.pool == None and self.QD_pool is None:
             self.pool = []
@@ -71,18 +71,8 @@ class GP_QD():
                 all_states.append(self.QD_pool[str(bin_id)][1])
 
             # +add new rd eqs for diversity. We add half the qd_pool size of random eqs
-            addsmartrandom = True
 
-            if self.addrandom and addsmartrandom == False:
-                toadd = int(len(self.QD_pool)/2)
-
-                for i in range(toadd):
-                    newgame = randomeqs(self.voc)
-                    newrdeq = newgame.state
-                    if self.voc.infinite_number not in newrdeq.reversepolish:
-                        all_states.append(newrdeq)
-
-            if addsmartrandom and self.addrandom:
+            if self.addrandom:
                 toadd = int(len(self.QD_pool)/2)
                 c=0
                 while c < toadd:
@@ -105,18 +95,18 @@ class GP_QD():
 
                 if u <= self.p_mutate:
                     mutatedstate = gp_motor.mutate(state)
-                    if str(mutatedstate.reversepolish) not in alleqs:
-                        newpool.append(mutatedstate)
+                    #if str(mutatedstate.reversepolish) not in alleqs:
+                    newpool.append(mutatedstate)
 
                 elif u <= self.p_cross:
                     index = np.random.randint(0, len(all_states))
                     otherstate = all_states[index]  # this might crossover with itself : why not!
                     state1, state2 = gp_motor.crossover(state, otherstate)
 
-                    if str(state1.reversepolish) not in alleqs:
-                        newpool.append(state1)
-                    if str(state2.reversepolish) not in alleqs:
-                        newpool.append(state2)
+                    #if str(state1.reversepolish) not in alleqs:
+                    newpool.append(state1)
+                    #if str(state2.reversepolish) not in alleqs:
+                    newpool.append(state2)
 
                 else:  # mutate AND cross
                     index = np.random.randint(0, len(all_states))
@@ -125,10 +115,10 @@ class GP_QD():
                     prestate2 = gp_motor.mutate(to_mutate)
                     state1, state2 = gp_motor.crossover(prestate1, prestate2)
 
-                    if str(state1.reversepolish) not in alleqs:
-                        newpool.append(state1)
-                    if str(state2.reversepolish) not in alleqs:
-                        newpool.append(state2)
+                    #if str(state1.reversepolish) not in alleqs:
+                    newpool.append(state1)
+                    #if str(state2.reversepolish) not in alleqs:
+                    newpool.append(state2)
 
 
             #update self.pool
@@ -322,25 +312,40 @@ class printresults():
         best_state = rank[0][1]
         with_a_best = rank[0][2]
         best_formula = best_state.formulas
+        bestreward = rank[0][0]
 
+        if np.isnan(bestreward) or np.isinf(bestreward):
+            bestreward=-1
 
         evaluate = Evaluatefit(best_formula, self.voc, self.target, tolerance, 'test')
         evaluate.rename_formulas()
 
         validation_reward = evaluate.eval_reward(with_a_best)
+        if np.isnan(validation_reward) or np.isinf(validation_reward):
+            validation_reward = -1
+
         useful_form = self.finalrename(best_formula, with_a_best)
 
-        if rank[0][0] > 0.999:
+        if bestreward > 0.999:
             print(best_formula, with_a_best)
             print(evaluate.formulas)
             print(validation_reward)
             print('again')
             validation_reward = evaluate.eval_reward(with_a_best)
+            if np.isnan(validation_reward) or np.isinf(validation_reward):
+                validation_reward = -1
             print('val2', validation_reward)
-        if rank[0][0] == 1.0:
+        if bestreward == 1.0:
             validation_reward = 1.0
         #other statistics
-        avgreward = sum([x[0] for x in rank]) / len(rank)
+        avgreward = 0
+        for x in rank:
+            reward = x[0]
+            if np.isnan(reward) or np.isinf(reward):
+                reward=-1
+            avgreward += reward
+
+        avgreward = avgreward / len(rank)
         #avg validation reward:
         avg_validation_reward = 0
         for x in rank:
@@ -350,7 +355,6 @@ class printresults():
             formula = state.formulas
             evaluate = Evaluatefit(formula, self.voc, self.target, tolerance, 'test')
             evaluate.rename_formulas()
-
             avg_validation_reward += evaluate.eval_reward(with_a)
         avg_validation_reward /= len(rank)
 
@@ -373,7 +377,7 @@ class printresults():
             myfile.write(' new avg validation reward: ' + str(int(1000 * avg_validation_reward) / 1000))
             myfile.write("\n")
 
-            myfile.write('best reward: ' + str(int(10000 * rank[0][0]) / 10000) + ' with validation reward: ' + str(
+            myfile.write('best reward: ' + str(int(10000 * bestreward) / 10000) + ' with validation reward: ' + str(
                 validation_reward))
             myfile.write("\n")
             myfile.write("\n")

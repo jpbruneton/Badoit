@@ -227,11 +227,14 @@ class Game:
 
     # ---------------------------------------------------------
     def simplif_eq(self):
-
+        count = 0
         change = 1
-        while change == 1:
+        while change == 1: #avoid possible infinite loop/ shouldnt happen, but secutity
             change, rpn = self.state.one_simplif()
             self.state = State(self.voc, rpn)
+            count+=1
+            if count > 1000:
+                change = 0
 
 
     # ---------------------------------------------------------
