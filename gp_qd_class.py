@@ -52,13 +52,16 @@ class GP_QD():
         # init : create random eqs
         if self.pool == None and self.QD_pool is None:
             self.pool = []
+            count = 0
 
-            while len(self.pool) < self.poolsize:
+            while len(self.pool) < self.poolsize and count < 10000:
                 newgame = randomeqs(self.voc)
                 newrdeq = newgame.state
 
                 if self.voc.infinite_number not in newrdeq.reversepolish :
                     self.pool.append(newrdeq)
+
+                count +=1
 
             return self.pool
 
@@ -75,20 +78,23 @@ class GP_QD():
             if self.addrandom:
                 toadd = int(len(self.QD_pool)/2)
                 c=0
-                while c < toadd:
+                ntries = 0
+                while c < toadd and ntries < 10000:
                     index = np.random.randint(0, len(all_states))
                     state = all_states[index]
                     if len(state.reversepolish) < self.maximal_size - 5:
-                        newgame = complete_eq_with_random(self.voc, state)
-                        if self.voc.infinite_number not in newgame.state.reversepolish:
-                            all_states.append(newgame.state)
+                        newstate = complete_eq_with_random(self.voc, state)
+                        if self.voc.infinite_number not in newstate.reversepolish:
+                            all_states.append(newstate)
                             c+=1
+                    ntries+=1
+
 
             #then mutate and crossover
             newpool = []
-
-            while len(newpool) < int(self.extend*len(self.QD_pool)):
-
+            count=0
+            while len(newpool) < int(self.extend*len(self.QD_pool)) and count < 10000:
+                count+=1
                 index = np.random.randint(0, len(all_states))
                 state = all_states[index]
                 u = random.random()
@@ -240,8 +246,7 @@ class printresults():
 
         formula = bestform
 
-        As = A
-        As = [int(10000*x)/10000 for x in As]
+        As = [int(1000000*x)/1000000 for x in A]
 
         if As != []:
 
@@ -261,6 +266,7 @@ class printresults():
 
             #handle le plus one
             if A_count < len(As):
+                print('this is obsolete')
                 rename += '+ A[' + str(A_count) + ']'
 
                 for i in range(A_count + 1):

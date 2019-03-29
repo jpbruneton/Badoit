@@ -289,7 +289,8 @@ def complete_eq_with_random(voc, state):
         game.takestep(nextchar)
 
     game.simplif_eq()
-    return game
+
+    return game.state
 
 # -------------------------------------------------------------------------- #
 def game_evaluate(rpn, formulas, tolerance, voc, target, mode):

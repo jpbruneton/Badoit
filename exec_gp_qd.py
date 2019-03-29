@@ -65,11 +65,22 @@ def init_tolerance(target, voc):
 # -------------------------------------------------------------------------- #
 def evalme(onestate):
     train_target, voc, state, tolerance = onestate[0], onestate[1], onestate[2], onestate[3]
+    failurestate = State(voc, [voc.neutral_element,1])
+
+    #print(state.reversepolish, state.formulas)
+    if len(state.reversepolish) == 0 or len(state.reversepolish) == 1:
+        #print('oui', state.reversepolish, state.formulas)
+        return -1, failurestate, [], 0, 2, 0, 0, 0, 0
+
 
     #run 1:
     results = []
-    reward, scalar_numbers, alla = game_env.game_evaluate(state.reversepolish, state.formulas, tolerance, voc, train_target, 'train')
-    results.append([reward, scalar_numbers, alla])
+    try:
+        reward, scalar_numbers, alla = game_env.game_evaluate(state.reversepolish, state.formulas, tolerance, voc, train_target, 'train')
+        results.append([reward, scalar_numbers, alla])
+    except (ValueError, IndexError, AttributeError, RuntimeError, RuntimeWarning):
+        print('happening')
+        reward, state, scalar_numbers, alla = -1, failurestate, 0, []
 
     if config.tworunsineval and voc.modescalar == 'A':
         # run 2:
@@ -81,9 +92,10 @@ def evalme(onestate):
         else:
             reward, scalar_numbers, alla = results[1]
 
-    L = len(state.reversepolish)
-
     try:
+        L = len(state.reversepolish)
+        # print('y', L)
+
         function_number = 0
         for char in voc.arity1symbols:
             function_number += state.reversepolish.count(char)
@@ -102,12 +114,13 @@ def evalme(onestate):
  #       for char in state.reversepolish:
   #          if char in voc.explognumbers:
    #             explognumber += 1
-
+        #print('t',state.reversepolish)
+        #print('k', reward, state, alla, scalar_numbers, L, function_number, powernumber, trignumber, explognumber)
         return reward, state, alla, scalar_numbers, L, function_number, powernumber, trignumber, explognumber
 
 
     except (ValueError, IndexError, AttributeError, RuntimeError, RuntimeWarning):
-        print(state.formulas, state.reversepolish)
+        #print(state.formulas, state.reversepolish)
         if config.uselocal:
             filepath = './bureport.txt'
         else:
@@ -115,12 +128,14 @@ def evalme(onestate):
         with open(filepath, 'a') as myfile:
             myfile.write(str(state.formulas) + str(state.reversepolish))
         myfile.close()
-        return -1, state, [], 0, 0, 0, 0, 0, 0
+        return -1, failurestate, [], 0, 2, 0, 0, 0, 0
 
 # -------------------------------------------------------------------------- #
-def exec(which_target, train_target, test_target, voc, iteration, tolerance, gp, prefix, alleqs):
+def exec(which_target, train_target, test_target, voc, iteration, tolerance, gp, prefix):
 
     # init all eqs seen so far
+    mp_pool = mp.Pool(config.cpus)
+    local_alleqs = {}
 
     for i in range(iteration):
         print('')
@@ -132,26 +147,29 @@ def exec(which_target, train_target, test_target, voc, iteration, tolerance, gp,
         pool_to_eval = []
         for state in pool:
             pool_to_eval.append([train_target, voc, state, tolerance])
-
+            #if voc.infinite_number in state.reversepolish:
+                #print('yes', state.formulas, state.reversepolish)
+                #import time
+                #time.sleep(4)
         print('how many states to eval : ', len(pool_to_eval))
 
         # init parallel workers
-        mp_pool = mp.Pool(config.cpus)
+   #     mp_pool = mp.Pool(config.cpus)
         asyncResult = mp_pool.map_async(evalme, pool_to_eval)
         results = asyncResult.get()
         # close it
-        mp_pool.close()
-        mp_pool.join()
+  #      mp_pool.close()
+ #       mp_pool.join()
 
         print('pool eval done')
 
         for result in results:
             # this is for the fact that an equation that has already been seen might return a better reward, because cmaes method is not perfect!
-            if str(result[1].reversepolish) in alleqs:
-                if result[0] > alleqs[str(result[1].reversepolish)][0]:
-                    alleqs.update({str(result[1].reversepolish): result})
+            if str(result[1].reversepolish) in local_alleqs:
+                if result[0] > local_alleqs[str(result[1].reversepolish)][0]:
+                    local_alleqs.update({str(result[1].reversepolish): result})
             else:
-                alleqs.update({str(result[1].reversepolish): result})
+                local_alleqs.update({str(result[1].reversepolish): result})
 
         results_by_bin = gp.bin_pool(results)
 
@@ -162,11 +180,11 @@ def exec(which_target, train_target, test_target, voc, iteration, tolerance, gp,
         newbin, replacements = gp.update_qd_pool(results_by_bin)
 
         print('QD pool size', len(gp.QD_pool))
-        print('alleqsseen', len(alleqs))
+        print('alleqsseen', len(local_alleqs))
 
         # save results and print
         saveme = printresults(test_target, voc)
-        valreward = saveme.saveresults(newbin, replacements, i, gp.QD_pool, gp.maxa, tolerance, which_target, alleqs, prefix)
+        valreward = saveme.saveresults(newbin, replacements, i, gp.QD_pool, gp.maxa, tolerance, which_target, local_alleqs, prefix)
         if config.uselocal:
             filename = './gpdata/QD_pool'+ str(which_target) + '.txt'
         else:
@@ -176,10 +194,19 @@ def exec(which_target, train_target, test_target, voc, iteration, tolerance, gp,
         file.close()
 
         if valreward > 0.999:
+            mp_pool.close()
+            mp_pool.join()
+            del mp_pool
+            del asyncResult
+            del results
             print('early stopping')
-            return 'stop', gp.QD_pool, alleqs, i
-
-    return None, gp.QD_pool, alleqs, i
+            return 'stop', gp.QD_pool, local_alleqs, i
+    mp_pool.close()
+    mp_pool.join()
+    del mp_pool
+    del asyncResult
+    del results
+    return None, gp.QD_pool, local_alleqs, i
 
 # -----------------------------------------------#
 def convert_eqs(qdpool, voc_a, voc_no_a, diff):
@@ -215,6 +242,9 @@ def convert_eqs(qdpool, voc_a, voc_no_a, diff):
             if str(game.state.reversepolish) not in local_alleqs:
                 local_alleqs.update({str(game.state.reversepolish): 1})
                 initpool.append(game.state)
+
+    del local_alleqs
+    del allstates
 
     return initpool
 
@@ -257,6 +287,10 @@ def eval_previous_eqs(which_target, train_target, test_target, voc_a, tolerance,
     with open(filename, 'wb') as file:
         pickle.dump(gp.QD_pool, file)
     file.close()
+
+    del mp_pool
+    del asyncResult
+    del results
 
     if valreward > 0.999:
         print('early stopping')
@@ -325,7 +359,7 @@ def init_everything_else(which_target):
 def main():
     id = str(int(10000000 * time.time()))
 
-    for target in range(17,33):
+    for target in range(18,33):
 
         # init target, dictionnaries, and meta parameters
         which_target = target
@@ -354,7 +388,6 @@ def main():
             reinit_grid = True
             qdpool = init_grid(reinit_grid, which_target)
 
-            alleqs = {}
 
             # ------------------- step 1 -----------------------#
             # first make a fast run with integers scalars to generate good equations for starting
@@ -373,7 +406,7 @@ def main():
 
             # run evolution :
             iteration_no_a = 100
-            stop, qdpool, alleqs_no_a, iter_no_a = exec(which_target, train_target, test_target, voc_no_a, iteration_no_a, tolerance, gp, prefix, alleqs)
+            stop, qdpool, alleqs_no_a, iter_no_a = exec(which_target, train_target, test_target, voc_no_a, iteration_no_a, tolerance, gp, prefix)
 
             #save csv
             if stop is not None:
@@ -397,20 +430,20 @@ def main():
                 gp = GP_QD(which_target, delete_ar1_ratio, p_mutate, p_cross, poolsize,
                            voc_with_a, tolerance, extend_ratio, maxa, bina, maxl_a, binl_a, maxf, binf, maxp, binp, maxtrig, bintrig, maxexp, binexp,
                            addrandom, None, initpool)
-                alleqs, QD_pool, stop = eval_previous_eqs(which_target, train_target, test_target, voc_with_a, tolerance, initpool, gp, prefix)
+                alleqs_change_mode, QD_pool, stop = eval_previous_eqs(which_target, train_target, test_target, voc_with_a, tolerance, initpool, gp, prefix)
 
                 if stop is not None:
                     with open(filepath, mode='a') as myfile:
                         writer = csv.writer(myfile, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
                         timespent = (time.time() - eval(prefix) / 10000000) / 60
-                        writer.writerow([str(0), str(iter_no_a), str(len(alleqs_no_a)), '1', str(len(alleqs)), '0', str(timespent)])
+                        writer.writerow([str(0), str(iter_no_a), str(len(alleqs_no_a)), '1', str(len(alleqs_change_mode)), '0', str(timespent)])
                     myfile.close()
 
                 # this might directly provide the exact solution : if not, stop is None, and thus, run evolution
                 if stop is None:
                     gp.QD_pool = QD_pool
                     iteration_a = 100
-                    stop, qdpool, alleqs_a, iter_a = exec(which_target, train_target, test_target, voc_with_a, iteration_a, tolerance, gp, prefix, alleqs)
+                    stop, qdpool, alleqs_a, iter_a = exec(which_target, train_target, test_target, voc_with_a, iteration_a, tolerance, gp, prefix)
 
                     if stop is None:
                         success = 0
@@ -423,6 +456,13 @@ def main():
                         writer.writerow(
                             [str(0), str(iter_no_a), str(len(alleqs_no_a)), str(success), str(len(alleqs_a)), str(iter_a+1), str(timespent)])
                     myfile.close()
+
+            del alleqs_change_mode
+            del alleqs_a
+            del alleqs_no_a
+            del gp
+            del initpool
+
 
 # -----------------------------------------------#
 if __name__ == '__main__':

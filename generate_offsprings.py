@@ -27,24 +27,19 @@ class generate_offsprings():
     # mutation
     def mutate(self, state):
 
-        newstate = []
-        prev_state = copy.deepcopy(state.reversepolish)
-
-        #in case mutation gives infinities (see below):
-        prev_state_object = copy.deepcopy(state)
-
-        # if I have two equations, then i'll mutate them both:
-
         L = len(state.reversepolish)
+        if L <= 1:
+            return state
+
+        #else
+        prev_rpn = copy.deepcopy(state.reversepolish)
 
         if state.reversepolish[-1] == 1:
             char_to_mutate = np.random.randint(0, L - 1)
-            real_L = L-1
         else:
             char_to_mutate = np.random.randint(0, L)
-            real_L = L
 
-        char = prev_state[char_to_mutate]
+        char = prev_rpn[char_to_mutate]
 
         # ------ arity 0 -------
         if char in self.voc.arity0symbols or char == self.voc.neutral_element or char == self.voc.true_zero_number:
@@ -65,27 +60,28 @@ class generate_offsprings():
 
         # --------  finally : I mutate or simply delete the char if -------
         if random.random() < self.delete_ar1_ratio and char in self.voc.arity1symbols:
-            newstate.append(prev_state[:char_to_mutate] + prev_state[char_to_mutate + 1:])
+            newrpn = prev_rpn[:char_to_mutate] + prev_rpn[char_to_mutate + 1:]
+            newstate = State(self.voc, newrpn)
+
         else:  # or mutate
-            prev_state[char_to_mutate] = newchar
+            prev_rpn[char_to_mutate] = newchar
+            newstate = State(self.voc, prev_rpn)
 
         # -------- return the new state:
-        state = State(self.voc, prev_state)
-
 
         if self.usesimplif:
             game = Game(self.voc, state)
             #print('bf', game.state.formulas)
             game.simplif_eq()
             #print('simplif?')
-            state = game.state
+            newstate = game.state
             #print('af', state.formulas)
 
         # mutation can lead to true zero division (after simplif) thus :
-        if self.voc.infinite_number not in state.reversepolish :
-            return state
+        if self.voc.infinite_number not in newstate.reversepolish :
+            return newstate
         else:
-            return prev_state_object
+            return state
 
 
 

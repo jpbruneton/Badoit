@@ -27,7 +27,7 @@ class Evaluatefit:
         self.target = target
         self.voc = voc
         self.mode = mode
-
+        self.scalar_numbers = 0
         self.n_targets, self.n_variables, self.variables, self.targets, self.f_renormalization, self.ranges, self.maximal_size = target.target
         self.xsize = self.variables[0].shape[0]
         if self.n_variables > 1:
@@ -41,7 +41,14 @@ class Evaluatefit:
 
         neweq = ''
         # rename the A's
-        scalar_numbers = self.formulas.count('A')
+        self.scalar_numbers = self.formulas.count('A')
+
+        if self.scalar_numbers == 1:
+            # cant use CMAES since in this case it returns : "ValueError: optimization in 1-D is not supported (code was never tested)"
+            # then just make a trick : add one new scalar!
+            self.formulas += '+ A'
+            self.scalar_numbers = 2
+
         A_count = 0
         for char in self.formulas:
             if char == 'A':
@@ -71,8 +78,6 @@ class Evaluatefit:
 
         # the update
         self.formulas = neweq
-
-        return scalar_numbers
 
 
     # ---------------------------------------------------------------------------- #
@@ -149,17 +154,10 @@ class Evaluatefit:
         return eval(toeval)
 
     # -------------------------------------------------------------------------------  #
-    def best_A_cmaes(self, scalar_numbers):
-        #applies the cmaes fit:
-
-        if scalar_numbers == 1:
-            # cant use CMAES since in this case it returns : "ValueError: optimization in 1-D is not supported (code was never tested)"
-            # then just make a trick : add one new scalar!
-            self.formulas += '+A[1]'
-            scalar_numbers = 2
-
-        # then, randomize initial guess between -1 and 1, and initial sigma between 1 and 5:
-        initialguess = 2*np.random.rand(scalar_numbers)-1
+    def best_A_cmaes(self):
+        # applies the cmaes fit:
+        # randomize initial guess between -1 and 1, and initial sigma between 1 and 5:
+        initialguess = 2*np.random.rand(self.scalar_numbers)-1
         initialsigma = np.random.randint(1,5)
 
         try:
@@ -174,7 +172,7 @@ class Evaluatefit:
                 rec.append(reco[u])
 
         except (RuntimeWarning, RuntimeError, ValueError, ZeroDivisionError, OverflowError, SystemError, AttributeError):
-            return False, [0]*scalar_numbers
+            return False, [1]*self.scalar_numbers
 
         return True, rec
 
@@ -185,7 +183,7 @@ class Evaluatefit:
             ls_attempt = self.fit(reco)
 
         except (RuntimeWarning, RuntimeError, ValueError, ZeroDivisionError, OverflowError, SystemError, AttributeError):
-            return False, []
+            return False, [1]*self.scalar_numbers
 
         success = ls_attempt.success
         if success:
@@ -197,7 +195,7 @@ class Evaluatefit:
             return True, rec
 
         else:
-            return False, []
+            return False, [1]*self.scalar_numbers
 
     # ---------------------------------------------------------------------------- #
     def eval_reward(self, A):
@@ -212,6 +210,8 @@ class Evaluatefit:
         else:
             usederivativecost = 0
 
+        #print('tt', self.formulas)
+        #print('jj', self.scalar_numbers)
         success, result = self.formula_eval(self.variables, A)
         # can fail from two effects : inf/nan from division by zero, or output is a cst, hence a scalar, and not an array
 
@@ -254,17 +254,17 @@ class Evaluatefit:
 
         # ---------------------------------------------------------------------------- #
         #rename formulas and return the number of A's
-        scalar_numbers = self.rename_formulas()
+        self.rename_formulas()
         #----------------------------------------------------------------------------- #
         # First consider the simple case where there are no generic scalars:
-        if scalar_numbers == 0:
+        if self.scalar_numbers == 0:
             reward = self.eval_reward(allA)
-            return reward, scalar_numbers, allA
+            return reward, self.scalar_numbers, allA
 
         # else: cmaes fit : ---------------------------------------------------------- #
-        success, allA = self.best_A_cmaes(scalar_numbers)
+        success, allA = self.best_A_cmaes()
         if success == False:
-            return failure_reward, scalar_numbers, allA
+            return failure_reward, self.scalar_numbers, [1]*self.scalar_numbers
 
         # ---------------------------------------------------------------------------- #
         #else, compute some actual reward:
@@ -295,16 +295,16 @@ class Evaluatefit:
             if change:
                 reward_ls_round = self.eval_reward(allA_ls_round)
             else:
-                reward_ls_round = -2
+                reward_ls_round = -1
 
         #now compare the three and chose the best
-        allrewards=[reward_cmaes, reward_ls, reward_ls_round]
+        allrewards = [reward_cmaes, reward_ls, reward_ls_round]
         m = max(allrewards)
         best = [i for i, j in enumerate(allrewards) if j == m][0]
 
         if best == 0:
-            return reward_cmaes, scalar_numbers, allA
+            return reward_cmaes, self.scalar_numbers, allA
         elif best == 1 and reward_ls > reward_ls_round:
-            return reward_ls, scalar_numbers, allA_ls
+            return reward_ls, self.scalar_numbers, allA_ls
         else:
-            return reward_ls_round, scalar_numbers, allA_ls_round
+            return reward_ls_round, self.scalar_numbers, allA_ls_round
