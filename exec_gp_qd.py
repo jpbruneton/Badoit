@@ -154,12 +154,12 @@ def exec(which_target, train_target, test_target, voc, iteration, tolerance, gp,
         print('how many states to eval : ', len(pool_to_eval))
 
         # init parallel workers
-   #     mp_pool = mp.Pool(config.cpus)
+        mp_pool = mp.Pool(config.cpus)
         asyncResult = mp_pool.map_async(evalme, pool_to_eval)
         results = asyncResult.get()
         # close it
-  #      mp_pool.close()
- #       mp_pool.join()
+        mp_pool.close()
+        mp_pool.join()
 
         print('pool eval done')
 
@@ -185,24 +185,24 @@ def exec(which_target, train_target, test_target, voc, iteration, tolerance, gp,
         # save results and print
         saveme = printresults(test_target, voc)
         valreward = saveme.saveresults(newbin, replacements, i, gp.QD_pool, gp.maxa, tolerance, which_target, local_alleqs, prefix)
-        if config.uselocal:
-            filename = './gpdata/QD_pool'+ str(which_target) + '.txt'
-        else:
-            filename = '/home/user/QD_pool' + str(which_target) + '.txt'
-        with open(filename, 'wb') as file:
-            pickle.dump(gp.QD_pool, file)
-        file.close()
+    #    if config.uselocal:
+     #       filename = './gpdata/QD_pool'+ str(which_target) + '.txt'
+     #   else:
+     #       filename = '/home/user/QD_pool' + str(which_target) + '.txt'
+     #   with open(filename, 'wb') as file:
+     #       pickle.dump(gp.QD_pool, file)
+     #   file.close()
 
         if valreward > 0.999:
-            mp_pool.close()
-            mp_pool.join()
+            #mp_pool.close()
+            #mp_pool.join()
             del mp_pool
             del asyncResult
             del results
             print('early stopping')
             return 'stop', gp.QD_pool, local_alleqs, i
-    mp_pool.close()
-    mp_pool.join()
+    #mp_pool.close()
+    #mp_pool.join()
     del mp_pool
     del asyncResult
     del results
