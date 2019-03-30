@@ -359,7 +359,7 @@ def init_everything_else(which_target):
 def main():
     id = str(int(10000000 * time.time()))
 
-    for target in range(18,33):
+    for target in range(21,25):
 
         # init target, dictionnaries, and meta parameters
         which_target = target
@@ -382,7 +382,7 @@ def main():
             writer.writerow('\n')
         myfile.close()
 
-        for runs in range(1):
+        for runs in range(6):
 
             # init qd grid
             reinit_grid = True
@@ -405,7 +405,7 @@ def main():
             prefix = str(int(10000000 * time.time()))
 
             # run evolution :
-            iteration_no_a = 100
+            iteration_no_a = 50
             stop, qdpool, alleqs_no_a, iter_no_a = exec(which_target, train_target, test_target, voc_no_a, iteration_no_a, tolerance, gp, prefix)
 
             #save csv
@@ -457,11 +457,11 @@ def main():
                             [str(0), str(iter_no_a), str(len(alleqs_no_a)), str(success), str(len(alleqs_a)), str(iter_a+1), str(timespent)])
                     myfile.close()
 
-            del alleqs_change_mode
-            del alleqs_a
-            del alleqs_no_a
-            del gp
-            del initpool
+            #del alleqs_change_mode
+            #del alleqs_a
+            #del alleqs_no_a
+            #del gp
+            #del initpool
 
 
 # -----------------------------------------------#
