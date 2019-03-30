@@ -1,7 +1,5 @@
 
-import multiprocessing
-
-cpus = multiprocessing.cpu_count()
+cpus = 40
 
 # --------------  Taget related ---------------- #
 findtolerance = True
@@ -13,7 +11,7 @@ MAX_DEPTH = 1
 only_scalar_in_power = True
 
 
-tworunsineval = True
+tworunsineval = False
 popsize = '20*N'
 timelimit = '7*N'
 
