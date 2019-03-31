@@ -359,7 +359,7 @@ def init_everything_else(which_target):
 def main():
     id = str(int(10000000 * time.time()))
 
-    listoftar = [1, 5]
+    listoftar = [7, 9, 16, 17, 18]
     for target in listoftar:
 
         # init target, dictionnaries, and meta parameters
@@ -383,7 +383,7 @@ def main():
             writer.writerow('\n')
         myfile.close()
 
-        for runs in range(10):
+        for runs in range(3):
 
             # init qd grid
             reinit_grid = True
