@@ -48,7 +48,7 @@
 
 
 # target 1 : Koza-3:
-1, 1, x**6 -2*x**4 + x**2, U, 0, 1, 20, U, 0, 2, 200, 15
+1, 1, x**6 -2*x**4 + x**2, U, 0, 1, 20, U, 0, 2, 200, 20
 
 
 # target 2 : Meier-3:
@@ -66,7 +66,7 @@
 #  ------------------- actual targets : easy ones in L = 15 -------------------
 
 # target 5 : Burks
-1, 1, 4*x**4 + 3*x**3 + 2*x**2 + x, U, 0, 1, 20, U, 0, 3, 200, 15
+1, 1, 4*x**4 + 3*x**3 + 2*x**2 + x, U, 0, 1, 20, U, 0, 3, 200, 20
 
 
 # target 6 : Keijzer-1
@@ -117,71 +117,71 @@
 
 # -------------------- 30
 
-# target 17 : R1:
+# target 16 : R1:
 1, 1,  ((x+1)**3)/(x**2 - x +1), E, 0, 2, 0.1, U, 0, 3, 100, 30
 
 
-# target 18 : R2:
+# target 17 : R2:
 1, 1,  (x**5 - 3*x**3 +1)/(x**2 +1), E, 0, 2, 0.1, U, 0, 4, 400, 30
 
 
-# target 19 : Keijzer-5
+# target 18 : Keijzer-5
 1, 3, 30*x*z/((x-10)*y**2), U, 0, 2, 5, U, 0, 3, 20, U, 0, 2, 5, U, 0, 3, 20, U, 1, 5, 10, U, 0, 20, 30
 
 
-# target 20 : Keijszer-12 :
+# target 19 : Keijszer-12 :
 1, 2, x**4 - x**3 + (y**2)/2 - y, U, 0, 3, 20, E, 0, 4, 0.1, U, 0, 3, 20, E, 0, 4, 0.1, 30
 
 
-# target 21 : Keijszer-15 :
+# target 20 : Keijszer-15 :
 1, 2, (x**3)/5 + (y**3)/2 - y - x, U, 0, 3, 20, E, 0, 4, 0.1, U, 0, 3, 20, E, 0, 4, 0.1, 30
 
 
-# target 22 : Keijszer-11 :
+# target 21 : Keijszer-11 :
 1, 2, x*y + np.sin((x-1)*(y-1)), U, 0, 3, 20, E, 0, 4, 0.1, U, 0, 3, 20, E, 0, 4, 0.1, 30
 
 
-# target 23 : Nguyen-4:
+# target 22 : Nguyen-4:
 1, 1, x + x**2 + x**3+ x**4 + x**5 + x**6, U, 0, 1, 40, U, 0, 1.5, 200, 30
 
 
-# target 24 : Pagie 1:
+# target 23 : Pagie 1:
 1, 2,  1/(1 + x**(-4)) + 1/(1+ y**(-4)), E, 0, 5, 0.2, U, 0, 6, 20, E, 0, 5, 0.2, U, 0, 6, 20, 30
 
 
 # -------------------- 35
 
-# target 25 : R3:
+# target 24 : R3:
 1, 1,  (x**6 + x**5)/(x**4 + x**3 +x**2 + x +1), E, 0, 1, 0.05, U, 0, 2, 100, 35
 
 
-# target 26 : Vladislavleva 7 :
+# target 25 : Vladislavleva 7 :
 1, 2, (x-3)*(y-3) + 2*np.sin((x-4)*(y-4)), U, 0.05, 6.05, 20, U, 0, 12.35, 100, U, 0.05, 6.05, 20, U, 0, 12.35, 100, 35
 
 
-# target 27 : Vladislavleva 1 :
+# target 26 : Vladislavleva 1 :
 1, 2, np.exp(-(x-1)**2)/(1.2 + (y-2.5)**2), U, 0.3, 4, 20, E, 0, 8, 0.1, U, 0.3, 4, 20, E, 0, 8, 0.1, 35
 
 
 # -------------------- 40
 
-# target 28 : Vladislavleva 5 :
+# target 27 : Vladislavleva 5 :
 1, 3, 30*(x-1)*(z-1)/((x-10)*y**2), U, 0.05, 2, 8, E, 0, 10, 0.5, U, 1, 2, 8, E, 0, 10, 0.5, U, 0.05, 2, 8, E, 0, 3, 0.5, 40
 
 
-# target 29 : Keijzer-4
+# target 28 : Keijzer-4
 1, 1, x**3*np.exp(-x)*np.cos(x)*np.sin(x)*(np.cos(x)*np.sin(x)**2-1), E, 0, 10, 0.1, U, 0, 14, 1000, 40
 
 
-# target 30 : Nonic
+# target 29 : Nonic
 1, 1, x + x**2 + x**3 + x**4 + x**5 + x**6 + x**7 + x**8 + x**9, E, 0, 1, 0.05, U, 0, 2, 100, 40
 
 
 # -------------------- 45
 
-# target 31 : Vladislavleva 3 :
+# target 30 : Vladislavleva 3 :
 1, 2, x**3*np.exp(-x)*np.cos(x)*np.sin(x)*(np.cos(x)*np.sin(x)**2-1)*(y-5), E, 0.05, 10, 0.1, U, 0, 10, 50, E, 0.05, 10.05, 2, U, 0, 10, 10, 45
 
 
-# target 32 : Vladislavleva 8 :
+# target 31 : Vladislavleva 8 :
 1, 2, ((x-3)**4 + (y-3)**3 -(y-3))/((y-2)**4 + 10), U, 0.05, 6.05, 20, E, 0, 12.35, 0.2,  U, 0.05, 6.05, 20, E, 0, 12.35, 0.2, 55
