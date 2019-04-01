@@ -319,7 +319,7 @@ def init_everything_else(which_target):
     # initial pool size of rd eqs at iteration 0
     poolsize = 4000
     # probability of dropping a function : cos(x) -> x
-    delete_ar1_ratio = 0.2
+    delete_ar1_ratio = 0.3
 
     # pool extension by mutation and crossovers
     extend_ratio = 2
@@ -359,8 +359,7 @@ def init_everything_else(which_target):
 def main():
     id = str(int(10000000 * time.time()))
 
-    listoftar = [0,1]
-    for target in listoftar:
+    for target in range(20):
 
         # init target, dictionnaries, and meta parameters
         which_target = target
@@ -406,7 +405,7 @@ def main():
             prefix = str(int(10000000 * time.time()))
 
             # run evolution :
-            iteration_no_a = 100
+            iteration_no_a = 150
             stop, qdpool, alleqs_no_a, iter_no_a = exec(which_target, train_target, test_target, voc_no_a, iteration_no_a, tolerance, gp, prefix)
 
             #save csv
