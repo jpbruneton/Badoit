@@ -6,7 +6,7 @@ findtolerance = True
 
 # --------------------- SPECIAL SYNTAXIC RULES -------------- #
 # how many nested functions I authorize
-MAX_DEPTH = 1
+MAX_DEPTH = 2
 # power is taken only to a real number : avoid stuff like exp(x)^(x exp(x)) !!
 only_scalar_in_power = True
 

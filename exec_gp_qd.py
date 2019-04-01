@@ -92,9 +92,10 @@ def evalme(onestate):
         else:
             reward, scalar_numbers, alla = results[1]
 
+
     try:
-        L = len(state.reversepolish)
         # print('y', L)
+        L = len(state.reversepolish)
 
         function_number = 0
         for char in voc.arity1symbols:
@@ -135,7 +136,7 @@ def exec(which_target, train_target, test_target, voc, iteration, tolerance, gp,
 
     # init all eqs seen so far
     mp_pool = mp.Pool(config.cpus)
-    local_alleqs = {}
+    local_alleqs = 0
 
     for i in range(iteration):
         print('')
@@ -160,17 +161,16 @@ def exec(which_target, train_target, test_target, voc, iteration, tolerance, gp,
         # close it
         mp_pool.close()
         mp_pool.join()
-
         print('pool eval done')
 
-        for result in results:
+#        for result in results:
             # this is for the fact that an equation that has already been seen might return a better reward, because cmaes method is not perfect!
-            if str(result[1].reversepolish) in local_alleqs:
-                if result[0] > local_alleqs[str(result[1].reversepolish)][0]:
-                    local_alleqs.update({str(result[1].reversepolish): result})
-            else:
-                local_alleqs.update({str(result[1].reversepolish): result})
-
+ #           if str(result[1].reversepolish) in local_alleqs:
+  #              if result[0] > local_alleqs[str(result[1].reversepolish)][0]:
+   #                 local_alleqs.update({str(result[1].reversepolish): result})
+    #        else:
+     #           local_alleqs.update({str(result[1].reversepolish): result})
+        local_alleqs += len(results)
         results_by_bin = gp.bin_pool(results)
 
         # init
@@ -180,7 +180,7 @@ def exec(which_target, train_target, test_target, voc, iteration, tolerance, gp,
         newbin, replacements = gp.update_qd_pool(results_by_bin)
 
         print('QD pool size', len(gp.QD_pool))
-        print('alleqsseen', len(local_alleqs))
+        print('alleqsseen', local_alleqs)
 
         # save results and print
         saveme = printresults(test_target, voc)
@@ -359,7 +359,7 @@ def init_everything_else(which_target):
 def main():
     id = str(int(10000000 * time.time()))
 
-    listoftar = [7, 9, 16, 17, 18]
+    listoftar = [24]
     for target in listoftar:
 
         # init target, dictionnaries, and meta parameters
@@ -383,7 +383,7 @@ def main():
             writer.writerow('\n')
         myfile.close()
 
-        for runs in range(3):
+        for runs in range(1):
 
             # init qd grid
             reinit_grid = True
@@ -406,7 +406,7 @@ def main():
             prefix = str(int(10000000 * time.time()))
 
             # run evolution :
-            iteration_no_a = 50
+            iteration_no_a = 200
             stop, qdpool, alleqs_no_a, iter_no_a = exec(which_target, train_target, test_target, voc_no_a, iteration_no_a, tolerance, gp, prefix)
 
             #save csv
