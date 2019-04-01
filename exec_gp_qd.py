@@ -414,7 +414,7 @@ def main():
                 with open(filepath, mode='a') as myfile:
                     writer = csv.writer(myfile, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
                     timespent = (time.time() - eval(prefix) / 10000000)/60
-                    writer.writerow([str(1), str(iter_no_a), str(len(alleqs_no_a)), '0', '0', '0', str(timespent)])
+                    writer.writerow([str(1), str(iter_no_a), str(alleqs_no_a), '0', '0', '0', str(timespent)])
                 myfile.close()
 
 
