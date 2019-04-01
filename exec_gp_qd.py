@@ -359,7 +359,7 @@ def init_everything_else(which_target):
 def main():
     id = str(int(10000000 * time.time()))
 
-    listoftar = [24]
+    listoftar = [25,26,27,28,29]
     for target in listoftar:
 
         # init target, dictionnaries, and meta parameters
@@ -406,7 +406,7 @@ def main():
             prefix = str(int(10000000 * time.time()))
 
             # run evolution :
-            iteration_no_a = 200
+            iteration_no_a = 100
             stop, qdpool, alleqs_no_a, iter_no_a = exec(which_target, train_target, test_target, voc_no_a, iteration_no_a, tolerance, gp, prefix)
 
             #save csv
