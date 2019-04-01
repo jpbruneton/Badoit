@@ -437,13 +437,13 @@ def main():
                     with open(filepath, mode='a') as myfile:
                         writer = csv.writer(myfile, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
                         timespent = (time.time() - eval(prefix) / 10000000) / 60
-                        writer.writerow([str(0), str(iter_no_a), str(len(alleqs_no_a)), '1', str(len(alleqs_change_mode)), '0', str(timespent)])
+                        writer.writerow([str(0), str(iter_no_a), str(alleqs_no_a), '1', str(alleqs_change_mode), '0', str(timespent)])
                     myfile.close()
 
                 # this might directly provide the exact solution : if not, stop is None, and thus, run evolution
                 if stop is None:
                     gp.QD_pool = QD_pool
-                    iteration_a = 100
+                    iteration_a = 150
                     stop, qdpool, alleqs_a, iter_a = exec(which_target, train_target, test_target, voc_with_a, iteration_a, tolerance, gp, prefix)
 
                     if stop is None:
@@ -455,7 +455,7 @@ def main():
                         writer = csv.writer(myfile, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
                         timespent = (time.time() - eval(prefix) / 10000000) / 60
                         writer.writerow(
-                            [str(0), str(iter_no_a), str(len(alleqs_no_a)), str(success), str(len(alleqs_a)), str(iter_a+1), str(timespent)])
+                            [str(0), str(iter_no_a), str(alleqs_no_a), str(success), str(alleqs_a), str(iter_a+1), str(timespent)])
                     myfile.close()
 
             #del alleqs_change_mode
