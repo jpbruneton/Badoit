@@ -252,7 +252,7 @@ def convert_eqs(qdpool, voc_a, voc_no_a, diff):
 def eval_previous_eqs(which_target, train_target, test_target, voc_a, tolerance, initpool, gp, prefix):
 
     # init all eqs seen so far
-    alleqs = {}
+    alleqs = 0
 
     pool_to_eval = []
     for state in initpool:
@@ -265,9 +265,9 @@ def eval_previous_eqs(which_target, train_target, test_target, voc_a, tolerance,
     mp_pool.close()
     mp_pool.join()
 
-    for result in results:
-        alleqs.update({str(result[1].reversepolish): result})
-
+    #for result in results:
+    #    alleqs.update({str(result[1].reversepolish): result})
+    alleqs = len(results)
     # bin the results
     results_by_bin = gp.bin_pool(results)
     gp.QD_pool = results_by_bin
@@ -275,7 +275,7 @@ def eval_previous_eqs(which_target, train_target, test_target, voc_a, tolerance,
     newbin, replacements = gp.update_qd_pool(results_by_bin)
 
     print('QD pool size', len(gp.QD_pool))
-    print('alleqsseen', len(alleqs))
+    print('alleqsseen', alleqs)
 
     # save results and print
     saveme = printresults(test_target, voc_a)
@@ -359,7 +359,7 @@ def init_everything_else(which_target):
 def main():
     id = str(int(10000000 * time.time()))
 
-    listoftar = [25,26,27,28,29]
+    listoftar = [0,1]
     for target in listoftar:
 
         # init target, dictionnaries, and meta parameters
