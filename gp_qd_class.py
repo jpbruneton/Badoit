@@ -144,7 +144,7 @@ class GP_QD():
             #then mutate and crossover
             newpool = []
             count=0
-            while len(newpool) < int(self.extend*len(self.QD_pool)) and count < 40000:
+            while len(newpool) < int(self.extend*len(self.QD_pool)) and count < 400000:
                 index = np.random.randint(0, len(all_states))
                 state = all_states[index]
                 u = random.random()

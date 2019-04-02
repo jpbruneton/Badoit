@@ -9,7 +9,7 @@ from Targets import Target, Voc
 from State import State
 import time
 import csv
-
+import sys
 
 # -------------------------------------------------------------------------- #
 def init_grid(reinit_grid, u):
@@ -157,6 +157,7 @@ def exec(which_target, train_target, test_target, voc, iteration, tolerance, gp,
         print('pool creation/extension done')
 
         pool_to_eval = []
+        print('verif', len(pool))
         for state in pool:
             pool_to_eval.append([train_target, voc, state, tolerance])
             #if voc.infinite_number in state.reversepolish:
@@ -164,7 +165,7 @@ def exec(which_target, train_target, test_target, voc, iteration, tolerance, gp,
                 #import time
                 #time.sleep(4)
         print('how many states to eval : ', len(pool_to_eval))
-
+        print('memory size is', sys.getsizeof(pool_to_eval))
         # init parallel workers
         mp_pool = mp.Pool(config.cpus)
         asyncResult = mp_pool.map_async(evalme, pool_to_eval)
@@ -343,15 +344,15 @@ def init_everything_else(which_target):
 
 
     #QD grid parameters
-    bina = 20  # number of bins for number of free scalars
-    maxa = 20
+    bina = 5  # number of bins for number of free scalars
+    maxa = 5
     binl_no_a = voc_no_a.maximal_size # number of bins for length of an eq
     maxl_no_a = voc_no_a.maximal_size
     binl_a = voc_with_a.maximal_size # number of bins for length of an eq
     maxl_a = voc_with_a.maximal_size
-    binf = 20 # number of bins for number of fonctions
-    maxf = 20
-    new = 20
+    binf = 2 # number of bins for number of fonctions
+    maxf = 2
+    new = 0
     binp = new  # number of bins for number of powers
     maxp = new
     bintrig = new # number of bins for number of trigonometric functions (sine and cos)
@@ -417,8 +418,10 @@ def main():
             prefix = str(int(10000000 * time.time()))
 
             # run evolution :
-            iteration_no_a = 200
+            iteration_no_a = 20000
             stop, qdpool, alleqs_no_a, iter_no_a = exec(which_target, train_target, test_target, voc_no_a, iteration_no_a, tolerance, gp, prefix)
+
+
 
             #save csv
             if stop is not None:
