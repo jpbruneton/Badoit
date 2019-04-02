@@ -9,7 +9,7 @@ def get_dic(n_targets, n_variables, modescalar):
     # arity 0 symbols
 
     my_dic_any_scalars = ['A']
-    my_dic_integer_scalars = [str(i) for i in range(1, 3)]
+    my_dic_integer_scalars = ['one', 'two']
     #my_dic_integer_scalars = [str(1), str(2)]
 
     # targets are f0, f1, ...
@@ -57,8 +57,8 @@ def get_dic(n_targets, n_variables, modescalar):
 
     # ------------------------
     # special algebraic symbols
-    my_dic_true_zero = ['0']
-    my_dic_neutral = ['1']
+    my_dic_true_zero = ['zero']
+    my_dic_neutral = ['neutral']
     my_dic_infinite =['infinity']
     special_dic = my_dic_true_zero + my_dic_neutral + my_dic_infinite
 
@@ -112,21 +112,16 @@ def get_dic(n_targets, n_variables, modescalar):
     trignumbers = (sin_number, cos_number)
 
     if modescalar == 'A':
-        arity0symbols_no_target = tuple([i for i in range(2, 2 + len(my_dic_any_scalars) + len(my_dic_variables))])
+        #arity0symbols_no_target = tuple([i for i in range(2, 2 + len(my_dic_any_scalars) + len(my_dic_variables))])
         arity0symbols_var_and_tar = tuple([i for i in range(2 + len(my_dic_any_scalars), 2 + a0)])
 
     else:
-        arity0symbols_no_target = tuple([i for i in range(2, 2 + len(my_dic_integer_scalars) + len(my_dic_variables))])
+        #arity0symbols_no_target = tuple([i for i in range(2, 2 + len(my_dic_integer_scalars) + len(my_dic_variables))])
         arity0symbols_var_and_tar = tuple([i for i in range(2 + len(my_dic_integer_scalars), 2 + a0)])
 
 
     arity0symbols = tuple([i for i in range(2, 2 + a0)])
     arity1symbols = tuple([i for i in range(2 + a0, 2 + a0 + a1)])
-    arity1symbols_no_diff = tuple([i for i in range(2 + a0 , 2 + a0 + len(my_dic_functions))])
-
-    arity1symbols_diff =  tuple([i for i in range(2 + a0 + len(my_dic_functions), 2 + a0 + a1)])
-
-    arity1symbols_no_functions = tuple([i for i in range(2 + a0 + len(my_dic_functions), 2 + a0 + a1)])
 
     arity2symbols = tuple([i for i in range(2 + a0 + a1, 2 + a0 + a1 + a2)])
     arity2symbols_no_power = tuple([i for i in range(2 + a0 + a1, 2 + a0 + a1 + a2 -1)])
@@ -157,10 +152,8 @@ def get_dic(n_targets, n_variables, modescalar):
     OUTPUTDIM = len(numbers_to_formula_dict)
 
     #check everything's fine
-    if False:
-        print(arity0symbols_no_target)
+    if True:
         print(arity0symbols)
-        print(arity1symbols_no_diff)
         print(arity1symbols)
         print(arity2symbols_no_power)
         print(arity2symbols)
@@ -169,23 +162,17 @@ def get_dic(n_targets, n_variables, modescalar):
         print(true_zero_number)
         print(neutral_element)
         print(infinite_number)
-        print(arity1symbols_diff)
         print(arity0symbols_var_and_tar)
         print(log_number)
         print(exp_number)
-        print(arity0symbols_var_and_tar)
         print(plusnumber)
         print(minusnumber)
         print(multnumber)
         print(divnumber)
-        print(log_number)
-        print(exp_number)
         print(explognumbers)
         print(trignumbers)
-        print(sin_number)
-        print(cos_number)
+
     return numbers_to_formula_dict, arity0symbols, arity1symbols, arity2symbols, true_zero_number, neutral_element, \
-           infinite_number, emptysymbol, terminalsymbol, OUTPUTDIM, pure_numbers, arity2symbols_no_power, \
-           arity1symbols_no_diff, arity1symbols_no_functions, arity0symbols_no_target, power_number, arity1symbols_diff, \
+           infinite_number, terminalsymbol, OUTPUTDIM, pure_numbers, arity2symbols_no_power, power_number,  \
            arity0symbols_var_and_tar, var_numbers, plusnumber, minusnumber, multnumber, divnumber, log_number, exp_number, explognumbers, trignumbers, sin_number, cos_number
 

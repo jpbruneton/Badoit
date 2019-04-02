@@ -83,11 +83,11 @@ class GP_QD():
                 results = asyncResult.get()
                 mp_pool.close()
                 mp_pool.join()
-
+                print('yo', len(results))
                 for state in results:
                     if self.voc.infinite_number not in state.reversepolish:
                         self.pool.append(state)
-
+                print('yu', len(self.pool))
 
             else:
                 self.pool = []
@@ -201,6 +201,8 @@ class GP_QD():
             #update self.pool
             self.pool = newpool
             print('yo', len(newpool))
+
+
             return self.pool
 
     # ---------------------------------------------------------------------------- #

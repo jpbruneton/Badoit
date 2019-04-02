@@ -104,7 +104,7 @@ class Game:
                         if space_left >= scalarcount:
 
                             if self.getnumberoffunctions() < config.MAX_DEPTH :
-                                allowedchars += self.voc.arity1symbols_no_diff
+                                allowedchars += self.voc.arity1symbols
 
 
                     if scalarcount >= 2:
@@ -132,7 +132,7 @@ class Game:
 
                             # also avoid stuff like exp(f)
                             if self.getnumberoffunctions() < config.MAX_DEPTH :
-                                allowedchars += self.voc.arity1symbols_no_diff
+                                allowedchars += self.voc.arity1symbols
 
         return allowedchars
 
@@ -225,17 +225,6 @@ class Game:
         return ast
 
 
-    # ---------------------------------------------------------
-    def simplif_eq(self):
-        count = 0
-        change = 1
-        while change == 1: #avoid possible infinite loop/ shouldnt happen, but secutity
-            change, rpn = self.state.one_simplif()
-            self.state = State(self.voc, rpn)
-            count+=1
-            if count > 1000:
-                change = 0
-
 
     # ---------------------------------------------------------
     def rename_ai(self, formula):
@@ -268,9 +257,34 @@ def randomeqs(voc):
     while game.isterminal() == 0:
         nextchar = np.random.choice(game.allowedmoves())
         game.takestep(nextchar)
+        #print(game.state.reversepolish, game.state.formulas)
 
-    game.simplif_eq()
-    return game
+    if config.use_simplif:
+        simplestate = simplif_eq(voc, game.state)
+        simplegame = Game(voc, simplestate)
+        return simplegame
+    #print('then', game.state.reversepolish, game.state.formulas)
+
+    else:
+        return game
+
+# ---------------------------------------------------------
+def simplif_eq(voc, state):
+    count = 0
+    change = 1
+
+    #print('start simplif', state.reversepolish, state.formulas)
+    while change == 1:  # avoid possible infinite loop/ shouldnt happen, but secutity
+        change, rpn = state.one_simplif()
+        #print('onesimplif', change, rpn)
+
+        state = State(voc, rpn)
+
+        count += 1
+        if count > 1000:
+            change = 0
+    #print('so', state.formulas)
+    return state
 
 # ---------------------------------------------------------------------------- #
 # takes a non maximal size and completes it with random + simplify it with my rules
@@ -288,9 +302,11 @@ def complete_eq_with_random(voc, state):
         nextchar = np.random.choice(game.allowedmoves())
         game.takestep(nextchar)
 
-    game.simplif_eq()
-
-    return game.state
+    if config.use_simplif:
+        simplestate = simplif_eq(voc, game.state)
+        return simplestate
+    else:
+        return game.state
 
 # -------------------------------------------------------------------------- #
 def game_evaluate(rpn, formulas, tolerance, voc, target, mode):

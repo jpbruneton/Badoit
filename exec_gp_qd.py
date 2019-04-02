@@ -248,12 +248,13 @@ def convert_eqs(qdpool, voc_a, voc_no_a, diff):
     # first simplfy the states, and remove infinities:
     for state in allstates:
         creastate = State(voc_a, state)
-        game = Game(voc_a, creastate)
-        game.simplif_eq()
-        if voc_a.infinite_number not in game.state.reversepolish:
-            if str(game.state.reversepolish) not in local_alleqs:
-                local_alleqs.update({str(game.state.reversepolish): 1})
-                initpool.append(game.state)
+        if config.use_simplif:
+            creastate = game_env.simplif_eq(voc_a, creastate)
+
+        if voc_a.infinite_number not in creastate.reversepolish:
+            if str(creastate.reversepolish) not in local_alleqs:
+                local_alleqs.update({str(creastate.reversepolish): 1})
+                initpool.append(creastate)
 
     del local_alleqs
     del allstates
@@ -286,19 +287,19 @@ def eval_previous_eqs(which_target, train_target, test_target, voc_a, tolerance,
 
     newbin, replacements = gp.update_qd_pool(results_by_bin)
 
-    print('QD pool size', len(gp.QD_pool))
+    print('QD pool size', gp.QD_pool)
     print('alleqsseen', alleqs)
 
     # save results and print
     saveme = printresults(test_target, voc_a)
     valreward = saveme.saveresults(newbin, replacements, -1, gp.QD_pool, gp.maxa, tolerance, which_target, alleqs, prefix)
-    #if config.uselocal:
-     #   filename = './gpdata/QD_pool' + str(which_target) + '.txt'
-    #else:
-    #    filename = '/home/user/QD_pool' + str(which_target) + '.txt'
-    #with open(filename, 'wb') as file:
-    #    pickle.dump(gp.QD_pool, file)
-    #file.close()
+    # if config.uselocal:
+    #     filename = './gpdata/QD_pool' + str(which_target) + '.txt'
+    # else:
+    #     filename = '/home/user/QD_pool' + str(which_target) + '.txt'
+    # with open(filename, 'wb') as file:
+    #     pickle.dump(gp.QD_pool, file)
+    # file.close()
 
     del mp_pool
     del asyncResult
@@ -361,7 +362,7 @@ def init_everything_else(which_target):
     maxexp = new
 
     #add rd eqs at each iteration
-    addrandom = True
+    addrandom = False
 
 
     return poolsize, delete_ar1_ratio, extend_ratio, p_mutate, p_cross, bina, maxa, binl_no_a, maxl_no_a, binl_a, maxl_a, binf, maxf, \
@@ -417,7 +418,7 @@ def main():
             prefix = str(int(10000000 * time.time()))
 
             # run evolution :
-            iteration_no_a = 150
+            iteration_no_a = 4
             stop, qdpool, alleqs_no_a, iter_no_a = exec(which_target, train_target, test_target, voc_no_a, iteration_no_a, tolerance, gp, prefix)
 
 
@@ -456,7 +457,7 @@ def main():
                 # this might directly provide the exact solution : if not, stop is None, and thus, run evolution
                 if stop is None:
                     gp.QD_pool = QD_pool
-                    iteration_a = 150
+                    iteration_a = 4
           
                     stop, qdpool, alleqs_a, iter_a = exec(which_target, train_target, test_target, voc_with_a, iteration_a, tolerance, gp, prefix)
 
@@ -497,4 +498,23 @@ if __name__ == '__main__':
         sys.stderr = logger
 
 
-    main()
+    #main()
+    test = False
+    if test:
+        which_target = 0
+        poolsize, delete_ar1_ratio, extend_ratio, p_mutate, p_cross, bina, maxa, binl_no_a, maxl_no_a, binl_a, maxl_a, binf, maxf, \
+        binp, maxp, bintrig, maxtrig, binexp, maxexp, addrandom, train_target, test_target, voc_with_a, voc_no_a, diff = init_everything_else(
+             which_target)
+        for u in range(10000):
+            newgame = game_env.randomeqs(voc_no_a)
+            if voc_no_a.infinite_number not in newgame.state.reversepolish:
+                if newgame.getnumberoffunctions() > config.MAX_DEPTH:
+                    print('happ')
+
+    else:
+        main()
+    #     print(newgame.state.formulas)
+    #     #newgame.simplif_eq()
+    #     #print(newgame.state.formulas)
+    #     game_env.simplif_eq(voc_no_a, newgame.state)
+

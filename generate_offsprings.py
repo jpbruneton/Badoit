@@ -4,7 +4,7 @@ import numpy as np
 import random
 import config
 import copy
-
+import game_env
 
 
 # ===================================================================================#
@@ -47,7 +47,7 @@ class generate_offsprings():
 
         # ------ arity 1 -------
         elif char in self.voc.arity1symbols:
-            newchar = random.choice(tuple(x for x in self.voc.arity1symbols_no_diff if x != char))
+            newchar = random.choice(tuple(x for x in self.voc.arity1symbols if x != char))
 
         # ------ arity 2 -------
         elif char in self.voc.arity2symbols:
@@ -60,9 +60,10 @@ class generate_offsprings():
 
         # --------  finally : I mutate or simply delete the char if -------
         if random.random() < self.delete_ar1_ratio and char in self.voc.arity1symbols:
+            #print('bf',state.formulas)
             newrpn = prev_rpn[:char_to_mutate] + prev_rpn[char_to_mutate + 1:]
             newstate = State(self.voc, newrpn)
-
+            #print('af', newstate.formulas)
         else:  # or mutate
             prev_rpn[char_to_mutate] = newchar
             newstate = State(self.voc, prev_rpn)
@@ -70,11 +71,12 @@ class generate_offsprings():
         # -------- return the new state:
 
         if self.usesimplif:
-            game = Game(self.voc, state)
+            newstate = game_env.simplif_eq(self.voc, newstate)
+#            game = Game(self.voc, state)
             #print('bf', game.state.formulas)
-            game.simplif_eq()
+ #           game.simplif_eq()
             #print('simplif?')
-            newstate = game.state
+  #          newstate = game.state
             #print('af', state.formulas)
 
         # mutation can lead to true zero division (after simplif) thus :
@@ -95,6 +97,8 @@ class generate_offsprings():
 
         game1 = Game(self.voc, prev_state1)
         game2 = Game(self.voc, prev_state2)
+        #if game1.getnumberoffunctions()>config.MAX_DEPTH:
+        #    print('ici', game1.state.formulas)
 
         ast1 = game1.convert_to_ast()
         ast2 = game2.convert_to_ast()
@@ -167,13 +171,18 @@ class generate_offsprings():
         state2 = State(self.voc, rpn2)
 
         if self.usesimplif:
-            game1 = Game(self.voc, state1)
-            game1.simplif_eq()
-            state1 = game1.state
+            state1 = game_env.simplif_eq(self.voc, state1)
+            state2 = game_env.simplif_eq(self.voc, state2)
 
-            game2 = Game(self.voc, state2)
-            game2.simplif_eq()
-            state2 = game2.state
+            # game1 = Game(self.voc, state1)
+            # game1.simplif_eq()
+            # state1 = game1.state
+
+            # game2 = Game(self.voc, state2)
+            # game2.simplif_eq()
+            # state2 = game2.state
+        game1 = Game(self.voc, state1)
+        game2 = Game(self.voc, state2)
         toreturn = []
 
         #crossover can lead to true zero division thus :

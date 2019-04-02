@@ -156,7 +156,7 @@ mysimplificationrules_no_A = \
 
  [['variable', 'mult', 'variable', 'div'], ['empty']],
  [['variable', 'div', 'variable', 'div'], ['empty']],
- [['variable', 'exp', 'two', 'power'], ['variable', 'two', 'mult', 'exp']],  # to avoid powers
+ #[['variable', 'exp', 'two', 'power'], ['variable', 'two', 'mult', 'exp']],  # to avoid powers
 
   # size 5
 

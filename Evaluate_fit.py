@@ -38,7 +38,7 @@ class Evaluatefit:
     # ---------------------------------------------------------------------------- #
     def rename_formulas(self):
         ''' index all the scalar 'A' by a A1, A2, etc, rename properly the differentials, and finally resize as it must '''
-
+        #print(self.formulas)
         neweq = ''
         # rename the A's
         self.scalar_numbers = self.formulas.count('A')
@@ -76,7 +76,23 @@ class Evaluatefit:
             replace_by = '(' + 'x' + '[' + str(i) +']' + '[' + arr + ']' +'*' + str(self.ranges[i]) + ')'
             neweq = neweq.replace(string_to_replace, replace_by)
 
+        string_to_replace  = 'one'
+        replace_by = '1'
+        neweq = neweq.replace(string_to_replace, replace_by)
+
+        string_to_replace = 'two'
+        replace_by = '2'
+        neweq = neweq.replace(string_to_replace, replace_by)
+
+        string_to_replace = 'neutral'
+        replace_by = '1'
+        neweq = neweq.replace(string_to_replace, replace_by)
+
+        string_to_replace = 'zero'
+        replace_by = '0'
+        neweq = neweq.replace(string_to_replace, replace_by)
         # the update
+        #print(self.formulas)
         self.formulas = neweq
 
 
@@ -94,6 +110,7 @@ class Evaluatefit:
     # ---------------------------------------------------------------------------- #
     def formula_eval(self, x, A) :
         try:
+            #print(self.formulas)
             toreturn = eval(self.formulas)/self.f_renormalization
             if type(toreturn) != np.ndarray or np.isnan(np.sum(toreturn)) or np.isinf(np.sum(toreturn)) :
                 return False, None

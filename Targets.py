@@ -304,8 +304,7 @@ class Voc():
             self.maximal_size = self.target[-1]
 
         self.numbers_to_formula_dict, self.arity0symbols, self.arity1symbols, self.arity2symbols, self.true_zero_number, self.neutral_element, \
-        self.infinite_number, self.emptysymbol, self.terminalsymbol, self.OUTPUTDIM, self.pure_numbers, self.arity2symbols_no_power, \
-        self.arity1symbols_no_diff, self.arity1symbols_no_functions, self.arity0symbols_no_target, self.power_number, self.arity1symbols_diff, \
+        self.infinite_number, self.terminalsymbol, self.OUTPUTDIM, self.pure_numbers, self.arity2symbols_no_power, self.power_number, \
         self.arity0symbols_var_and_tar, self.var_numbers, self.plusnumber, self.minusnumber, self.multnumber, self.divnumber, self.log_number, \
         self.exp_number, self.explognumbers, self.trignumbers, self.sin_number, self.cos_number \
             = Build_dictionnaries.get_dic(self.target[0], self.target[1], modescalar)
@@ -337,7 +336,7 @@ class Voc():
             elif elem == 'arity0':
                 firstlist.append(self.arity0symbols[k])
             elif elem == 'fonction':
-                firstlist.append(self.arity1symbols_no_diff[k])
+                firstlist.append(self.arity1symbols[k])
             elif elem == 'allops':
                 firstlist.append(self.arity2symbols[k])
             elif elem == 'power':
@@ -379,7 +378,7 @@ class Voc():
             elif elem == 'arity0':
                 secondlist.append(self.arity0symbols[k])
             elif elem == 'fonction':
-                secondlist.append(self.arity1symbols_no_diff[k])
+                secondlist.append(self.arity1symbols[k])
             elif elem == 'allops':
                 secondlist.append(self.arity2symbols[k])
             elif elem == 'empty':
@@ -424,7 +423,7 @@ class Voc():
                         mydic_simplifs.update(({str(firstlist): secondlist}))
 
                 elif 'fonction' in toreplace:
-                    for k in range(len(self.arity1symbols_no_diff)):
+                    for k in range(len(self.arity1symbols)):
                         firstlist, secondlist = self.replacemotor(toreplace, replaceby, k)
                         mydic_simplifs.update(({str(firstlist): secondlist}))
 
@@ -459,7 +458,7 @@ class Voc():
                         mydic_simplifs.update(({str(firstlist): secondlist}))
 
                 elif 'fonction' in toreplace:
-                    for k in range(len(self.arity1symbols_no_diff)):
+                    for k in range(len(self.arity1symbols)):
                         firstlist, secondlist = self.replacemotor(toreplace, replaceby, k)
                         mydic_simplifs.update(({str(firstlist): secondlist}))
 

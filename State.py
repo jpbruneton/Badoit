@@ -60,10 +60,8 @@ class State:
         stack = []
 
         for number in self.reversepolish:
-
             #get character
             char = self.voc.numbers_to_formula_dict[str(number)]
-
             if number in self.voc.arity0symbols:
                 #push scalar in the stack
                 stack.append(char)
@@ -92,13 +90,13 @@ class State:
                 stack = newstack
 
             elif number == self.voc.true_zero_number:
-                stack += char
+                stack.append(char)
 
             elif number == self.voc.neutral_element:
-                stack += char
+                stack.append(char)
 
             elif number == self.voc.infinite_number:
-                stack += char
+                stack.append(char)
 
         #might happen if first symbol is 1 ('halt')
         if len(stack) == 0:
