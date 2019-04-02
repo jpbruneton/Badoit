@@ -287,18 +287,18 @@ def eval_previous_eqs(which_target, train_target, test_target, voc_a, tolerance,
     newbin, replacements = gp.update_qd_pool(results_by_bin)
 
     print('QD pool size', len(gp.QD_pool))
-    print('alleqsseen', len(alleqs))
+    print('alleqsseen', alleqs)
 
     # save results and print
     saveme = printresults(test_target, voc_a)
     valreward = saveme.saveresults(newbin, replacements, -1, gp.QD_pool, gp.maxa, tolerance, which_target, alleqs, prefix)
-    if config.uselocal:
-        filename = './gpdata/QD_pool' + str(which_target) + '.txt'
-    else:
-        filename = '/home/user/QD_pool' + str(which_target) + '.txt'
-    with open(filename, 'wb') as file:
-        pickle.dump(gp.QD_pool, file)
-    file.close()
+    #if config.uselocal:
+     #   filename = './gpdata/QD_pool' + str(which_target) + '.txt'
+    #else:
+    #    filename = '/home/user/QD_pool' + str(which_target) + '.txt'
+    #with open(filename, 'wb') as file:
+    #    pickle.dump(gp.QD_pool, file)
+    #file.close()
 
     del mp_pool
     del asyncResult
