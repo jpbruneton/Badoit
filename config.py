@@ -1,5 +1,5 @@
 
-cpus = 4
+cpus = 40
 
 # --------------  Taget related ---------------- #
 findtolerance = True
