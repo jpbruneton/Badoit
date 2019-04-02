@@ -344,15 +344,15 @@ def init_everything_else(which_target):
 
 
     #QD grid parameters
-    bina = 5  # number of bins for number of free scalars
-    maxa = 5
+    bina = 55  # number of bins for number of free scalars
+    maxa = 55
     binl_no_a = voc_no_a.maximal_size # number of bins for length of an eq
     maxl_no_a = voc_no_a.maximal_size
     binl_a = voc_with_a.maximal_size # number of bins for length of an eq
     maxl_a = voc_with_a.maximal_size
-    binf = 2 # number of bins for number of fonctions
-    maxf = 2
-    new = 0
+    binf = 22 # number of bins for number of fonctions
+    maxf = 22
+    new = 50
     binp = new  # number of bins for number of powers
     maxp = new
     bintrig = new # number of bins for number of trigonometric functions (sine and cos)
