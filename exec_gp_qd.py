@@ -264,7 +264,7 @@ def convert_eqs(qdpool, voc_a, voc_no_a, diff):
 def eval_previous_eqs(which_target, train_target, test_target, voc_a, tolerance, initpool, gp, prefix):
 
     # init all eqs seen so far
-    alleqs = {}
+    alleqs = 0
 
     pool_to_eval = []
     for state in initpool:
@@ -278,8 +278,8 @@ def eval_previous_eqs(which_target, train_target, test_target, voc_a, tolerance,
     mp_pool.join()
 
     for result in results:
-        alleqs.update({str(result[1].reversepolish): result})
-
+        #alleqs.update({str(result[1].reversepolish): result})
+        alleqs+=1
     # bin the results
     results_by_bin = gp.bin_pool(results)
     gp.QD_pool = results_by_bin
@@ -427,7 +427,7 @@ def main():
                 with open(filepath, mode='a') as myfile:
                     writer = csv.writer(myfile, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
                     timespent = (time.time() - eval(prefix) / 10000000)/60
-                    writer.writerow([str(1), str(iter_no_a), str(len(alleqs_no_a)), '0', '0', '0', str(timespent)])
+                    writer.writerow([str(1), str(iter_no_a), str(alleqs_no_a), '0', '0', '0', str(timespent)])
                 myfile.close()
 
 
@@ -450,7 +450,7 @@ def main():
                     with open(filepath, mode='a') as myfile:
                         writer = csv.writer(myfile, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
                         timespent = (time.time() - eval(prefix) / 10000000) / 60
-                        writer.writerow([str(0), str(iter_no_a), str(len(alleqs_no_a)), '1', str(len(alleqs_change_mode)), '0', str(timespent)])
+                        writer.writerow([str(0), str(iter_no_a), str(alleqs_no_a), '1', str(alleqs_change_mode), '0', str(timespent)])
                     myfile.close()
 
                 # this might directly provide the exact solution : if not, stop is None, and thus, run evolution
@@ -469,7 +469,7 @@ def main():
                         writer = csv.writer(myfile, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
                         timespent = (time.time() - eval(prefix) / 10000000) / 60
                         writer.writerow(
-                            [str(0), str(iter_no_a), str(len(alleqs_no_a)), str(success), str(len(alleqs_a)), str(iter_a+1), str(timespent)])
+                            [str(0), str(iter_no_a), str(alleqs_no_a), str(success), str(alleqs_a), str(iter_a+1), str(timespent)])
                     myfile.close()
 
             #del alleqs_change_mode
