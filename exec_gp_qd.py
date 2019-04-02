@@ -75,12 +75,12 @@ def evalme(onestate):
 
     #run 1:
     results = []
-    try:
-        reward, scalar_numbers, alla = game_env.game_evaluate(state.reversepolish, state.formulas, tolerance, voc, train_target, 'train')
-        results.append([reward, scalar_numbers, alla])
-    except (ValueError, IndexError, AttributeError, RuntimeError, RuntimeWarning):
-        print('happening')
-        reward, state, scalar_numbers, alla = -1, failurestate, 0, []
+    #try:
+    reward, scalar_numbers, alla = game_env.game_evaluate(state.reversepolish, state.formulas, tolerance, voc, train_target, 'train')
+    results.append([reward, scalar_numbers, alla])
+    #except (ValueError, IndexError, AttributeError, RuntimeError, RuntimeWarning):
+    #    print('happening')
+    #    reward, state, scalar_numbers, alla = -1, failurestate, 0, []
 
     if config.tworunsineval and voc.modescalar == 'A':
         # run 2:
@@ -93,49 +93,60 @@ def evalme(onestate):
             reward, scalar_numbers, alla = results[1]
 
 
-    try:
+    #try:
         # print('y', L)
+    if state.reversepolish[-1] == voc.terminalsymbol:
+        L = len(state.reversepolish) -1
+    else:
         L = len(state.reversepolish)
 
-        function_number = 0
-        for char in voc.arity1symbols:
-            function_number += state.reversepolish.count(char)
+    if voc.modescalar == 'noA':
+        scalar_numbers =0
+        for char in voc.pure_numbers :
+            scalar_numbers += state.reversepolish.count(char)
 
-        powernumber = 0
-        #for char in state.reversepolish:
-        #    if char == voc.power_number:
-        #        powernumber += 1
-
-        trignumber = 0
-        #for char in state.reversepolish:
-        #    if char in voc.trignumbers:
-        #        trignumber += 1
-
-        explognumber = 0
- #       for char in state.reversepolish:
-  #          if char in voc.explognumbers:
-   #             explognumber += 1
-        #print('t',state.reversepolish)
-        #print('k', reward, state, alla, scalar_numbers, L, function_number, powernumber, trignumber, explognumber)
-        return reward, state, alla, scalar_numbers, L, function_number, powernumber, trignumber, explognumber
+        scalar_numbers += state.reversepolish.count(voc.neutral_element)
 
 
-    except (ValueError, IndexError, AttributeError, RuntimeError, RuntimeWarning):
-        #print(state.formulas, state.reversepolish)
-        if config.uselocal:
-            filepath = './bureport.txt'
-        else:
-            filepath = '/home/user/results/bureport.txt'
-        with open(filepath, 'a') as myfile:
-            myfile.write(str(state.formulas) + str(state.reversepolish))
-        myfile.close()
-        return -1, failurestate, [], 0, 2, 0, 0, 0, 0
+    function_number = 0
+    for char in voc.arity1symbols:
+        function_number += state.reversepolish.count(char)
+
+    powernumber = 0
+    for char in state.reversepolish:
+        if char == voc.power_number:
+            powernumber += 1
+
+    trignumber = 0
+    for char in state.reversepolish:
+        if char in voc.trignumbers:
+            trignumber += 1
+
+    explognumber = 0
+    for char in state.reversepolish:
+        if char in voc.explognumbers:
+            explognumber += 1
+    #print('t',state.reversepolish, state.formulas, 'k', reward, state, alla, scalar_numbers, L, function_number, powernumber, trignumber, explognumber)
+    return reward, state, alla, scalar_numbers, L, function_number, powernumber, trignumber, explognumber
+
+    #
+    # except (ValueError, IndexError, AttributeError, RuntimeError, RuntimeWarning):
+    #     #print(state.formulas, state.reversepolish)
+    #     print('happening')
+    #     if config.uselocal:
+    #         filepath = './bureport.txt'
+    #     else:
+    #         filepath = '/home/user/results/bureport.txt'
+    #     with open(filepath, 'a') as myfile:
+    #         myfile.write(str(state.formulas) + str(state.reversepolish))
+    #     myfile.close()
+    #     return -1, failurestate, [], 0, 2, 0, 0, 0, 0
 
 # -------------------------------------------------------------------------- #
 def exec(which_target, train_target, test_target, voc, iteration, tolerance, gp, prefix):
 
     # init all eqs seen so far
-    mp_pool = mp.Pool(config.cpus)
+    #mp_pool = mp.Pool(config.cpus)
     local_alleqs = 0
 
     for i in range(iteration):
@@ -252,7 +263,7 @@ def convert_eqs(qdpool, voc_a, voc_no_a, diff):
 def eval_previous_eqs(which_target, train_target, test_target, voc_a, tolerance, initpool, gp, prefix):
 
     # init all eqs seen so far
-    alleqs = 0
+    alleqs = {}
 
     pool_to_eval = []
     for state in initpool:
@@ -265,9 +276,9 @@ def eval_previous_eqs(which_target, train_target, test_target, voc_a, tolerance,
     mp_pool.close()
     mp_pool.join()
 
-    #for result in results:
-    #    alleqs.update({str(result[1].reversepolish): result})
-    alleqs = len(results)
+    for result in results:
+        alleqs.update({str(result[1].reversepolish): result})
+
     # bin the results
     results_by_bin = gp.bin_pool(results)
     gp.QD_pool = results_by_bin
@@ -275,7 +286,7 @@ def eval_previous_eqs(which_target, train_target, test_target, voc_a, tolerance,
     newbin, replacements = gp.update_qd_pool(results_by_bin)
 
     print('QD pool size', len(gp.QD_pool))
-    print('alleqsseen', alleqs)
+    print('alleqsseen', len(alleqs))
 
     # save results and print
     saveme = printresults(test_target, voc_a)
@@ -319,7 +330,7 @@ def init_everything_else(which_target):
     # initial pool size of rd eqs at iteration 0
     poolsize = 4000
     # probability of dropping a function : cos(x) -> x
-    delete_ar1_ratio = 0.3
+    delete_ar1_ratio = 0.2
 
     # pool extension by mutation and crossovers
     extend_ratio = 2
@@ -338,9 +349,9 @@ def init_everything_else(which_target):
     maxl_no_a = voc_no_a.maximal_size
     binl_a = voc_with_a.maximal_size # number of bins for length of an eq
     maxl_a = voc_with_a.maximal_size
-    binf = 8 # number of bins for number of fonctions
-    maxf = 8
-    new = 0
+    binf = 20 # number of bins for number of fonctions
+    maxf = 20
+    new = 20
     binp = new  # number of bins for number of powers
     maxp = new
     bintrig = new # number of bins for number of trigonometric functions (sine and cos)
@@ -349,7 +360,7 @@ def init_everything_else(which_target):
     maxexp = new
 
     #add rd eqs at each iteration
-    addrandom = True
+    addrandom = False
 
 
     return poolsize, delete_ar1_ratio, extend_ratio, p_mutate, p_cross, bina, maxa, binl_no_a, maxl_no_a, binl_a, maxl_a, binf, maxf, \
@@ -359,7 +370,8 @@ def init_everything_else(which_target):
 def main():
     id = str(int(10000000 * time.time()))
 
-    for target in range(20):
+    listoftar = [24]
+    for target in listoftar:
 
         # init target, dictionnaries, and meta parameters
         which_target = target
@@ -405,7 +417,7 @@ def main():
             prefix = str(int(10000000 * time.time()))
 
             # run evolution :
-            iteration_no_a = 150
+            iteration_no_a = 200
             stop, qdpool, alleqs_no_a, iter_no_a = exec(which_target, train_target, test_target, voc_no_a, iteration_no_a, tolerance, gp, prefix)
 
             #save csv
@@ -413,7 +425,7 @@ def main():
                 with open(filepath, mode='a') as myfile:
                     writer = csv.writer(myfile, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
                     timespent = (time.time() - eval(prefix) / 10000000)/60
-                    writer.writerow([str(1), str(iter_no_a), str(alleqs_no_a), '0', '0', '0', str(timespent)])
+                    writer.writerow([str(1), str(iter_no_a), str(len(alleqs_no_a)), '0', '0', '0', str(timespent)])
                 myfile.close()
 
 
@@ -436,13 +448,13 @@ def main():
                     with open(filepath, mode='a') as myfile:
                         writer = csv.writer(myfile, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
                         timespent = (time.time() - eval(prefix) / 10000000) / 60
-                        writer.writerow([str(0), str(iter_no_a), str(alleqs_no_a), '1', str(alleqs_change_mode), '0', str(timespent)])
+                        writer.writerow([str(0), str(iter_no_a), str(len(alleqs_no_a)), '1', str(len(alleqs_change_mode)), '0', str(timespent)])
                     myfile.close()
 
                 # this might directly provide the exact solution : if not, stop is None, and thus, run evolution
                 if stop is None:
                     gp.QD_pool = QD_pool
-                    iteration_a = 150
+                    iteration_a = 100
                     stop, qdpool, alleqs_a, iter_a = exec(which_target, train_target, test_target, voc_with_a, iteration_a, tolerance, gp, prefix)
 
                     if stop is None:
@@ -454,7 +466,7 @@ def main():
                         writer = csv.writer(myfile, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
                         timespent = (time.time() - eval(prefix) / 10000000) / 60
                         writer.writerow(
-                            [str(0), str(iter_no_a), str(alleqs_no_a), str(success), str(alleqs_a), str(iter_a+1), str(timespent)])
+                            [str(0), str(iter_no_a), str(len(alleqs_no_a)), str(success), str(len(alleqs_a)), str(iter_a+1), str(timespent)])
                     myfile.close()
 
             #del alleqs_change_mode
