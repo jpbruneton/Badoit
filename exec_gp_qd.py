@@ -65,12 +65,12 @@ def init_tolerance(target, voc):
 # -------------------------------------------------------------------------- #
 def evalme(onestate):
     train_target, voc, state, tolerance = onestate[0], onestate[1], onestate[2], onestate[3]
-    failurestate = State(voc, [voc.neutral_element,1])
+    #failurestate = State(voc, [voc.neutral_element,1])
 
     #print(state.reversepolish, state.formulas)
-    if len(state.reversepolish) == 0 or len(state.reversepolish) == 1:
+    #if len(state.reversepolish) == 0 or len(state.reversepolish) == 1:
         #print('oui', state.reversepolish, state.formulas)
-        return -1, failurestate, [], 0, 2, 0, 0, 0, 0
+    #    return -1, failurestate, [], 0, 2, 0, 0, 0, 0
 
 
     #run 1:
@@ -164,8 +164,8 @@ def exec(which_target, train_target, test_target, voc, iteration, tolerance, gp,
                 #print('yes', state.formulas, state.reversepolish)
                 #import time
                 #time.sleep(4)
-        print('how many states to eval : ', len(pool_to_eval))
-        print('memory size is', sys.getsizeof(pool_to_eval))
+        #print('how many states to eval : ', len(pool_to_eval))
+        #print('memory size is', sys.getsizeof(pool_to_eval))
         # init parallel workers
         mp_pool = mp.Pool(config.cpus)
         asyncResult = mp_pool.map_async(evalme, pool_to_eval)
@@ -331,7 +331,7 @@ def init_everything_else(which_target):
     # initial pool size of rd eqs at iteration 0
     poolsize = 4000
     # probability of dropping a function : cos(x) -> x
-    delete_ar1_ratio = 0.2
+    delete_ar1_ratio = 0.3
 
     # pool extension by mutation and crossovers
     extend_ratio = 2
@@ -344,15 +344,15 @@ def init_everything_else(which_target):
 
 
     #QD grid parameters
-    bina = 55  # number of bins for number of free scalars
-    maxa = 55
+    bina = 20  # number of bins for number of free scalars
+    maxa = 20
     binl_no_a = voc_no_a.maximal_size # number of bins for length of an eq
     maxl_no_a = voc_no_a.maximal_size
     binl_a = voc_with_a.maximal_size # number of bins for length of an eq
     maxl_a = voc_with_a.maximal_size
-    binf = 22 # number of bins for number of fonctions
-    maxf = 22
-    new = 50
+    binf = 8 # number of bins for number of fonctions
+    maxf = 8
+    new = 0
     binp = new  # number of bins for number of powers
     maxp = new
     bintrig = new # number of bins for number of trigonometric functions (sine and cos)
@@ -361,7 +361,7 @@ def init_everything_else(which_target):
     maxexp = new
 
     #add rd eqs at each iteration
-    addrandom = False
+    addrandom = True
 
 
     return poolsize, delete_ar1_ratio, extend_ratio, p_mutate, p_cross, bina, maxa, binl_no_a, maxl_no_a, binl_a, maxl_a, binf, maxf, \
@@ -371,11 +371,10 @@ def init_everything_else(which_target):
 def main():
     id = str(int(10000000 * time.time()))
 
-    listoftar = [24]
-    for target in listoftar:
+    for u in range(0,32):
 
         # init target, dictionnaries, and meta parameters
-        which_target = target
+        which_target = u
         poolsize, delete_ar1_ratio, extend_ratio, p_mutate, p_cross, bina, maxa,  binl_no_a, maxl_no_a, binl_a, maxl_a,  binf, maxf, \
         binp, maxp, bintrig, maxtrig, binexp, maxexp, addrandom, train_target, test_target, voc_with_a, voc_no_a, diff = init_everything_else(
             which_target)
@@ -418,7 +417,7 @@ def main():
             prefix = str(int(10000000 * time.time()))
 
             # run evolution :
-            iteration_no_a = 20000
+            iteration_no_a = 150
             stop, qdpool, alleqs_no_a, iter_no_a = exec(which_target, train_target, test_target, voc_no_a, iteration_no_a, tolerance, gp, prefix)
 
 
@@ -478,7 +477,6 @@ def main():
             #del gp
             #del initpool
 
-
 # -----------------------------------------------#
 if __name__ == '__main__':
     # don't display any output
@@ -496,5 +494,6 @@ if __name__ == '__main__':
         logger = writer()
         sys.stdout = logger
         sys.stderr = logger
+
 
     main()

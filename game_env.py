@@ -276,7 +276,7 @@ def randomeqs(voc):
 # takes a non maximal size and completes it with random + simplify it with my rules
 def complete_eq_with_random(voc, state):
 
-    if state.reversepolish[-1] == 1:
+    if state.reversepolish[-1] == voc.terminalsymbol:
         newstate = State(voc, state.reversepolish[:-1])
 
     else :

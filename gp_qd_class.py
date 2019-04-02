@@ -1,4 +1,3 @@
-from game_env import randomeqs, complete_eq_with_random
 import numpy as np
 import copy
 import random
@@ -52,15 +51,23 @@ class GP_QD():
         self.smallstates =[]
 
     def par_crea(self, task):
-        np.random.seed()
+        np.random.seed(task)
         newgame = game_env.randomeqs(self.voc)
         return newgame.state
 
     def para_complet(self, task):
-        index = np.random.randint(0, len(self.smallstates))
-        newstate = complete_eq_with_random(self.voc, self.smallstates[index])
-        return newstate
+        st = time.time()
+        #np.random.seed(task)
+        #index = np.random.randint(0, len(self.smallstates))
+        #print(index)
 
+        #print('before', self.smallstates[index].formulas)
+        #newstate = game_env.complete_eq_with_random(self.voc, self.smallstates[task])
+        #print(time.time() -st)
+        #print('after', newstate.formulas)
+
+        #return newstate
+        return 1
     # ---------------------------------------------------------------------------- #
     #creates or extend self.pool
     def extend_pool(self):
@@ -68,24 +75,25 @@ class GP_QD():
         if self.pool == None and self.QD_pool is None:
             multi = True
             if multi:
-                print('capasse')
                 self.pool = []
                 tasks = range(0, self.poolsize)
                 # print(tasks)
                 mp_pool = mp.Pool(config.cpus)
                 asyncResult = mp_pool.map_async(self.par_crea, tasks)
                 results = asyncResult.get()
+                mp_pool.close()
+                mp_pool.join()
+
                 for state in results:
                     if self.voc.infinite_number not in state.reversepolish:
                         self.pool.append(state)
-                mp_pool.close()
-                mp_pool.join()
+
 
             else:
                 self.pool = []
 
                 while len(self.pool) < self.poolsize:
-                    newgame = randomeqs(self.voc)
+                    newgame = game_env.randomeqs(self.voc)
                     newrdeq = newgame.state
 
                     if self.voc.infinite_number not in newrdeq.reversepolish:
@@ -103,7 +111,9 @@ class GP_QD():
                 all_states.append(self.QD_pool[str(bin_id)][1])
                 if eval(bin_id)[1] < self.maximal_size -10:
                     small_states.append(self.QD_pool[str(bin_id)][1])
+
             self.smallstates = small_states
+
             # +add new rd eqs for diversity. We add half the qd_pool size of random eqs
             if self.addrandom:
                 toadd = int(len(self.QD_pool)/2)
@@ -114,9 +124,15 @@ class GP_QD():
                     st = time.time()
                     tasks = range(0, toadd)
                     print('ici', toadd)
+                    st= time.time()
                     mp_pool = mp.Pool(config.cpus)
+                    print('y', st - time.time())
                     asyncResult = mp_pool.map_async(self.para_complet, tasks)
-                    results = asyncResult.get()
+                    print('yy', st - time.time())
+
+                    results = asyncResult.get(timeout=1)
+                    print('yyy' , st - time.time())
+
                     mp_pool.close()
                     mp_pool.join()
                     for res in results:
@@ -129,11 +145,10 @@ class GP_QD():
                     while c < toadd and ntries < 10000:
                         index = np.random.randint(0, len(small_states))
                         state = small_states[index]
-                        if len(state.reversepolish) < self.maximal_size - 5:
-                            newstate = complete_eq_with_random(self.voc, state)
-                            if self.voc.infinite_number not in newstate.reversepolish:
-                                all_states.append(newstate)
-                                c+=1
+                        newstate = game_env.complete_eq_with_random(self.voc, state)
+                        if self.voc.infinite_number not in newstate.reversepolish:
+                            all_states.append(newstate)
+                            c+=1
                         ntries+=1
                 print('toi complet', time.time() -st)
 

@@ -64,10 +64,10 @@ class Evaluatefit:
                 arr = arr + ','
 
         # renaming f: this transforms f into f[:] if one variable ... or into f[:,:,:] if three variables
-        for i in range(self.n_targets):
-            string_to_replace = 'f' + str(i)
-            replace_by = 'f' + str(i) + '[' + arr + ']'
-            neweq = neweq.replace(string_to_replace, replace_by)
+        # for i in range(self.n_targets):
+        #     string_to_replace = 'f' + str(i)
+        #     replace_by = 'f' + str(i) + '[' + arr + ']'
+        #     neweq = neweq.replace(string_to_replace, replace_by)
 
 
         # rename the x : transforms x0 in x[0], x1 in x[1], x2 in x[2] (because variables are self.variables = [X,Y,Z], see class Targets)
@@ -95,12 +95,12 @@ class Evaluatefit:
     def formula_eval(self, x, A) :
         try:
             toreturn = eval(self.formulas)/self.f_renormalization
-            if np.isnan(np.sum(toreturn)) or np.isinf(np.sum(toreturn)):
+            if type(toreturn) != np.ndarray or np.isnan(np.sum(toreturn)) or np.isinf(np.sum(toreturn)) :
                 return False, None
             else:
                 return True, toreturn
 
-        except (RuntimeWarning, RuntimeError, ValueError, ZeroDivisionError, OverflowError, SystemError, AttributeError):
+        except (RuntimeWarning, RuntimeError, ValueError, ZeroDivisionError, OverflowError, SystemError):#, AttributeError):
             return False, None
 
     # ---------------------------------------------------------------------------- #
@@ -171,7 +171,7 @@ class Evaluatefit:
             for u in range(reco.size):
                 rec.append(reco[u])
 
-        except (RuntimeWarning, RuntimeError, ValueError, ZeroDivisionError, OverflowError, SystemError, AttributeError):
+        except (RuntimeWarning, RuntimeError, ValueError, ZeroDivisionError, OverflowError, SystemError):#, AttributeError):
             return False, [1]*self.scalar_numbers
 
         return True, rec
@@ -182,7 +182,7 @@ class Evaluatefit:
         try:
             ls_attempt = self.fit(reco)
 
-        except (RuntimeWarning, RuntimeError, ValueError, ZeroDivisionError, OverflowError, SystemError, AttributeError):
+        except (RuntimeWarning, RuntimeError, ValueError, ZeroDivisionError, OverflowError, SystemError):#, AttributeError):
             return False, [1]*self.scalar_numbers
 
         success = ls_attempt.success
@@ -214,6 +214,11 @@ class Evaluatefit:
         #print('jj', self.scalar_numbers)
         success, result = self.formula_eval(self.variables, A)
         # can fail from two effects : inf/nan from division by zero, or output is a cst, hence a scalar, and not an array
+
+        # if success == False or type(result) != np.ndarray:
+        #     all_success = False
+        # else:
+        #     results.append(result)
 
         if success:
             distance_cost = np.sum(np.absolute(result - self.targets))
