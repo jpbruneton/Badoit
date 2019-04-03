@@ -30,4 +30,4 @@ use_simplif = True
 usederivativecost = 1  #or 0
 
 
-uselocal = True
+uselocal = False
