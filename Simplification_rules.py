@@ -15,7 +15,14 @@ mysimplificationrules_with_A = \
  [['exp', 'log'], ['empty']],
 
  #size three
- [['neutral', 'scalar', 'mult'], ['scalar']],
+  [['zero', 'zero', 'mult'], ['zero']],
+  [['zero', 'zero', 'plus'], ['zero']],
+  [['zero', 'zero', 'minus'], ['zero']],
+
+  [['zero', 'scalar', 'power'], ['zero']],
+  [['zero', 'variable', 'power'], ['zero']],
+
+  [['neutral', 'scalar', 'mult'], ['scalar']],
  [['neutral', 'scalar', 'plus'], ['scalar']],
  [['neutral', 'scalar', 'minus'], ['scalar']],
  [['neutral', 'scalar', 'div'], ['scalar']],
@@ -135,14 +142,21 @@ mysimplificationrules_no_A = \
  [['exp', 'log'], ['empty']],
 
   # size three
+  [['zero', 'zero', 'mult'], ['zero']],
+  [['zero', 'zero', 'plus'], ['zero']],
+  [['zero', 'zero', 'minus'], ['zero']],
 
- [['zero', 'arity0', 'mult'], ['zero']],
+  [['zero', 'two', 'power'], ['zero']],
+
+  [['zero', 'arity0', 'mult'], ['zero']],
  [['zero', 'arity0', 'plus'], ['arity0']],
  [['zero', 'arity0', 'div'], ['zero']],
  [['arity0', 'zero', 'mult'], ['zero']],
  [['neutral', 'neutral', 'plus'], ['two']],
  [['neutral', 'neutral', 'minus'], ['zero']],
- [['neutral', 'two', 'mult'], ['two']],
+  [['neutral', 'neutral', 'div'], ['neutral']],
+
+  [['neutral', 'two', 'mult'], ['two']],
  [['two', 'neutral', 'minus'], ['neutral']],
  [['neutral', 'two', 'minus'], ['zero', 'neutral', 'minus']],
  [['neutral', 'two', 'power'], ['neutral']],

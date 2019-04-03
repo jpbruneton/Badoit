@@ -111,6 +111,7 @@ class Evaluatefit:
     def formula_eval(self, x, A) :
         try:
             #print(self.formulas)
+
             toreturn = eval(self.formulas)/self.f_renormalization
             if type(toreturn) != np.ndarray or np.isnan(np.sum(toreturn)) or np.isinf(np.sum(toreturn)) :
                 return False, None
@@ -122,7 +123,7 @@ class Evaluatefit:
             if config.uselocal:
                 filepath = './bureport.txt'
             else:
-                filepath = '/home/user/results/bureport.txt'
+                filepath = '/home/user/results/bugreport.txt'
             with open(filepath, 'a') as myfile:
                 myfile.write(str(sys.exc_info()))
                 myfile.write(self.formulas)

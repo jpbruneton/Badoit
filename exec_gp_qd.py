@@ -353,7 +353,7 @@ def init_everything_else(which_target):
     maxl_a = voc_with_a.maximal_size
     binf = 8 # number of bins for number of fonctions
     maxf = 8
-    new = 1
+    new = 0
     binp = new  # number of bins for number of powers
     maxp = new
     bintrig = new # number of bins for number of trigonometric functions (sine and cos)
@@ -362,7 +362,7 @@ def init_everything_else(which_target):
     maxexp = new
 
     #add rd eqs at each iteration
-    addrandom = True
+    addrandom = False
 
 
     return poolsize, delete_ar1_ratio, extend_ratio, p_mutate, p_cross, bina, maxa, binl_no_a, maxl_no_a, binl_a, maxl_a, binf, maxf, \
