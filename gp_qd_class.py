@@ -459,7 +459,7 @@ class printresults():
             filepath = '/home/user/results/'+ prefix+ 'results_target_' + str(target_number) + '.txt'
         with open(filepath, 'a') as myfile:
 
-            myfile.write('iteration ' + str(i) + ': we have seen ' + str(alleqs) + ' different eqs')
+            myfile.write('iteration ' + str(i) + ': we have seen ' + str(len(alleqs)) + ' different eqs')
             myfile.write("\n")
             myfile.write(
                 'QD pool size: ' + str(len(QD_pool)) + ', newbins: ' + str(newbin) + ' replacements: ' + str(

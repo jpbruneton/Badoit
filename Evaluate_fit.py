@@ -16,7 +16,7 @@ from scipy.optimize import least_squares
 import copy
 import cma
 
-
+import sys
 # ============================ CLASS: Evaluate_Fit ================================ #
 # A class returning the reward of a given equation w.r.t. the target data (or function)
 class Evaluatefit:
@@ -118,6 +118,20 @@ class Evaluatefit:
                 return True, toreturn
 
         except (RuntimeWarning, RuntimeError, ValueError, ZeroDivisionError, OverflowError, SystemError):#, AttributeError):
+
+            if config.uselocal:
+                filepath = './bureport.txt'
+            else:
+                filepath = '/home/user/results/bureport.txt'
+            with open(filepath, 'a') as myfile:
+                myfile.write(str(sys.exc_info()))
+                myfile.write(self.formulas)
+                myfile.write("\n")
+                myfile.write("\n")
+
+            myfile.close()
+
+
             return False, None
 
     # ---------------------------------------------------------------------------- #

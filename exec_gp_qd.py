@@ -147,7 +147,7 @@ def exec(which_target, train_target, test_target, voc, iteration, tolerance, gp,
 
     # init all eqs seen so far
     #mp_pool = mp.Pool(config.cpus)
-    local_alleqs = 0
+    local_alleqs = {}
 
     for i in range(iteration):
         print('')
@@ -175,14 +175,14 @@ def exec(which_target, train_target, test_target, voc, iteration, tolerance, gp,
         mp_pool.join()
         print('pool eval done')
 
-#        for result in results:
+        for result in results:
             # this is for the fact that an equation that has already been seen might return a better reward, because cmaes method is not perfect!
- #           if str(result[1].reversepolish) in local_alleqs:
-  #              if result[0] > local_alleqs[str(result[1].reversepolish)][0]:
-   #                 local_alleqs.update({str(result[1].reversepolish): result})
-    #        else:
-     #           local_alleqs.update({str(result[1].reversepolish): result})
-        local_alleqs += len(results)
+            if voc.modescalar == 'A' and str(result[1].reversepolish) in local_alleqs:
+                if result[0] > local_alleqs[str(result[1].reversepolish)][0]:
+                    local_alleqs.update({str(result[1].reversepolish): result})
+            else:
+                local_alleqs.update({str(result[1].reversepolish): result})
+
         results_by_bin = gp.bin_pool(results)
 
         # init
@@ -192,7 +192,7 @@ def exec(which_target, train_target, test_target, voc, iteration, tolerance, gp,
         newbin, replacements = gp.update_qd_pool(results_by_bin)
 
         print('QD pool size', len(gp.QD_pool))
-        print('alleqsseen', local_alleqs)
+        print('alleqsseen', len(local_alleqs))
 
         # save results and print
         saveme = printresults(test_target, voc)
@@ -265,7 +265,7 @@ def convert_eqs(qdpool, voc_a, voc_no_a, diff):
 def eval_previous_eqs(which_target, train_target, test_target, voc_a, tolerance, initpool, gp, prefix):
 
     # init all eqs seen so far
-    alleqs = 0
+    alleqs = {}
 
     pool_to_eval = []
     for state in initpool:
@@ -279,8 +279,8 @@ def eval_previous_eqs(which_target, train_target, test_target, voc_a, tolerance,
     mp_pool.join()
 
     for result in results:
-        #alleqs.update({str(result[1].reversepolish): result})
-        alleqs+=1
+        alleqs.update({str(result[1].reversepolish): result})
+
     # bin the results
     results_by_bin = gp.bin_pool(results)
     gp.QD_pool = results_by_bin
@@ -353,7 +353,7 @@ def init_everything_else(which_target):
     maxl_a = voc_with_a.maximal_size
     binf = 8 # number of bins for number of fonctions
     maxf = 8
-    new = 0
+    new = 1
     binp = new  # number of bins for number of powers
     maxp = new
     bintrig = new # number of bins for number of trigonometric functions (sine and cos)
@@ -418,7 +418,7 @@ def main():
             prefix = str(int(10000000 * time.time()))
 
             # run evolution :
-            iteration_no_a = 150
+            iteration_no_a = 100
             stop, qdpool, alleqs_no_a, iter_no_a = exec(which_target, train_target, test_target, voc_no_a, iteration_no_a, tolerance, gp, prefix)
 
 
@@ -428,7 +428,7 @@ def main():
                 with open(filepath, mode='a') as myfile:
                     writer = csv.writer(myfile, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
                     timespent = (time.time() - eval(prefix) / 10000000)/60
-                    writer.writerow([str(1), str(iter_no_a), str(alleqs_no_a), '0', '0', '0', str(timespent)])
+                    writer.writerow([str(1), str(iter_no_a), str(len(alleqs_no_a)), '0', '0', '0', str(timespent)])
                 myfile.close()
 
 
@@ -451,7 +451,7 @@ def main():
                     with open(filepath, mode='a') as myfile:
                         writer = csv.writer(myfile, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
                         timespent = (time.time() - eval(prefix) / 10000000) / 60
-                        writer.writerow([str(0), str(iter_no_a), str(alleqs_no_a), '1', str(alleqs_change_mode), '0', str(timespent)])
+                        writer.writerow([str(0), str(iter_no_a), str(len(alleqs_no_a)), '1', str(len(alleqs_change_mode)), '0', str(timespent)])
                     myfile.close()
 
                 # this might directly provide the exact solution : if not, stop is None, and thus, run evolution
@@ -470,7 +470,7 @@ def main():
                         writer = csv.writer(myfile, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
                         timespent = (time.time() - eval(prefix) / 10000000) / 60
                         writer.writerow(
-                            [str(0), str(iter_no_a), str(alleqs_no_a), str(success), str(alleqs_a), str(iter_a+1), str(timespent)])
+                            [str(0), str(iter_no_a), str(len(alleqs_no_a)), str(success), str(len(alleqs_a)), str(iter_a+1), str(timespent)])
                     myfile.close()
 
             #del alleqs_change_mode
