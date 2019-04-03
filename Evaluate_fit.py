@@ -123,7 +123,7 @@ class Evaluatefit:
             if config.uselocal:
                 filepath = './bureport.txt'
             else:
-                filepath = '/home/user/results/bugreport.txt'
+                filepath = '/home/user/results/buggreport.txt'
             with open(filepath, 'a') as myfile:
                 myfile.write(str(sys.exc_info()))
                 myfile.write(self.formulas)
