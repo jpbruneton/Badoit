@@ -203,7 +203,7 @@ class Evaluatefit:
             for u in range(reco.size):
                 rec.append(reco[u])
 
-        except (RuntimeWarning, RuntimeError, ValueError, ZeroDivisionError, OverflowError, SystemError):#, AttributeError):
+        except (RuntimeWarning, RuntimeError, ValueError, ZeroDivisionError, OverflowError, SystemError, AttributeError):
             return False, [1]*self.scalar_numbers
 
         return True, rec
@@ -214,7 +214,7 @@ class Evaluatefit:
         try:
             ls_attempt = self.fit(reco)
 
-        except (RuntimeWarning, RuntimeError, ValueError, ZeroDivisionError, OverflowError, SystemError):#, AttributeError):
+        except (RuntimeWarning, RuntimeError, ValueError, ZeroDivisionError, OverflowError, SystemError, AttributeError):
             return False, [1]*self.scalar_numbers
 
         success = ls_attempt.success
