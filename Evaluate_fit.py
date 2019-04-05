@@ -118,7 +118,7 @@ class Evaluatefit:
             else:
                 return True, toreturn
 
-        except (RuntimeWarning, RuntimeError, ValueError, ZeroDivisionError, OverflowError, SystemError):#, AttributeError):
+        except (RuntimeWarning, RuntimeError, ValueError, ZeroDivisionError, OverflowError, SystemError, AttributeError):
 
             if config.uselocal:
                 filepath = './bureport.txt'
