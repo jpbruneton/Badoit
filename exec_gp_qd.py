@@ -129,6 +129,40 @@ def evalme(onestate):
     #print('t',state.reversepolish, state.formulas, 'k', reward, state, alla, scalar_numbers, L, function_number, powernumber, trignumber, explognumber)
     return reward, state, alla, scalar_numbers, L, function_number, powernumber, trignumber, explognumber
 
+
+def count_meta_features(voc, state):
+    if state.reversepolish[-1] == voc.terminalsymbol:
+        L = len(state.reversepolish) -1
+    else:
+        L = len(state.reversepolish)
+
+    scalar_numbers = 0
+    for char in voc.pure_numbers:
+        scalar_numbers += state.reversepolish.count(char)
+
+    scalar_numbers += state.reversepolish.count(voc.neutral_element)
+    scalar_numbers += state.reversepolish.count(voc.true_zero_number)
+
+    function_number = 0
+    for char in voc.arity1symbols:
+        function_number += state.reversepolish.count(char)
+
+    powernumber = 0
+    for char in state.reversepolish:
+        if char == voc.power_number:
+            powernumber += 1
+
+    trignumber = 0
+    for char in state.reversepolish:
+        if char in voc.trignumbers:
+            trignumber += 1
+
+    explognumber = 0
+    for char in state.reversepolish:
+        if char in voc.explognumbers:
+            explognumber += 1
+
+    return L, function_number, powernumber, trignumber, explognumber
     #
     # except (ValueError, IndexError, AttributeError, RuntimeError, RuntimeWarning):
     #     #print(state.formulas, state.reversepolish)
@@ -150,38 +184,45 @@ def exec(which_target, train_target, test_target, voc, iteration, tolerance, gp,
     local_alleqs = {}
 
     for i in range(iteration):
+        #parallel cma
         print('')
         print('this is iteration', i, 'working with tolerance', tolerance)
         # this creates a pool of states or extends it before evaluation
         pool = gp.extend_pool()
         print('pool creation/extension done')
 
-        pool_to_eval = []
-        print('verif', len(pool))
-        for state in pool:
-            pool_to_eval.append([train_target, voc, state, tolerance])
-            #if voc.infinite_number in state.reversepolish:
-                #print('yes', state.formulas, state.reversepolish)
-                #import time
-                #time.sleep(4)
-        #print('how many states to eval : ', len(pool_to_eval))
-        #print('memory size is', sys.getsizeof(pool_to_eval))
-        # init parallel workers
-        mp_pool = mp.Pool(config.cpus)
-        asyncResult = mp_pool.map_async(evalme, pool_to_eval)
-        results = asyncResult.get()
-        # close it
-        mp_pool.close()
-        mp_pool.join()
-        print('pool eval done')
+        if voc.modescalar == 'A':
+            pool_to_eval = []
+            print('verif', len(pool))
+            for state in pool:
+                pool_to_eval.append([train_target, voc, state, tolerance])
 
-        for result in results:
-            # this is for the fact that an equation that has already been seen might return a better reward, because cmaes method is not perfect!
-            if voc.modescalar == 'A' and str(result[1].reversepolish) in local_alleqs:
-                if result[0] > local_alleqs[str(result[1].reversepolish)][0]:
+            mp_pool = mp.Pool(config.cpus)
+            asyncResult = mp_pool.map_async(evalme, pool_to_eval)
+            results = asyncResult.get()
+            # close it
+            mp_pool.close()
+            mp_pool.join()
+            print('pool eval done')
+
+            for result in results:
+                # this is for the fact that an equation that has already been seen might return a better reward, because cmaes method is not perfect!
+                if str(result[1].reversepolish) in local_alleqs:
+                    if result[0] > local_alleqs[str(result[1].reversepolish)][0]:
+                        local_alleqs.update({str(result[1].reversepolish): result})
+                else:
                     local_alleqs.update({str(result[1].reversepolish): result})
-            else:
-                local_alleqs.update({str(result[1].reversepolish): result})
+
+        else:
+            #mono core eval
+            print('monocore eval')
+            results = []
+            for state in pool:
+                reward, scalar_numbers, alla = game_env.game_evaluate(state.reversepolish, state.formulas, tolerance, voc, train_target, 'train')
+                L, function_number, powernumber, trignumber, explognumber = count_meta_features(voc, state)
+                results.append([reward, state, alla, scalar_numbers, L, function_number, powernumber, trignumber, explognumber])
+                if str(state.reversepolish) not in local_alleqs:
+                    local_alleqs.update({str(state.reversepolish): results[-1]})
 
         results_by_bin = gp.bin_pool(results)
 
