@@ -216,8 +216,9 @@ class GP_QD():
         cnotif=0
         # rescale and print which bin
         for oneresult in results:
+            #print(oneresult)
             reward, state, allA, Anumber, L, function_number, powernumber, trignumber, explognumber = oneresult
-
+            #print(reward, state, allA, Anumber, L, function_number, powernumber, trignumber, explognumber)
             #if state.reversepolish[-1] == 1:
             #    L = L - 1
 
@@ -276,10 +277,11 @@ class GP_QD():
                 for i in range(len(bins_for_exp) - 1):
                     if explognumber >= bins_for_exp[i] and explognumber < bins_for_exp[i + 1]:
                         bin_exp = i
-        #    print('entry', reward, state, allA, Anumber, L, function_number, powernumber, trignumber, explognumber)
+            #print('entry', reward, state, allA, Anumber, L, function_number, powernumber, trignumber, explognumber)
 
-         #   print(state.reversepolish, state.formulas)
-          #  print('bins are', [bin_a, bin_l, bin_exp, bin_trig, bin_p, bin_f])
+            #print(state.reversepolish, state.formulas)
+            #print('bins are', [bin_a, bin_l, bin_exp, bin_trig, bin_p, bin_f])
+
             ct+=1
             if str([bin_a, bin_l, bin_exp, bin_trig, bin_p, bin_f]) not in results_by_bin:
                 cif+=1

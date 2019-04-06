@@ -162,7 +162,7 @@ def count_meta_features(voc, state):
         if char in voc.explognumbers:
             explognumber += 1
 
-    return L, function_number, powernumber, trignumber, explognumber
+    return scalar_numbers, L, function_number, powernumber, trignumber, explognumber
     #
     # except (ValueError, IndexError, AttributeError, RuntimeError, RuntimeWarning):
     #     #print(state.formulas, state.reversepolish)
@@ -182,7 +182,7 @@ def exec(which_target, train_target, test_target, voc, iteration, tolerance, gp,
     # init all eqs seen so far
     #mp_pool = mp.Pool(config.cpus)
     local_alleqs = {}
-
+    monocore = False
     for i in range(iteration):
         #parallel cma
         print('')
@@ -213,17 +213,44 @@ def exec(which_target, train_target, test_target, voc, iteration, tolerance, gp,
                 else:
                     local_alleqs.update({str(result[1].reversepolish): result})
 
+        elif monocore == False:
+            print('par pool')
+            pool_to_eval = []
+            print('verif', len(pool))
+            for state in pool:
+                pool_to_eval.append([train_target, voc, state, tolerance])
+
+            mp_pool = mp.Pool(config.cpus)
+            asyncResult = mp_pool.map_async(evalme, pool_to_eval)
+            results = asyncResult.get()
+            # close it
+            mp_pool.close()
+            mp_pool.join()
+            print('pool eval done')
+
+            for result in results:
+                # this is for the fact that an equation that has already been seen might return a better reward, because cmaes method is not perfect!
+                if str(result[1].reversepolish) in local_alleqs:
+                    if result[0] > local_alleqs[str(result[1].reversepolish)][0]:
+                        local_alleqs.update({str(result[1].reversepolish): result})
+                else:
+                    local_alleqs.update({str(result[1].reversepolish): result})
+
+
         else:
             #mono core eval
-            print('monocore eval')
+            #print('monocore eval')
             results = []
+            #print('lenpool', len(pool))
             for state in pool:
                 reward, scalar_numbers, alla = game_env.game_evaluate(state.reversepolish, state.formulas, tolerance, voc, train_target, 'train')
-                L, function_number, powernumber, trignumber, explognumber = count_meta_features(voc, state)
+                scalar_numbers, L, function_number, powernumber, trignumber, explognumber = count_meta_features(voc, state)
+                #print(state.formulas)
+                #print(L, function_number, powernumber, trignumber, explognumber)
                 results.append([reward, state, alla, scalar_numbers, L, function_number, powernumber, trignumber, explognumber])
                 if str(state.reversepolish) not in local_alleqs:
                     local_alleqs.update({str(state.reversepolish): results[-1]})
-
+            #print('yo', len(results))
         results_by_bin = gp.bin_pool(results)
 
         # init
