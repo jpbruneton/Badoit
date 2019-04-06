@@ -182,7 +182,7 @@ def exec(which_target, train_target, test_target, voc, iteration, tolerance, gp,
     # init all eqs seen so far
     #mp_pool = mp.Pool(config.cpus)
     local_alleqs = {}
-    monocore = False
+    monocore = True
     for i in range(iteration):
         #parallel cma
         print('')
