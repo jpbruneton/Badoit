@@ -234,6 +234,8 @@ def convert_eqs(qdpool, voc_a, voc_no_a, diff):
                 newstate.append(voc_a.terminalsymbol)
             elif char == voc_no_a.neutral_element:
                 newstate.append(voc_a.pure_numbers[0])
+            elif char == voc_no_a.true_zero_number:
+                newstate.append(voc_a.pure_numbers[0])
             elif char in voc_no_a.pure_numbers:
                 newstate.append(voc_a.pure_numbers[0])
             else:
