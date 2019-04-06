@@ -137,7 +137,6 @@ mysimplificationrules_no_A = \
  [['zero', 'minus'], ['empty']],
  [['zero', 'div'], ['infinite', 'mult']],
  [['neutral', 'div'], ['empty']],
- [['infinite', 'fonction'], ['infinite']],
  [['log', 'exp'], ['empty']],
  [['exp', 'log'], ['empty']],
 

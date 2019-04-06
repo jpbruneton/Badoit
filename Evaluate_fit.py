@@ -121,7 +121,7 @@ class Evaluatefit:
         except (RuntimeWarning, RuntimeError, ValueError, ZeroDivisionError, OverflowError, SystemError, AttributeError):
 
             if config.uselocal:
-                filepath = './bureport.txt'
+                filepath = './bugreport.txt'
             else:
                 filepath = '/home/user/results/buggreport.txt'
             with open(filepath, 'a') as myfile:

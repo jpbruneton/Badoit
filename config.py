@@ -1,5 +1,5 @@
 
-cpus = 40
+cpus = 4
 
 # --------------  Taget related ---------------- #
 findtolerance = True
@@ -23,11 +23,11 @@ parsimony_cost = 0.01
 max_A_number = 260
 
 # simplif on the fly
-use_simplif = True
+use_simplif = False
 
 # -------------------- reward related -------------------------- #
 #after some tests, its better to use both the distance cost AND the derivative cost
 usederivativecost = 1  #or 0
 
 
-uselocal = False
+uselocal = True

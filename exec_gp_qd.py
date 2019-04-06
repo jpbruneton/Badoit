@@ -276,16 +276,16 @@ def exec(which_target, train_target, test_target, voc, iteration, tolerance, gp,
         if valreward > 0.999:
             #mp_pool.close()
             #mp_pool.join()
-            del mp_pool
-            del asyncResult
+     #       del mp_pool
+      #      del asyncResult
             del results
             print('early stopping')
             return 'stop', gp.QD_pool, local_alleqs, i
     #mp_pool.close()
     #mp_pool.join()
-    del mp_pool
-    del asyncResult
-    del results
+   # del mp_pool
+    #del asyncResult
+    #del results
     return None, gp.QD_pool, local_alleqs, i
 
 # -----------------------------------------------#
@@ -432,7 +432,7 @@ def init_everything_else(which_target):
     maxexp = new
 
     #add rd eqs at each iteration
-    addrandom = True
+    addrandom = False
 
 
     return poolsize, delete_ar1_ratio, extend_ratio, p_mutate, p_cross, bina, maxa, binl_no_a, maxl_no_a, binl_a, maxl_a, binf, maxf, \
@@ -442,7 +442,7 @@ def init_everything_else(which_target):
 def main():
     id = str(int(10000000 * time.time()))
 
-    for u in range(22,32):
+    for u in range(0,10):
 
         # init target, dictionnaries, and meta parameters
         which_target = u
@@ -465,7 +465,7 @@ def main():
             writer.writerow('\n')
         myfile.close()
 
-        for runs in range(1):
+        for runs in range(5):
 
             # init qd grid
             reinit_grid = True
@@ -491,57 +491,57 @@ def main():
             iteration_no_a = 150
             stop, qdpool, alleqs_no_a, iter_no_a = exec(which_target, train_target, test_target, voc_no_a, iteration_no_a, tolerance, gp, prefix)
 
-
-
-            #save csv
-            if stop is not None:
-                with open(filepath, mode='a') as myfile:
-                    writer = csv.writer(myfile, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-                    timespent = (time.time() - eval(prefix) / 10000000)/60
-                    writer.writerow([str(1), str(iter_no_a), str(len(alleqs_no_a)), '0', '0', '0', str(timespent)])
-                myfile.close()
-
-
-            # ------------------- step 2 -----------------------#
-            #if target has not already been found, stop is None; then launch evoltion with free scalars A:
-            if stop is None:
-
-                # re-adjust tolerance in the case where free scalars are allowed :
-                tolerance = init_tolerance(train_target, voc_with_a)
-                # convert noA eqs into A eqs:
-                initpool = convert_eqs(qdpool, voc_with_a, voc_no_a, diff)
-
-                # reinit gp class with a:
-                gp = GP_QD(which_target, delete_ar1_ratio, p_mutate, p_cross, poolsize,
-                           voc_with_a, tolerance, extend_ratio, maxa, bina, maxl_a, binl_a, maxf, binf, maxp, binp, maxtrig, bintrig, maxexp, binexp,
-                           addrandom, None, initpool)
-                alleqs_change_mode, QD_pool, stop = eval_previous_eqs(which_target, train_target, test_target, voc_with_a, tolerance, initpool, gp, prefix)
-
+            test = True
+            if test == False:
+                #save csv
                 if stop is not None:
                     with open(filepath, mode='a') as myfile:
                         writer = csv.writer(myfile, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-                        timespent = (time.time() - eval(prefix) / 10000000) / 60
-                        writer.writerow([str(0), str(iter_no_a), str(len(alleqs_no_a)), '1', str(len(alleqs_change_mode)), '0', str(timespent)])
+                        timespent = (time.time() - eval(prefix) / 10000000)/60
+                        writer.writerow([str(1), str(iter_no_a), str(len(alleqs_no_a)), '0', '0', '0', str(timespent)])
                     myfile.close()
 
-                # this might directly provide the exact solution : if not, stop is None, and thus, run evolution
+
+                # ------------------- step 2 -----------------------#
+                #if target has not already been found, stop is None; then launch evoltion with free scalars A:
                 if stop is None:
-                    gp.QD_pool = QD_pool
-                    iteration_a = 150
-          
-                    stop, qdpool, alleqs_a, iter_a = exec(which_target, train_target, test_target, voc_with_a, iteration_a, tolerance, gp, prefix)
 
+                    # re-adjust tolerance in the case where free scalars are allowed :
+                    tolerance = init_tolerance(train_target, voc_with_a)
+                    # convert noA eqs into A eqs:
+                    initpool = convert_eqs(qdpool, voc_with_a, voc_no_a, diff)
+
+                    # reinit gp class with a:
+                    gp = GP_QD(which_target, delete_ar1_ratio, p_mutate, p_cross, poolsize,
+                               voc_with_a, tolerance, extend_ratio, maxa, bina, maxl_a, binl_a, maxf, binf, maxp, binp, maxtrig, bintrig, maxexp, binexp,
+                               addrandom, None, initpool)
+                    alleqs_change_mode, QD_pool, stop = eval_previous_eqs(which_target, train_target, test_target, voc_with_a, tolerance, initpool, gp, prefix)
+
+                    if stop is not None:
+                        with open(filepath, mode='a') as myfile:
+                            writer = csv.writer(myfile, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+                            timespent = (time.time() - eval(prefix) / 10000000) / 60
+                            writer.writerow([str(0), str(iter_no_a), str(len(alleqs_no_a)), '1', str(len(alleqs_change_mode)), '0', str(timespent)])
+                        myfile.close()
+
+                    # this might directly provide the exact solution : if not, stop is None, and thus, run evolution
                     if stop is None:
-                        success = 0
-                    else:
-                        success = 1
+                        gp.QD_pool = QD_pool
+                        iteration_a = 1
 
-                    with open(filepath, mode='a') as myfile:
-                        writer = csv.writer(myfile, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-                        timespent = (time.time() - eval(prefix) / 10000000) / 60
-                        writer.writerow(
-                            [str(0), str(iter_no_a), str(len(alleqs_no_a)), str(success), str(len(alleqs_a)), str(iter_a+1), str(timespent)])
-                    myfile.close()
+                        stop, qdpool, alleqs_a, iter_a = exec(which_target, train_target, test_target, voc_with_a, iteration_a, tolerance, gp, prefix)
+
+                        if stop is None:
+                            success = 0
+                        else:
+                            success = 1
+
+                        with open(filepath, mode='a') as myfile:
+                            writer = csv.writer(myfile, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+                            timespent = (time.time() - eval(prefix) / 10000000) / 60
+                            writer.writerow(
+                                [str(0), str(iter_no_a), str(len(alleqs_no_a)), str(success), str(len(alleqs_a)), str(iter_a+1), str(timespent)])
+                        myfile.close()
 
             #del alleqs_change_mode
             #del alleqs_a
