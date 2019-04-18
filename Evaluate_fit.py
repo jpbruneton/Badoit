@@ -77,19 +77,19 @@ class Evaluatefit:
             neweq = neweq.replace(string_to_replace, replace_by)
 
         string_to_replace  = 'one'
-        replace_by = '1'
+        replace_by = '1.0'
         neweq = neweq.replace(string_to_replace, replace_by)
 
         string_to_replace = 'two'
-        replace_by = '2'
+        replace_by = '2.0'
         neweq = neweq.replace(string_to_replace, replace_by)
 
         string_to_replace = 'neutral'
-        replace_by = '1'
+        replace_by = '1.0'
         neweq = neweq.replace(string_to_replace, replace_by)
 
         string_to_replace = 'zero'
-        replace_by = '0'
+        replace_by = '0.0'
         neweq = neweq.replace(string_to_replace, replace_by)
         # the update
         #print(self.formulas)
