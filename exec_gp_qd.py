@@ -264,7 +264,7 @@ def exec(which_target, train_target, test_target, voc, iteration, tolerance, gp,
 
         # save results and print
         saveme = printresults(test_target, voc)
-        valreward = saveme.saveresults(newbin, replacements, i, gp.QD_pool, gp.maxa, tolerance, which_target, local_alleqs, prefix)
+        valreward, valrmse = saveme.saveresults(newbin, replacements, i, gp.QD_pool, gp.maxa, tolerance, which_target, local_alleqs, prefix)
     #    if config.uselocal:
      #       filename = './gpdata/QD_pool'+ str(which_target) + '.txt'
      #   else:
@@ -280,13 +280,13 @@ def exec(which_target, train_target, test_target, voc, iteration, tolerance, gp,
       #      del asyncResult
             del results
             print('early stopping')
-            return 'stop', gp.QD_pool, local_alleqs, i
+            return 'stop', gp.QD_pool, local_alleqs, i, valrmse
     #mp_pool.close()
     #mp_pool.join()
    # del mp_pool
     #del asyncResult
     #del results
-    return None, gp.QD_pool, local_alleqs, i
+    return None, gp.QD_pool, local_alleqs, i, valrmse
 
 # -----------------------------------------------#
 def convert_eqs(qdpool, voc_a, voc_no_a, diff):
@@ -362,7 +362,7 @@ def eval_previous_eqs(which_target, train_target, test_target, voc_a, tolerance,
 
     # save results and print
     saveme = printresults(test_target, voc_a)
-    valreward = saveme.saveresults(newbin, replacements, -1, gp.QD_pool, gp.maxa, tolerance, which_target, alleqs, prefix)
+    valreward, valrmse = saveme.saveresults(newbin, replacements, -1, gp.QD_pool, gp.maxa, tolerance, which_target, alleqs, prefix)
     # if config.uselocal:
     #     filename = './gpdata/QD_pool' + str(which_target) + '.txt'
     # else:
@@ -377,10 +377,10 @@ def eval_previous_eqs(which_target, train_target, test_target, voc_a, tolerance,
 
     if valreward > 0.999:
         print('early stopping')
-        return alleqs, gp.QD_pool, 'stop'
+        return alleqs, gp.QD_pool, 'stop', valrmse
 
     else:
-        return alleqs, gp.QD_pool, None
+        return alleqs, gp.QD_pool, None, valrmse
 
 # -----------------------------------------------#
 def init_everything_else(which_target):
@@ -405,7 +405,7 @@ def init_everything_else(which_target):
     delete_ar1_ratio = 0.3
 
     # pool extension by mutation and crossovers
-    extend_ratio = 2
+    extend_ratio = 2.5
 
     # probabilities of mutation = p_mutate, crossovers
     p_mutate = 0.4
@@ -423,7 +423,7 @@ def init_everything_else(which_target):
     maxl_a = voc_with_a.maximal_size
     binf = 8 # number of bins for number of fonctions
     maxf = 8
-    new = 0
+    new = 1
     binp = new  # number of bins for number of powers
     maxp = new
     bintrig = new # number of bins for number of trigonometric functions (sine and cos)
@@ -442,11 +442,11 @@ def init_everything_else(which_target):
 def main():
     id = str(int(10000000 * time.time()))
 
-    for u in range(0,10):
+    for u in range(24,32):
 
         # init target, dictionnaries, and meta parameters
         which_target = u
-        poolsize, delete_ar1_ratio, extend_ratio, p_mutate, p_cross, bina, maxa,  binl_no_a, maxl_no_a, binl_a, maxl_a,  binf, maxf, \
+        poolsize, delete_ar1_ratio, extend_ratio, p_mutate, p_cross, bina, maxa,  binl_no_a, maxl_no_a, binl_a, maxl_a, binf, maxf, \
         binp, maxp, bintrig, maxtrig, binexp, maxexp, addrandom, train_target, test_target, voc_with_a, voc_no_a, diff = init_everything_else(
             which_target)
 
@@ -465,7 +465,7 @@ def main():
             writer.writerow('\n')
         myfile.close()
 
-        for runs in range(5):
+        for runs in range(1):
 
             # init qd grid
             reinit_grid = True
@@ -489,16 +489,16 @@ def main():
 
             # run evolution :
             iteration_no_a = 150
-            stop, qdpool, alleqs_no_a, iter_no_a = exec(which_target, train_target, test_target, voc_no_a, iteration_no_a, tolerance, gp, prefix)
+            stop, qdpool, alleqs_no_a, iter_no_a, valrmse = exec(which_target, train_target, test_target, voc_no_a, iteration_no_a, tolerance, gp, prefix)
 
-            test = True
+            test = False
             if test == False:
                 #save csv
                 if stop is not None:
                     with open(filepath, mode='a') as myfile:
                         writer = csv.writer(myfile, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
                         timespent = (time.time() - eval(prefix) / 10000000)/60
-                        writer.writerow([str(1), str(iter_no_a), str(len(alleqs_no_a)), '0', '0', '0', str(timespent)])
+                        writer.writerow([str(1), str(iter_no_a), str(len(alleqs_no_a)), '0', '0', '0', str(valrmse), str(timespent)])
                     myfile.close()
 
 
@@ -515,21 +515,21 @@ def main():
                     gp = GP_QD(which_target, delete_ar1_ratio, p_mutate, p_cross, poolsize,
                                voc_with_a, tolerance, extend_ratio, maxa, bina, maxl_a, binl_a, maxf, binf, maxp, binp, maxtrig, bintrig, maxexp, binexp,
                                addrandom, None, initpool)
-                    alleqs_change_mode, QD_pool, stop = eval_previous_eqs(which_target, train_target, test_target, voc_with_a, tolerance, initpool, gp, prefix)
+                    alleqs_change_mode, QD_pool, stop, valrmse = eval_previous_eqs(which_target, train_target, test_target, voc_with_a, tolerance, initpool, gp, prefix)
 
                     if stop is not None:
                         with open(filepath, mode='a') as myfile:
                             writer = csv.writer(myfile, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
                             timespent = (time.time() - eval(prefix) / 10000000) / 60
-                            writer.writerow([str(0), str(iter_no_a), str(len(alleqs_no_a)), '1', str(len(alleqs_change_mode)), '0', str(timespent)])
+                            writer.writerow([str(0), str(iter_no_a), str(len(alleqs_no_a)), '1', str(len(alleqs_change_mode)), '0',  str(valrmse), str(timespent)])
                         myfile.close()
 
                     # this might directly provide the exact solution : if not, stop is None, and thus, run evolution
                     if stop is None:
                         gp.QD_pool = QD_pool
-                        iteration_a = 1
+                        iteration_a = 200
 
-                        stop, qdpool, alleqs_a, iter_a = exec(which_target, train_target, test_target, voc_with_a, iteration_a, tolerance, gp, prefix)
+                        stop, qdpool, alleqs_a, iter_a, valrmse = exec(which_target, train_target, test_target, voc_with_a, iteration_a, tolerance, gp, prefix)
 
                         if stop is None:
                             success = 0
@@ -540,7 +540,7 @@ def main():
                             writer = csv.writer(myfile, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
                             timespent = (time.time() - eval(prefix) / 10000000) / 60
                             writer.writerow(
-                                [str(0), str(iter_no_a), str(len(alleqs_no_a)), str(success), str(len(alleqs_a)), str(iter_a+1), str(timespent)])
+                                [str(0), str(iter_no_a), str(len(alleqs_no_a)), str(success), str(len(alleqs_a)), str(iter_a+1),  str(valrmse), str(timespent)])
                         myfile.close()
 
             #del alleqs_change_mode

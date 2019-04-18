@@ -417,6 +417,8 @@ class printresults():
         evaluate.rename_formulas()
 
         validation_reward = evaluate.eval_reward(with_a_best)
+        validation_reward1 = evaluate.eval_reward_nrmse(with_a_best)
+
         if np.isnan(validation_reward) or np.isinf(validation_reward):
             validation_reward = -1
 
@@ -474,7 +476,7 @@ class printresults():
             myfile.write("\n")
 
             myfile.write('best reward: ' + str(int(10000 * bestreward) / 10000) + ' with validation reward: ' + str(
-                validation_reward))
+                validation_reward) + ' and nrmse' + str(validation_reward1))
             myfile.write("\n")
             myfile.write("\n")
 
@@ -495,5 +497,5 @@ class printresults():
 
             myfile.close()
 
-        return validation_reward
+        return validation_reward, validation_reward1
 

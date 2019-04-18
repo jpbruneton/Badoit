@@ -120,17 +120,17 @@ class Evaluatefit:
 
         except (RuntimeWarning, RuntimeError, ValueError, ZeroDivisionError, OverflowError, SystemError, AttributeError):
 
-            if config.uselocal:
-                filepath = './bugreport.txt'
-            else:
-                filepath = '/home/user/results/buggreport.txt'
-            with open(filepath, 'a') as myfile:
-                myfile.write(str(sys.exc_info()))
-                myfile.write(self.formulas)
-                myfile.write("\n")
-                myfile.write("\n")
-
-            myfile.close()
+            # if config.uselocal:
+            #     filepath = './bugreport.txt'
+            # else:
+            #     filepath = '/home/user/results/buggreport.txt'
+            # with open(filepath, 'a') as myfile:
+            #     myfile.write(str(sys.exc_info()))
+            #     myfile.write(self.formulas)
+            #     myfile.write("\n")
+            #     myfile.write("\n")
+            #
+            # myfile.close()
 
 
             return False, None
@@ -229,6 +229,21 @@ class Evaluatefit:
         else:
             return False, [1]*self.scalar_numbers
 
+
+    def eval_reward_nrmse(self, A):
+    #for validation only
+        success, result = self.formula_eval(self.variables, A)
+
+        if success:
+            quadratic_cost = np.sum((result - self.targets)**2)
+            n = self.targets.size
+            rmse = np.sqrt(quadratic_cost / n)
+            nrmse = rmse / np.std(self.targets)
+
+            return nrmse
+
+        else:
+            return 1367
     # ---------------------------------------------------------------------------- #
     def eval_reward(self, A):
         # given A's, compute the distance to taget function, then calls reward formula:

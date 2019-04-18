@@ -152,7 +152,7 @@ def get_dic(n_targets, n_variables, modescalar):
     OUTPUTDIM = len(numbers_to_formula_dict)
 
     #check everything's fine
-    if True:
+    if False:
         print(arity0symbols)
         print(arity1symbols)
         print(arity2symbols_no_power)
