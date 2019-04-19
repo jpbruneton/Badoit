@@ -405,7 +405,7 @@ def init_everything_else(which_target):
     delete_ar1_ratio = 0.3
 
     # pool extension by mutation and crossovers
-    extend_ratio = 2.5
+    extend_ratio = 2.3
 
     # probabilities of mutation = p_mutate, crossovers
     p_mutate = 0.4
@@ -432,7 +432,7 @@ def init_everything_else(which_target):
     maxexp = new
 
     #add rd eqs at each iteration
-    addrandom = False
+    addrandom = True
 
 
     return poolsize, delete_ar1_ratio, extend_ratio, p_mutate, p_cross, bina, maxa, binl_no_a, maxl_no_a, binl_a, maxl_a, binf, maxf, \
@@ -527,7 +527,7 @@ def main():
                     # this might directly provide the exact solution : if not, stop is None, and thus, run evolution
                     if stop is None:
                         gp.QD_pool = QD_pool
-                        iteration_a = 200
+                        iteration_a = 150
 
                         stop, qdpool, alleqs_a, iter_a, valrmse = exec(which_target, train_target, test_target, voc_with_a, iteration_a, tolerance, gp, prefix)
 
