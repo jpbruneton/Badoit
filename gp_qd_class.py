@@ -141,15 +141,12 @@ class GP_QD():
 
                 else:
                     st = time.time()
-
-                    while c < toadd and ntries < 10000:
-                        index = np.random.randint(0, len(small_states))
-                        state = small_states[index]
-                        newstate = game_env.complete_eq_with_random(self.voc, state)
-                        if self.voc.infinite_number not in newstate.reversepolish:
-                            all_states.append(newstate)
-                            c+=1
-                        ntries+=1
+                    while c < toadd and ntries < 2000:
+                        newgame = game_env.randomeqs(self.voc)
+                        if self.voc.infinite_number not in newgame.state.reversepolish:
+                            all_states.append(newgame.state)
+                            c += 1
+                        ntries += 1
                 print('toi complet', time.time() -st)
 
 
