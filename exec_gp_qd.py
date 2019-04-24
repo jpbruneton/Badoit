@@ -441,8 +441,8 @@ def init_everything_else(which_target):
 # -----------------------------------------------#
 def main():
     id = str(int(10000000 * time.time()))
-
-    for u in range(25,31):
+    targetsafinir=[17,19,20,21]
+    for u in targetsafinir:
 
         # init target, dictionnaries, and meta parameters
         which_target = u
