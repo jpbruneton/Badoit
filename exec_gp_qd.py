@@ -441,7 +441,7 @@ def init_everything_else(which_target):
 # -----------------------------------------------#
 def main():
     id = str(int(10000000 * time.time()))
-    targetsafinir=[17,19,20,21]
+    targetsafinir=[7,8]
     for u in targetsafinir:
 
         # init target, dictionnaries, and meta parameters
@@ -465,7 +465,7 @@ def main():
             writer.writerow('\n')
         myfile.close()
 
-        for runs in range(1):
+        for runs in range(6):
 
             # init qd grid
             reinit_grid = True
@@ -488,7 +488,7 @@ def main():
             prefix = str(int(10000000 * time.time()))
 
             # run evolution :
-            iteration_no_a = 150
+            iteration_no_a = 100
             stop, qdpool, alleqs_no_a, iter_no_a, valrmse = exec(which_target, train_target, test_target, voc_no_a, iteration_no_a, tolerance, gp, prefix)
 
             test = False
