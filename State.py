@@ -12,6 +12,7 @@
 # ================================= PREAMBLE ================================= #
 # Packages
 import copy
+import numpy as np
 # ============================================================================ #
 
 
@@ -107,5 +108,27 @@ class State:
 
         return formula
 
+
+# ---------------------------------------------------------------------------- #
+    def convert_to_NN_input(self):
+        if self.reversepolish == []:
+            nninput = [0]*self.voc.maximal_size
+
+        else:
+            if len(self.reversepolish) < self.voc.maximal_size:
+                nninput = copy.deepcopy(self.reversepolish)
+                addzeros = self.voc.maximal_size - len(nninput)
+                nninput += [0]*addzeros
+                #print('check', len(nninput) == config.SENTENCELENGHT)
+                #probably a good idea to scale input between 0 and 1
+                nninput = [x/self.voc.outputdim for x in nninput]
+            else:
+                nninput = copy.deepcopy(self.reversepolish)
+                nninput = [x/self.voc.outputdim for x in nninput]
+                #print('check', len(nninput) == config.SENTENCELENGHT)
+
+        nninput = np.asarray(nninput)
+
+        return nninput
 
 # =============================== END CLASS: State ================================ #

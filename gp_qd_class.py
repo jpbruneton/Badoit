@@ -88,6 +88,7 @@ class GP_QD():
                     if self.voc.infinite_number not in state.reversepolish:
                         self.pool.append(state)
                 print('yu', len(self.pool))
+                del mp_pool
 
             else:
                 self.pool = []
@@ -109,10 +110,11 @@ class GP_QD():
             small_states=[]
             for bin_id in self.QD_pool:
                 all_states.append(self.QD_pool[str(bin_id)][1])
-                if eval(bin_id)[1] < self.maximal_size -10:
+                if eval(bin_id)[1] < self.maximal_size - 10:
                     small_states.append(self.QD_pool[str(bin_id)][1])
 
             self.smallstates = small_states
+            print('euh1', len(all_states))
 
             # +add new rd eqs for diversity. We add half the qd_pool size of random eqs
             if self.addrandom:
@@ -141,6 +143,7 @@ class GP_QD():
 
                 else:
                     st = time.time()
+
                     while c < toadd and ntries < 2000:
                         newgame = game_env.randomeqs(self.voc)
                         if self.voc.infinite_number not in newgame.state.reversepolish:
@@ -149,7 +152,7 @@ class GP_QD():
                         ntries += 1
                 print('toi complet', time.time() -st)
 
-
+            print('euh2', len(all_states))
             #print('trying', ntries, 'vs', toadd)
             ts = time.time()
             print('sizetocross', len(self.QD_pool))
@@ -455,7 +458,7 @@ class printresults():
 
         timespent = time.time() - eval(prefix)/10000000
         if config.uselocal:
-            filepath = './' + prefix + 'results_target_' + str(target_number) + '.txt'
+            filepath = './localdata/' + prefix + 'results_target_' + str(target_number) + '.txt'
         else:
             filepath = '/home/user/results/'+ prefix+ 'results_target_' + str(target_number) + '.txt'
         with open(filepath, 'a') as myfile:

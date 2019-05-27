@@ -299,7 +299,7 @@ class Voc():
         self.modescalar = modescalar
         self.target = target.target
         if self.modescalar == 'noA':
-            self.maximal_size = 10 + self.target[-1]
+            self.maximal_size = 10+ self.target[-1]
         else:
             self.maximal_size = self.target[-1]
 
@@ -308,6 +308,7 @@ class Voc():
         self.arity0symbols_var_and_tar, self.var_numbers, self.plusnumber, self.minusnumber, self.multnumber, self.divnumber, self.log_number, \
         self.exp_number, self.explognumbers, self.trignumbers, self.sin_number, self.cos_number \
             = Build_dictionnaries.get_dic(self.target[0], self.target[1], modescalar)
+        self.outputdim = len(self.numbers_to_formula_dict) - 3
 
         self.mysimplificationrules, self.maxrulesize = self.create_dic_of_simplifs()
 

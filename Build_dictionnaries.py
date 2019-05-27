@@ -9,7 +9,11 @@ def get_dic(n_targets, n_variables, modescalar):
     # arity 0 symbols
 
     my_dic_any_scalars = ['A']
-    my_dic_integer_scalars = ['one', 'two']
+    neuralnet = False
+    if neuralnet:
+        my_dic_integer_scalars = ['one', 'two']
+    else:
+        my_dic_integer_scalars = ['one', 'two']
     #my_dic_integer_scalars = [str(1), str(2)]
 
     # targets are f0, f1, ...
@@ -41,7 +45,10 @@ def get_dic(n_targets, n_variables, modescalar):
     # ------------------------
     # arity 1 symbols
     # basic functions
-    my_dic_functions = [ 'np.cos(', 'np.sin(', 'np.exp(', 'np.log(']
+    if neuralnet:
+        my_dic_functions = []
+    else:
+        my_dic_functions = [ 'np.cos(', 'np.sin(', 'np.exp(', 'np.log(']
 
     # partial derivatives w.r.t. x1, x2, ...
     # see also game_env : d_i are only allowed acting directly on f_j, ie no stuff like partial_x (x^2+ cos(y) - f) : because could always be simplified and thus useless

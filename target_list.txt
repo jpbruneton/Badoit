@@ -43,12 +43,13 @@
 
 #  ------------------- actual targets : Very easy ones in L=15 -------------------
 
+
 # target 0 : Nguyen-2:
 1, 1, x + x**2 + x**3 + x**4, U, 0, 1, 20, U, 0, 2, 200, 15
 
 
 # target 1 : Koza-3:
-1, 1, x**6 -2*x**4 + x**2, U, 0, 1, 20, U, 0, 2, 200, 20
+1, 1, x**6 -2*x**4 + x**2, U, 0, 1, 20, U, 0, 2, 200, 15
 
 
 # target 2 : Meier-3:
@@ -156,32 +157,32 @@
 
 
 # target 25 : Vladislavleva 7 :
-#1, 2, (x-3)*(y-3) + 2*np.sin((x-4)*(y-4)), U, 0.05, 6.05, 20, U, 0, 12.35, 100, U, 0.05, 6.05, 20, U, 0, 12.35, 100, 35
+1, 2, (x-3)*(y-3) + 2*np.sin((x-4)*(y-4)), U, 0.05, 6.05, 20, U, 0, 12.35, 100, U, 0.05, 6.05, 20, U, 0, 12.35, 100, 35
 
 
-# target 25 : Vladislavleva 1 :
+# target 26 : Vladislavleva 1 :
 1, 2, np.exp(-(x-1)**2)/(1.2 + (y-2.5)**2), U, 0.3, 4, 20, E, 0, 8, 0.1, U, 0.3, 4, 20, E, 0, 8, 0.1, 35
 
 
 # -------------------- 40
 
-# target 26 : Vladislavleva 5 :
+# target 27 : Vladislavleva 5 :
 1, 3, 30*(x-1)*(z-1)/((x-10)*y**2), U, 0.05, 2, 8, E, 0, 10, 0.5, U, 1, 2, 8, E, 0, 10, 0.5, U, 0.05, 2, 8, E, 0, 3, 0.5, 40
 
 
-# target 27 : Keijzer-4
+# target 28 : Keijzer-4
 1, 1, x**3*np.exp(-x)*np.cos(x)*np.sin(x)*(np.cos(x)*np.sin(x)**2-1), E, 0, 10, 0.1, U, 0, 14, 1000, 40
 
 
-# target 28 : Nonic
+# target 29 : Nonic
 1, 1, x + x**2 + x**3 + x**4 + x**5 + x**6 + x**7 + x**8 + x**9, E, 0, 1, 0.05, U, 0, 2, 100, 40
 
 
 # -------------------- 45
 
-# target 29 : Vladislavleva 3 :
-1, 2, x**3*np.exp(-x)*np.cos(x)*np.sin(x)*(np.cos(x)*np.sin(x)**2-1)*(y-5), E, 0.05, 10, 0.2, U, 0, 10, 50, E, 0.05, 10.05, 2, U, 0, 10, 10, 45
+# target 30 : Vladislavleva 3 :
+1, 2, x**3*np.exp(-x)*np.cos(x)*np.sin(x)*(np.cos(x)*np.sin(x)**2-1)*(y-5), E, 0.05, 10, 0.1, U, 0, 10, 50, E, 0.05, 10.05, 2, U, 0, 10, 10, 45
 
 
-# target 30 : Vladislavleva 8 :
+# target 31 : Vladislavleva 8 :
 1, 2, ((x-3)**4 + (y-3)**3 -(y-3))/((y-2)**4 + 10), U, 0.05, 6.05, 20, E, 0, 12.35, 0.2,  U, 0.05, 6.05, 20, E, 0, 12.35, 0.2, 55
