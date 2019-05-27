@@ -469,7 +469,7 @@ def main():
             writer.writerow('\n')
         myfile.close()
 
-        for runs in range(8):
+        for runs in range(1):
 
             # init qd grid
             reinit_grid = True
