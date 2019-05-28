@@ -445,7 +445,7 @@ def init_everything_else(which_target):
 # -----------------------------------------------#
 def main():
     id = str(int(10000000 * time.time()))
-    uu=[15,22]
+    uu=[15, 22, 24, 18]
     for u in uu:
 
         # init target, dictionnaries, and meta parameters
