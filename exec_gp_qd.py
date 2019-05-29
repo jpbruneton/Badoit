@@ -406,7 +406,7 @@ def init_everything_else(which_target):
     # initial pool size of rd eqs at iteration 0
     poolsize = 4000
     # probability of dropping a function : cos(x) -> x
-    delete_ar1_ratio = 0.3
+    delete_ar1_ratio = 0.2
 
     # pool extension by mutation and crossovers
     extend_ratio = 2
@@ -436,7 +436,7 @@ def init_everything_else(which_target):
     maxexp = new
 
     #add rd eqs at each iteration
-    addrandom = False
+    addrandom = True
 
 
     return poolsize, delete_ar1_ratio, extend_ratio, p_mutate, p_cross, bina, maxa, binl_no_a, maxl_no_a, binl_a, maxl_a, binf, maxf, \
@@ -445,7 +445,7 @@ def init_everything_else(which_target):
 # -----------------------------------------------#
 def main():
     id = str(int(10000000 * time.time()))
-    uu=[21,23]
+    uu=[15, 21,23]
     for u in uu:
 
         # init target, dictionnaries, and meta parameters
