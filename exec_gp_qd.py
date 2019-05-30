@@ -436,7 +436,7 @@ def init_everything_else(which_target):
     maxexp = new
 
     #add rd eqs at each iteration
-    addrandom = True
+    addrandom = False
 
 
     return poolsize, delete_ar1_ratio, extend_ratio, p_mutate, p_cross, bina, maxa, binl_no_a, maxl_no_a, binl_a, maxl_a, binf, maxf, \
