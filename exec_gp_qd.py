@@ -445,7 +445,7 @@ def init_everything_else(which_target):
 # -----------------------------------------------#
 def main():
     id = str(int(10000000 * time.time()))
-    uu=[15, 16]
+    uu=[17]
     for u in uu:
 
         # init target, dictionnaries, and meta parameters
@@ -469,7 +469,7 @@ def main():
             writer.writerow('\n')
         myfile.close()
 
-        for runs in range(20):
+        for runs in range(1):
 
             # init qd grid
             reinit_grid = True
