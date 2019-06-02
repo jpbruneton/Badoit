@@ -193,8 +193,8 @@ class Evaluatefit:
         initialsigma = np.random.randint(1,5)
 
         try:
-            res = cma.CMAEvolutionStrategy(initialguess, initialsigma, 
-                {'verb_disp': 0, 'maxfevals' : '1e4 * N**2', 'popsize': config.popsize,'timeout': config.timelimit}).optimize(self.evaluation_target).result
+            res = cma.CMAEvolutionStrategy(initialguess, initialsigma,
+                {'verb_disp': 0}).optimize(self.evaluation_target).result
 
             reco = res.xfavorite
             #transforms array into list

@@ -272,7 +272,7 @@ def exec(which_target, train_target, test_target, voc, iteration, tolerance, gp,
      #       pickle.dump(gp.QD_pool, file)
      #   file.close()
 
-        if valreward > 0.999:
+        if valrmse <0.000001:
             #mp_pool.close()
             #mp_pool.join()
      #       del mp_pool
@@ -280,7 +280,7 @@ def exec(which_target, train_target, test_target, voc, iteration, tolerance, gp,
             del results
             print('early stopping')
             return 'es', gp.QD_pool, local_alleqs, i, valrmse
-        if len(local_alleqs) > 1000000:
+        if len(local_alleqs) > 100000000:
             del results
             print(' stopping bcs too many eqs seen')
             return 'stop', gp.QD_pool, local_alleqs, i, valrmse
@@ -406,7 +406,7 @@ def init_everything_else(which_target):
     # initial pool size of rd eqs at iteration 0
     poolsize = 4000
     # probability of dropping a function : cos(x) -> x
-    delete_ar1_ratio = 0.2
+    delete_ar1_ratio = 0.3
 
     # pool extension by mutation and crossovers
     extend_ratio = 2
@@ -445,7 +445,7 @@ def init_everything_else(which_target):
 # -----------------------------------------------#
 def main():
     id = str(int(10000000 * time.time()))
-    uu=[23]
+    uu=[0,1,2,3,4,5,6,7,8,9,10,11,12]
     for u in uu:
 
         # init target, dictionnaries, and meta parameters
@@ -469,7 +469,7 @@ def main():
             writer.writerow('\n')
         myfile.close()
 
-        for runs in range(1):
+        for runs in range(2):
 
             # init qd grid
             reinit_grid = True
