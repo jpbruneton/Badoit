@@ -167,7 +167,7 @@ class GP_QD():
                 if u <= self.p_mutate:
                     count += 1
 
-                    mutatedstate = gp_motor.mutate(state)
+                    s, mutatedstate = gp_motor.mutate(state)
                     #if str(mutatedstate.reversepolish) not in alleqs:
                     newpool.append(mutatedstate)
 
@@ -176,26 +176,28 @@ class GP_QD():
 
                     index = np.random.randint(0, len(all_states))
                     otherstate = all_states[index]  # this might crossover with itself : why not!
-                    state1, state2 = gp_motor.crossover(state, otherstate)
+                    success, state1, state2 = gp_motor.crossover(state, otherstate)
 
-                    #if str(state1.reversepolish) not in alleqs:
-                    newpool.append(state1)
-                    #if str(state2.reversepolish) not in alleqs:
-                    newpool.append(state2)
+                    if success:
+                        #if str(state1.reversepolish) not in alleqs:
+                        newpool.append(state1)
+                        #if str(state2.reversepolish) not in alleqs:
+                        newpool.append(state2)
 
                 else:  # mutate AND cross
                     count += 2
 
                     index = np.random.randint(0, len(all_states))
                     to_mutate = copy.deepcopy(all_states[index])
-                    prestate1 = gp_motor.mutate(state)
-                    prestate2 = gp_motor.mutate(to_mutate)
-                    state1, state2 = gp_motor.crossover(prestate1, prestate2)
+                    s, prestate1 = gp_motor.mutate(state)
+                    s, prestate2 = gp_motor.mutate(to_mutate)
+                    suc, state1, state2 = gp_motor.crossover(prestate1, prestate2)
 
-                    #if str(state1.reversepolish) not in alleqs:
-                    newpool.append(state1)
-                    #if str(state2.reversepolish) not in alleqs:
-                    newpool.append(state2)
+                    if suc:
+                        #if str(state1.reversepolish) not in alleqs:
+                        newpool.append(state1)
+                        #if str(state2.reversepolish) not in alleqs:
+                        newpool.append(state2)
 
             print('avgtime', (time.time()-ts))
             #update self.pool

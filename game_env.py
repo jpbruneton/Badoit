@@ -253,7 +253,7 @@ class Game:
 # create random eqs + simplify it with my rules
 def randomeqs(voc):
     game = Game(voc)
-
+    np.random.seed()
     while game.isterminal() == 0:
         nextchar = np.random.choice(game.allowedmoves())
         game.takestep(nextchar)

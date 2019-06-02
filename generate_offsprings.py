@@ -29,7 +29,7 @@ class generate_offsprings():
 
         L = len(state.reversepolish)
         if L <= 1:
-            return state
+            return False, state
 
         #else
         prev_rpn = copy.deepcopy(state.reversepolish)
@@ -81,9 +81,9 @@ class generate_offsprings():
 
         # mutation can lead to true zero division (after simplif) thus :
         if self.voc.infinite_number not in newstate.reversepolish :
-            return newstate
+            return True, newstate
         else:
-            return state
+            return False, state
 
 
 
@@ -159,12 +159,12 @@ class generate_offsprings():
 
             # but dont crossover at all if the results are eqs longer than maximal_size (see GP_QD) :
             if len(rpn1) > self.maximal_size or len(rpn2)> self.maximal_size:
-                return prev_state1, prev_state2
+                return False, prev_state1, prev_state2
 
 
         # else cant crossover
         else:
-            return prev_state1, prev_state2
+            return False, prev_state1, prev_state2
 
         #returns the new states
         state1 = State(self.voc, rpn1)
@@ -211,5 +211,5 @@ class generate_offsprings():
             #print('succes')
 
 
-        return toreturn[0], toreturn[1]
+        return True, toreturn[0], toreturn[1]
 
