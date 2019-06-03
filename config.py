@@ -30,7 +30,7 @@ use_simplif = False
 usederivativecost = 1  #or 0
 
 
-uselocal = False
+uselocal = True
 
 
 # -------------------- net and mcts -------------------------- #

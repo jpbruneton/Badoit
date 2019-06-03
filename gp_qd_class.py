@@ -42,7 +42,6 @@ class GP_QD():
         self.binf = binf
         self.maxp = maxp
         self.binp = binp
-
         self.maxtrig = maxtrig
         self.bintrig = bintrig
 
@@ -243,7 +242,6 @@ class GP_QD():
                 bin_l = self.binl
             else:
                 bins_for_l = np.linspace(0, self.maxl, num=self.binl+1)
-
                 for i in range(len(bins_for_l) - 1):
                     if L >= bins_for_l[i] and L < bins_for_l[i + 1]:
                         bin_l = i

@@ -10,7 +10,9 @@ from State import State
 import time
 import csv
 import sys
-
+import numpy as np
+import matplotlib
+import matplotlib.pyplot as plt
 # -------------------------------------------------------------------------- #
 def init_grid(reinit_grid, u):
     if config.uselocal:
@@ -261,6 +263,7 @@ def exec(which_target, train_target, test_target, voc, iteration, tolerance, gp,
         print('QD pool size', len(gp.QD_pool))
         print('alleqsseen', len(local_alleqs))
 
+
         # save results and print
         saveme = printresults(test_target, voc)
         valreward, valrmse = saveme.saveresults(newbin, replacements, i, gp.QD_pool, gp.maxa, tolerance, which_target, local_alleqs, prefix)
@@ -277,10 +280,12 @@ def exec(which_target, train_target, test_target, voc, iteration, tolerance, gp,
             #mp_pool.join()
      #       del mp_pool
       #      del asyncResult
+            #plotme(gp.QD_pool)
+
             del results
             print('early stopping')
             return 'es', gp.QD_pool, local_alleqs, i, valrmse
-        if len(local_alleqs) > 100000000:
+        if len(local_alleqs) > 10000000:
             del results
             print(' stopping bcs too many eqs seen')
             return 'stop', gp.QD_pool, local_alleqs, i, valrmse
@@ -291,6 +296,163 @@ def exec(which_target, train_target, test_target, voc, iteration, tolerance, gp,
     #del asyncResult
     #del results
     return None, gp.QD_pool, local_alleqs, i, valrmse
+
+def heatmap(data, row_labels, col_labels, ax=None,
+            cbar_kw={}, cbarlabel="", **kwargs):
+    """
+    Create a heatmap from a numpy array and two lists of labels.
+
+    Parameters
+    ----------
+    data
+        A 2D numpy array of shape (N, M).
+    row_labels
+        A list or array of length N with the labels for the rows.
+    col_labels
+        A list or array of length M with the labels for the columns.
+    ax
+        A `matplotlib.axes.Axes` instance to which the heatmap is plotted.  If
+        not provided, use current axes or create a new one.  Optional.
+    cbar_kw
+        A dictionary with arguments to `matplotlib.Figure.colorbar`.  Optional.
+    cbarlabel
+        The label for the colorbar.  Optional.
+    **kwargs
+        All other arguments are forwarded to `imshow`.
+    """
+
+    if not ax:
+        ax = plt.gca()
+
+    # Plot the heatmap
+    im = ax.imshow(data, **kwargs)
+    # Create colorbar
+    cbar = ax.figure.colorbar(im, ax=ax, **cbar_kw)
+    cbar.ax.set_ylabel(cbarlabel, rotation=-90, va="bottom")
+
+    # We want to show all ticks...
+    ax.set_xticks(np.arange(data.shape[1]))
+    ax.set_yticks(np.arange(data.shape[0]))
+    # ... and label them with the respective list entries.
+    ax.set_xticklabels(col_labels)
+    ax.set_yticklabels(row_labels)
+
+    # Let the horizontal axes labeling appear on top.
+    ax.tick_params(top=True, bottom=False,
+                   labeltop=True, labelbottom=False)
+
+    # Rotate the tick labels and set their alignment.
+    plt.setp(ax.get_xticklabels(), rotation=-30, ha="right",
+             rotation_mode="anchor")
+
+    # Turn spines off and create white grid.
+    for edge, spine in ax.spines.items():
+        spine.set_visible(False)
+
+    ax.set_xticks(np.arange(data.shape[1]+1)-.5, minor=True)
+    ax.set_yticks(np.arange(data.shape[0]+1)-.5, minor=True)
+    ax.grid(which="minor", color="w", linestyle='-', linewidth=3)
+    ax.tick_params(which="minor", bottom=False, left=False)
+    return im, cbar
+
+
+def annotate_heatmap(im, data=None, valfmt="{x:.2f}",
+                     textcolors=["black", "white"],
+                     threshold=None, **textkw):
+    """
+    A function to annotate a heatmap.
+
+    Parameters
+    ----------
+    im
+        The AxesImage to be labeled.
+    data
+        Data used to annotate.  If None, the image's data is used.  Optional.
+    valfmt
+        The format of the annotations inside the heatmap.  This should either
+        use the string format method, e.g. "$ {x:.2f}", or be a
+        `matplotlib.ticker.Formatter`.  Optional.
+    textcolors
+        A list or array of two color specifications.  The first is used for
+        values below a threshold, the second for those above.  Optional.
+    threshold
+        Value in data units according to which the colors from textcolors are
+        applied.  If None (the default) uses the middle of the colormap as
+        separation.  Optional.
+    **kwargs
+        All other arguments are forwarded to each call to `text` used to create
+        the text labels.
+    """
+
+    if not isinstance(data, (list, np.ndarray)):
+        data = im.get_array()
+
+    # Normalize the threshold to the images color range.
+    if threshold is not None:
+        threshold = im.norm(threshold)
+    else:
+        threshold = im.norm(data.max())/2.
+
+    # Set default alignment to center, but allow it to be
+    # overwritten by textkw.
+    kw = dict(horizontalalignment="center",
+              verticalalignment="center")
+    kw.update(textkw)
+
+    # Get the formatter in case a string is supplied
+    if isinstance(valfmt, str):
+        valfmt = matplotlib.ticker.StrMethodFormatter(valfmt)
+
+    # Loop over the data and create a `Text` for each "pixel".
+    # Change the text's color depending on the data.
+    texts = []
+    for i in range(data.shape[0]):
+        for j in range(data.shape[1]):
+            kw.update(color=textcolors[int(im.norm(data[i, j]) > threshold)])
+            text = im.axes.text(j, i, valfmt(data[i, j], None), **kw)
+            texts.append(text)
+
+    return texts
+
+#results_by_bin.update({str([bin_a, bin_l, bin_exp, bin_trig, bin_p, bin_f]): [reward, state, allA]})
+
+
+def plotme(pool):
+
+    drawme = -np.ones((16,31,9))
+    for key in pool:
+        smallkeya = eval(key)[0]
+        smallkeyl = eval(key)[1]
+        smallkeyf = eval(key)[-1]
+
+        reward =  pool[key][0]
+        #print(key, smallkey, reward)
+        drawme[smallkeya, smallkeyl, smallkeyf] = reward
+
+
+
+    yo1 = drawme[:,:,0]
+    yo1 = np.transpose(yo1)
+    im, _ = heatmap(yo1, [], [],
+                    cmap="RdYlGn",
+                    cbarlabel="reward")
+    plt.show()
+    yo2 = drawme[:, :, 1]
+    im2, _ = heatmap(yo1, [], [],
+                    cmap="RdYlGn",
+                    cbarlabel="reward")
+    plt.show()
+    def func(x, pos):
+        return "{:.2f}".format(x).replace("0.", ".").replace("1.00", "")
+
+    #annotate_heatmap(im, valfmt=matplotlib.ticker.FuncFormatter(func), size=7)
+
+#    plt.imshow(im)
+    #plt.imshow(drawme[:,:,1])
+    #plt.show()
+    #plt.imshow(drawme[:,:,2])
+
+
 
 # -----------------------------------------------#
 def convert_eqs(qdpool, voc_a, voc_no_a, diff):
@@ -404,7 +566,7 @@ def init_everything_else(which_target):
     diff = sizenoa - sizea
 
     # initial pool size of rd eqs at iteration 0
-    poolsize = 4000
+    poolsize = 10000
     # probability of dropping a function : cos(x) -> x
     delete_ar1_ratio = 0.3
 
@@ -419,15 +581,17 @@ def init_everything_else(which_target):
 
 
     #QD grid parameters
-    bina = 20  # number of bins for number of free scalars
-    maxa = 20
+
     binl_no_a = voc_no_a.maximal_size # number of bins for length of an eq
+    #print('checkme', binl_no_a)
     maxl_no_a = voc_no_a.maximal_size
+    bina = int(maxl_no_a/2)  # number of bins for number of free scalars
+    maxa = bina
     binl_a = voc_with_a.maximal_size # number of bins for length of an eq
     maxl_a = voc_with_a.maximal_size
     binf = 8 # number of bins for number of fonctions
     maxf = 8
-    new = 0
+    new = 1
     binp = new  # number of bins for number of powers
     maxp = new
     bintrig = new # number of bins for number of trigonometric functions (sine and cos)
@@ -445,7 +609,7 @@ def init_everything_else(which_target):
 # -----------------------------------------------#
 def main():
     id = str(int(10000000 * time.time()))
-    uu=[0,1,2,3,4,5,6,7,8,9,10,11,12]
+    uu=[26, 27, 28, 29,30,31,32]
     for u in uu:
 
         # init target, dictionnaries, and meta parameters
@@ -469,7 +633,7 @@ def main():
             writer.writerow('\n')
         myfile.close()
 
-        for runs in range(2):
+        for runs in range(1):
 
             # init qd grid
             reinit_grid = True
