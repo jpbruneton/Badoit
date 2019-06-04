@@ -566,7 +566,7 @@ def init_everything_else(which_target):
     diff = sizenoa - sizea
 
     # initial pool size of rd eqs at iteration 0
-    poolsize = 10000
+    poolsize = 4000
     # probability of dropping a function : cos(x) -> x
     delete_ar1_ratio = 0.3
 
@@ -585,13 +585,13 @@ def init_everything_else(which_target):
     binl_no_a = voc_no_a.maximal_size # number of bins for length of an eq
     #print('checkme', binl_no_a)
     maxl_no_a = voc_no_a.maximal_size
-    bina = int(maxl_no_a/2)  # number of bins for number of free scalars
+    bina = maxl_no_a  # number of bins for number of free scalars
     maxa = bina
     binl_a = voc_with_a.maximal_size # number of bins for length of an eq
     maxl_a = voc_with_a.maximal_size
     binf = 8 # number of bins for number of fonctions
     maxf = 8
-    new = 1
+    new = 0
     binp = new  # number of bins for number of powers
     maxp = new
     bintrig = new # number of bins for number of trigonometric functions (sine and cos)
@@ -609,8 +609,7 @@ def init_everything_else(which_target):
 # -----------------------------------------------#
 def main():
     id = str(int(10000000 * time.time()))
-    uu=[26, 27, 28, 29,30,31,32]
-    for u in uu:
+    for u in range(13,24):
 
         # init target, dictionnaries, and meta parameters
         which_target = u
@@ -633,7 +632,7 @@ def main():
             writer.writerow('\n')
         myfile.close()
 
-        for runs in range(1):
+        for runs in range(2):
 
             # init qd grid
             reinit_grid = True

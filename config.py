@@ -12,7 +12,7 @@ only_scalar_in_power = True
 
 
 tworunsineval = False
-popsize = '20*N'
+popsize = '10'
 timelimit = '7*N'
 
 # reward decreases if there are too many pure scalar parameters, given by:
@@ -30,7 +30,7 @@ use_simplif = False
 usederivativecost = 1  #or 0
 
 
-uselocal = True
+uselocal = False
 
 
 # -------------------- net and mcts -------------------------- #

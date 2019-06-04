@@ -190,7 +190,10 @@ class Evaluatefit:
         # applies the cmaes fit:
         # randomize initial guess between -1 and 1, and initial sigma between 1 and 5:
         initialguess = 2*np.random.rand(self.scalar_numbers)-1
+        #print(initialguess)
         initialsigma = np.random.randint(1,5)
+        #initialguess = [0]*self.scalar_numbers
+        #initialsigma = 1
 
         try:
             res = cma.CMAEvolutionStrategy(initialguess, initialsigma,
