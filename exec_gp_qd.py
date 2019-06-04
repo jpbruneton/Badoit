@@ -11,8 +11,8 @@ import time
 import csv
 import sys
 import numpy as np
-import matplotlib
-import matplotlib.pyplot as plt
+#import matplotlib
+#import matplotlib.pyplot as plt
 # -------------------------------------------------------------------------- #
 def init_grid(reinit_grid, u):
     if config.uselocal:
