@@ -18,7 +18,7 @@ class GP_QD():
 
     # ---------------------------------------------------------------------------- #
     def __init__(self, target_number, delete_ar1_ratio, p_mutate, p_cross, poolsize, voc, tolerance,
-                  extend_ratio, maxa, bina, maxl, binl, maxf, binf, maxp, binp, maxtrig, bintrig, maxexp, binexp, addrandom, qdpool, pool = None):
+                  extend_ratio, maxa, bina, maxl, binl, maxf, binf, maxp, binp, maxtrig, bintrig, derzero, derone, maxexp, binexp, addrandom, qdpool, pool = None):
 
         self.target_number = target_number
         self.usesimplif = config.use_simplif
@@ -44,7 +44,9 @@ class GP_QD():
         self.binp = binp
         self.maxtrig = maxtrig
         self.bintrig = bintrig
-
+        self.derzero = derzero
+        self.derone = derone
+        self.maxder = 1
         self.maxexp = maxexp
         self.binexp = binexp
         self.smallstates =[]
@@ -218,7 +220,7 @@ class GP_QD():
         # rescale and print which bin
         for oneresult in results:
             #print(oneresult)
-            reward, state, allA, Anumber, L, function_number, powernumber, trignumber, explognumber = oneresult
+            reward, state, allA, Anumber, L, function_number, powernumber, trignumber, explognumber, fnumber, deronenumber = oneresult
             #print(reward, state, allA, Anumber, L, function_number, powernumber, trignumber, explognumber)
             #if state.reversepolish[-1] == 1:
             #    L = L - 1
@@ -254,6 +256,23 @@ class GP_QD():
                     if function_number >= bins_for_f[i] and function_number < bins_for_f[i + 1]:
                         bin_f = i
 
+            if fnumber >= self.maxder:
+                bin_fzero = self.derzero
+            else:
+                bin_fzero = np.linspace(0, self.maxder, num = self.derzero+1)
+                for i in range(len(bin_fzero) - 1):
+                    if fnumber >= bin_fzero[i] and fnumber < bin_fzero[i + 1]:
+                        bin_fzero = i
+
+            if deronenumber >= self.maxder:
+                bin_fone = self.derzero
+            else:
+                bin_fone = np.linspace(0, self.maxder, num = self.derzero+1)
+                for i in range(len(bin_fone) - 1):
+                    if deronenumber >= bin_fone[i] and deronenumber < bin_fone[i + 1]:
+                        bin_fone = i
+
+
             if powernumber >= self.maxp:
                 bin_p = self.binp
             else:
@@ -283,20 +302,20 @@ class GP_QD():
             #print('bins are', [bin_a, bin_l, bin_exp, bin_trig, bin_p, bin_f])
 
             ct+=1
-            if str([bin_a, bin_l, bin_exp, bin_trig, bin_p, bin_f]) not in results_by_bin:
+            if str([bin_a, bin_l, bin_exp, bin_trig, bin_p, bin_f, bin_fzero, bin_fone]) not in results_by_bin:
                 cif+=1
-                results_by_bin.update({str([bin_a, bin_l, bin_exp, bin_trig, bin_p, bin_f]): [reward, state, allA]})
+                results_by_bin.update({str([bin_a, bin_l, bin_exp, bin_trig, bin_p, bin_f, bin_fzero, bin_fone]): [reward, state, allA]})
                 #print(results_by_bin)
             else:
                 cnotif+=1
                 #print('happening', [bin_a, bin_l, bin_exp, bin_trig, bin_p, bin_f])
                 #time.sleep(.2)
                 #print(state.formulas)
-                prev_reward = results_by_bin[str([bin_a, bin_l, bin_exp, bin_trig, bin_p, bin_f])][0]
+                prev_reward = results_by_bin[str([bin_a, bin_l, bin_exp, bin_trig, bin_p, bin_f, bin_fzero, bin_fone])][0]
                 #print('prev', results_by_bin[str([bin_a, bin_l, bin_exp, bin_trig, bin_p, bin_f])])
                 #print('prev', results_by_bin[str([bin_a, bin_l, bin_exp, bin_trig, bin_p, bin_f])][1].formulas)
                 if reward > prev_reward:
-                    results_by_bin.update({str([bin_a, bin_l, bin_exp, bin_trig, bin_p, bin_f]): [reward, state, allA]})
+                    results_by_bin.update({str([bin_a, bin_l, bin_exp, bin_trig, bin_p, bin_f, bin_fzero, bin_fone]): [reward, state, allA]})
         #print(results_by_bin)
         #print('me', len(results_by_bin))
         print(ct, cif, cnotif)

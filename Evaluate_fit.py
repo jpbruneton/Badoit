@@ -15,6 +15,7 @@ import config
 from scipy.optimize import least_squares
 import copy
 import cma
+import matplotlib.pyplot as plt
 
 import sys
 # ============================ CLASS: Evaluate_Fit ================================ #
@@ -29,11 +30,15 @@ class Evaluatefit:
         self.mode = mode
         self.scalar_numbers = 0
         self.n_targets, self.n_variables, self.variables, self.targets, self.f_renormalization, self.ranges, self.maximal_size = target.target
+
         self.xsize = self.variables[0].shape[0]
+        self.step = (self.ranges[0])/self.xsize
+
         if self.n_variables > 1:
             self.ysize = self.variables[0].shape[1]
         if self.n_variables > 2:
             self.zsize = self.variables[0].shape[2]
+
 
     # ---------------------------------------------------------------------------- #
     def rename_formulas(self):
@@ -56,25 +61,48 @@ class Evaluatefit:
                 A_count += 1
             else:
                 neweq += char
-        # rename by hand: this transforms x0 into x0[:] if one variable ... or into x0[:,:,:] if three variables
-        arr = ''
-        for j in range(self.n_variables):
-            arr = arr + ':'
-            if j < self.n_variables - 1:
-                arr = arr + ','
 
-        # renaming f: this transforms f into f[:] if one variable ... or into f[:,:,:] if three variables
-        # for i in range(self.n_targets):
-        #     string_to_replace = 'f' + str(i)
-        #     replace_by = 'f' + str(i) + '[' + arr + ']'
-        #     neweq = neweq.replace(string_to_replace, replace_by)
+        # count derivatives
+        # #only works with one var here and one target
+        highest_der = 0
+        for u in range(1,config.max_derivative):
+            if 'd'*u in neweq:
+                highest_der += 1
 
+        if highest_der != 0 :
 
-        # rename the x : transforms x0 in x[0], x1 in x[1], x2 in x[2] (because variables are self.variables = [X,Y,Z], see class Targets)
-        for i in range(self.n_variables):
-            string_to_replace = 'x' + str(i)
-            replace_by = '(' + 'x' + '[' + str(i) +']' + '[' + arr + ']' +'*' + str(self.ranges[i]) + ')'
-            neweq = neweq.replace(string_to_replace, replace_by)
+            #print('yo, bf', neweq)
+            #handle derivatives
+            for u in range(1, highest_der+1):
+                if highest_der-u > 0:
+                    arr = '[:-' + str(highest_der-u) + ']'
+                else:
+                    arr = '[:]'
+                look_for = 'd'*u + '_x0'*u + '_f0'
+                replace_by = 'np.diff(f[0]' + arr + ',' +str(u) +')/('  + str(self.step) +'**2)'
+                neweq = neweq.replace(look_for, replace_by)
+
+                #print('yo, af', neweq)
+
+        # must do avant:
+        # rename f0 alone, and not _f0, and idem x0
+        if highest_der != 0 :
+            base_array = '[:-' + str(highest_der) + ']'
+        else:
+            base_array = '[:]'
+        string_to_replace = 'x0'
+        replace_by = '(x[0]' + base_array + '*' + str(self.ranges[0]) + ')'
+        neweq = neweq.replace(string_to_replace, replace_by)
+
+        #print('then', neweq)
+
+        # f:
+        string_to_replace = 'f0'
+        replace_by = 'f[0]' + base_array
+        neweq = neweq.replace(string_to_replace, replace_by)
+
+        #print('then', neweq)
+
 
         string_to_replace  = 'one'
         replace_by = '1.0'
@@ -92,8 +120,12 @@ class Evaluatefit:
         replace_by = '0.0'
         neweq = neweq.replace(string_to_replace, replace_by)
         # the update
-        #print(self.formulas)
+        #print('bf', self.formulas)
         self.formulas = neweq
+        #print('af', self.formulas)
+        #print(np.diff(self.targets[0],1).shape)
+        #print(self.variables[0][:].shape)
+        #self.formulas = '2.0'
 
 
     # ---------------------------------------------------------------------------- #
@@ -108,11 +140,11 @@ class Evaluatefit:
         return reward
 
     # ---------------------------------------------------------------------------- #
-    def formula_eval(self, x, A) :
+    def formula_eval(self, x, f, A) :
         try:
             #print(self.formulas)
-
             toreturn = eval(self.formulas)/self.f_renormalization
+            #print('ma', toreturn)
             if type(toreturn) != np.ndarray or np.isnan(np.sum(toreturn)) or np.isinf(np.sum(toreturn)) :
                 return False, None
             else:
@@ -139,10 +171,15 @@ class Evaluatefit:
     def evaluation_target(self, a):
         err = 0
 
-        success, eval = self.formula_eval(self.variables, a)
+        success, eval = self.formula_eval(self.variables, self.targets, a)
 
         if success == True:
-            diff = eval - self.targets[0]
+            mavraitarget = np.diff(self.targets[0], config.max_derivative) / (self.step ** (config.max_derivative))
+            # print('re', mavraitarget)
+            # plt.plot(mavraitarget, 'r')
+            resize_eval = eval[:mavraitarget.size]
+
+            diff = resize_eval - mavraitarget
             err += (np.sum(diff**2))
             err /= np.sum(np.ones_like(diff))
         else:
@@ -207,6 +244,7 @@ class Evaluatefit:
                 rec.append(reco[u])
 
         except (RuntimeWarning, RuntimeError, ValueError, ZeroDivisionError, OverflowError, SystemError, AttributeError):
+
             return False, [1]*self.scalar_numbers
 
         return True, rec
@@ -235,11 +273,17 @@ class Evaluatefit:
 
     def eval_reward_nrmse(self, A):
     #for validation only
-        success, result = self.formula_eval(self.variables, A)
+        success, result = self.formula_eval(self.variables, self.targets, A)
 
         if success:
-            quadratic_cost = np.sum((result - self.targets)**2)
-            n = self.targets.size
+
+            mavraitarget = np.diff(self.targets[0], config.max_derivative)/(self.step**(config.max_derivative))
+            #print('re', mavraitarget.shape)
+            resize_result = result[:mavraitarget.size]
+
+            quadratic_cost = np.sum((mavraitarget - resize_result)**2)
+
+            n = mavraitarget.size
             rmse = np.sqrt(quadratic_cost / n)
             nrmse = rmse / np.std(self.targets)
 
@@ -262,7 +306,10 @@ class Evaluatefit:
 
         #print('tt', self.formulas)
         #print('jj', self.scalar_numbers)
-        success, result = self.formula_eval(self.variables, A)
+        success, result = self.formula_eval(self.variables, self.targets, A)
+
+        #print('tut', success)
+
         # can fail from two effects : inf/nan from division by zero, or output is a cst, hence a scalar, and not an array
 
         # if success == False or type(result) != np.ndarray:
@@ -271,17 +318,33 @@ class Evaluatefit:
         #     results.append(result)
 
         if success:
-            distance_cost = np.sum(np.absolute(result - self.targets))
+            #print('je passe la', self.formulas, self.f_renormalization)
+            #print('step', self.step)
+            #print(self.targets[0])
+            mavraitarget = np.diff(self.targets[0], config.max_derivative)/(self.step**(config.max_derivative))
+            #print('re', mavraitarget)
+            #plt.plot(mavraitarget, 'r')
+            resize_result = result[:mavraitarget.size]
 
-            for i in range(self.n_variables):
+            #plt.plot(resize_result, 'b')
+            #plt.show()
 
-                differential_along_i = np.diff(result - self.targets, axis=i)
-                myvar = self.variables[i]
-                diff_my_var = np.diff(myvar, axis=i)
-                derivative_along_i = np.divide(differential_along_i, diff_my_var)
-                derivative_cost[i] = np.sum(np.absolute(derivative_along_i))
+            #print('re', mavraitarget.shape)
 
-            error_on_target = distance_cost + usederivativecost *config.usederivativecost * np.sum(derivative_cost)
+            distance_cost = np.sum(np.absolute(mavraitarget - resize_result))
+
+            if config. usederivativecost:
+                for i in range(self.n_variables):
+
+                    differential_along_i = np.diff(mavraitarget - resize_result, axis=i)
+                    myvar = self.variables[i]
+                    diff_my_var = np.diff(myvar, axis=i)
+                    derivative_along_i = np.divide(differential_along_i, diff_my_var)
+                    derivative_cost[i] = np.sum(np.absolute(derivative_along_i))
+
+                error_on_target = distance_cost + usederivativecost *config.usederivativecost * np.sum(derivative_cost)
+            else:
+                error_on_target = distance_cost
             reward = self.reward_formula(error_on_target)
 
             # add parsimony cost
@@ -310,6 +373,7 @@ class Evaluatefit:
         # ---------------------------------------------------------------------------- #
         #rename formulas and return the number of A's
         self.rename_formulas()
+        #print('tut', self.formulas)
         #----------------------------------------------------------------------------- #
         # First consider the simple case where there are no generic scalars:
         if self.scalar_numbers == 0:
@@ -325,7 +389,12 @@ class Evaluatefit:
         #else, compute some actual reward:
         reward_cmaes = self.eval_reward(allA)
         #now we can refine with least squares
-        success_ls, allA_ls = self.best_A_least_squares(allA)
+        usels = False
+        if usels:
+            success_ls, allA_ls = self.best_A_least_squares(allA)
+        else:
+            success_ls, allA_ls = success, allA
+
         if success_ls == False:
             reward_ls = failure_reward
             reward_ls_round = failure_reward

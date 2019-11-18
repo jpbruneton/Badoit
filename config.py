@@ -4,6 +4,10 @@ cpus = 40
 # --------------  Taget related ---------------- #
 findtolerance = True
 
+saveqd = False
+use_derivative = True
+max_derivative = 2 #will look for f'' -- eventuellement derivees croisees = stuff
+
 # --------------------- SPECIAL SYNTAXIC RULES -------------- #
 # how many nested functions I authorize
 MAX_DEPTH = 1
@@ -27,11 +31,11 @@ use_simplif = False
 
 # -------------------- reward related -------------------------- #
 #after some tests, its better to use both the distance cost AND the derivative cost
-usederivativecost = 1  #or 0
+usederivativecost = 0  #or 0
 
 
 uselocal = False
-
+fromfile = True
 
 # -------------------- net and mcts -------------------------- #
 

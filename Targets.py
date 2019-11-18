@@ -13,15 +13,68 @@
 import numpy as np
 import Build_dictionnaries
 import Simplification_rules
+import matplotlib.pyplot as plt
+import config
 # ============================================================================ #
 
 class Target:
 
-    def __init__(self, which_target, mode):
+    def __init__(self, which_target, mode, fromfile = None):
         self.which_target = which_target
         self.mode = mode #'test' or 'train'
-        self.target = self._define_target()
-        self.mytarget = self.returntarget()
+        self.from_file = fromfile
+        if self.from_file is None:
+            self.target = self._define_target()
+            self.mytarget = self.returntarget()
+        else: #define target from file
+            self.target = self._definetargetfromfile()
+            self.mytarget = 'dummytarget'
+
+    def _definetargetfromfile(self):
+        n_targets = 1
+        n_variables = 1
+        maximal_size = 40
+
+        data = np.loadtxt(self.from_file, delimiter=',')
+        L = data.shape[0]
+
+        #si je coupe en deux:
+        if False:
+            lo = int(L*0.8)
+            data_train = data[:lo, :]
+            data_test = data[lo:, :]
+            x_train = data_train[:, 0]
+            x_test = data_test[:,0]
+            f0_train = data_train[:,1]
+            f0_test = data_test[:,1]
+
+        else: # mieux je subsample genre 1 sur 2 quoi
+            data_x = list(data[1933:3200, 0])
+            data_f = list(data[1933:3200,1])
+            x_train = data_x[0::3]
+            x_test = data_x[0::7]
+            f0_train = data_f[0::3]
+            f0_test = data_f[0::7]
+
+            #plt.plot(f0_train)
+            #plt.show()
+            #plt.plot(f0_test)
+            #plt.show()
+        f_normalization_train = np.amax(np.abs(f0_train))
+        f_normalization_train = 1
+        #f0_train = f0_train / f_normalization_train
+
+        f_normalization_test = np.amax(np.abs(f0_test))
+        f_normalization_test = 1
+        #f0_test = f0_test / f_normalization_test
+        range_x_train = x_train[-1] - x_train[0]
+        range_x_test = x_test[-1] - x_test[0]
+
+        if self.mode == 'train':
+            return n_targets, n_variables, [x_train / range_x_train], [np.asarray(f0_train)], f_normalization_train, [range_x_train], maximal_size
+        else:
+            return n_targets, n_variables, [x_test / range_x_test], [np.asarray(f0_test)], f_normalization_test, [range_x_test], maximal_size
+
 
     def returntarget(self):
         with open('target_list.txt') as myfile:
@@ -185,24 +238,27 @@ class Target:
         # ------------------------------------------------#
         if n_variables == 1:
             x = x_train
+            #print(x)
             #then i can eval f0
             f0_train = eval(target_function)
             f_normalization_train = np.amax(np.abs(f0_train))
+            f_normalization_train = 1
             f0_train = f0_train/f_normalization_train
 
             x = x_test
             # then i can eval f0
             f0_test = eval(target_function)
             f_normalization_test = np.amax(np.abs(f0_test))
+            f_normalization_test  = 1
 
             f0_test = f0_test/f_normalization_test
 
             #also schrink the x interval to -1, 1
             if self.mode == 'train':
                 #return n_targets, n_variables, [x_train/range_x], [x_test/range_x], [f0_train], [f0_test], f_normalization, [range_x]
-                return n_targets, n_variables, [x_train / range_x_train], f0_train, f_normalization_train, [range_x_train], maximal_size
+                return n_targets, n_variables, [x_train / range_x_train], [f0_train], f_normalization_train, [range_x_train], maximal_size
             else:
-                return n_targets, n_variables,  [x_test/range_x_test], f0_test, f_normalization_test, [range_x_test], maximal_size
+                return n_targets, n_variables,  [x_test/range_x_test], [f0_test], f_normalization_test, [range_x_test], maximal_size
         # ------------------------------------------------#
         elif n_variables == 2:
 
@@ -298,6 +354,7 @@ class Voc():
 
         self.modescalar = modescalar
         self.target = target.target
+
         if self.modescalar == 'noA':
             self.maximal_size = 10+ self.target[-1]
         else:

@@ -1,4 +1,5 @@
 import config
+
 def get_dic(n_targets, n_variables, modescalar):
 
     # ------------------------
@@ -53,7 +54,23 @@ def get_dic(n_targets, n_variables, modescalar):
     # partial derivatives w.r.t. x1, x2, ...
     # see also game_env : d_i are only allowed acting directly on f_j, ie no stuff like partial_x (x^2+ cos(y) - f) : because could always be simplified and thus useless
 
-    my_dic_diff = []
+    if config.use_derivative:
+        my_dic_diff = []
+        ders =[['']]
+        while len(ders) < config.max_derivative:
+            loc_der = []
+            pre_der = ders[-1]
+            for elem in pre_der:
+                for v in range(n_variables):
+                    loc_der.append('d' + elem + '_x' + str(v))
+            ders.append(loc_der)
+
+        for u in range(n_targets):
+            for i in range(1, len(ders)):
+                for der in ders[i]:
+                    my_dic_diff.append(der+'_f'+str(u))
+    else:
+        my_dic_diff = []
 
 
     # ------------------------
@@ -69,18 +86,23 @@ def get_dic(n_targets, n_variables, modescalar):
     my_dic_infinite =['infinity']
     special_dic = my_dic_true_zero + my_dic_neutral + my_dic_infinite
 
+    my_dic_myfunctions = []
+    if config.use_derivative:
+        for u in range(n_targets):
+            my_dic_myfunctions.append('f' + str(u))
 
     # --------------------------
     #concatenate the dics
     numbers_to_formula_dict = {'1' : 'halt'}
 
     if modescalar == 'A':
-        arity0dic = my_dic_any_scalars + my_dic_variables
+
+        arity0dic = my_dic_any_scalars + my_dic_variables + my_dic_diff + my_dic_myfunctions
         pure_numbers = tuple([i for i in range(2, 2 + len(my_dic_any_scalars))])
         var_numbers = tuple([i for i in range(2 + len(my_dic_any_scalars), 2 + len(my_dic_any_scalars) + len(my_dic_variables))])
 
     else:
-        arity0dic = my_dic_integer_scalars + my_dic_variables
+        arity0dic = my_dic_integer_scalars + my_dic_variables + my_dic_diff + my_dic_myfunctions
         pure_numbers = tuple([i for i in range(2, 2 + len(my_dic_integer_scalars))])
         var_numbers = tuple([i for i in range(2 + len(my_dic_integer_scalars), 2 + len(my_dic_integer_scalars) + len(my_dic_variables))])
 

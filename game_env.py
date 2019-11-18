@@ -324,9 +324,12 @@ def game_evaluate(rpn, formulas, tolerance, voc, target, mode):
 def calculatetolerance(initialguess, target, voc):
     print('automatic calculation of tolerance for reward estimate...')
 
-    budget = 10
+    budget = 60
     count = 0
-    tolerance = initialguess
+    if voc.modescalar == 'noA':
+        tolerance = initialguess*1000
+    else:
+        tolerance = initialguess * 100000
     meanreward = -1
     print('initial guess', initialguess)
 

@@ -13,12 +13,13 @@ import sys
 import numpy as np
 #import matplotlib
 #import matplotlib.pyplot as plt
+import pickle
 # -------------------------------------------------------------------------- #
-def init_grid(reinit_grid, u):
+def init_grid(reinit_grid, type, u):
     if config.uselocal:
-        file_path = './gpdata/QD_pool' + str(u) + '.txt'
+        file_path = './gpdata/QD_pool' + type + str(u) + '.txt'
     else:
-        file_path = '/home/user/QD_pool' + str(u) + '.txt'
+        file_path = '/home/user/results/QD_pool' + type + str(u) + '.txt'
 
     if reinit_grid:
         if os.path.exists(file_path):
@@ -35,6 +36,18 @@ def init_grid(reinit_grid, u):
         qdpool = None
 
     return qdpool
+
+def save_qd_pool(pool, type, u):
+    timeur = int(time.time()*1000000)
+
+    if config.uselocal:
+        file_path = './gpdata/QD_pool' + type + str(u) + '.txt'
+    else:
+        file_path = '/home/user/results/QD_pool' + type + str(u) + str(timeur) + '.txt'
+
+    with open(file_path, 'wb') as file:
+        pickle.dump(pool, file)
+        file.close()
 
 # -------------------------------------------------------------------------- #
 def init_tolerance(target, voc):
@@ -127,8 +140,22 @@ def evalme(onestate):
     for char in state.reversepolish:
         if char in voc.explognumbers:
             explognumber += 1
+
+    fnumber, deronenumber = 0, 0
+    for char in state.reversepolish:
+        if voc.modescalar == 'noA':
+            if char == 6:
+                fnumber = 1
+            if char == 5:
+                deronenumber = 1
+        else:
+            if char == 5:
+                fnumber = 1
+            if char == 4:
+                deronenumber = 1
+
     #print('t',state.reversepolish, state.formulas, 'k', reward, state, alla, scalar_numbers, L, function_number, powernumber, trignumber, explognumber)
-    return reward, state, alla, scalar_numbers, L, function_number, powernumber, trignumber, explognumber
+    return reward, state, alla, scalar_numbers, L, function_number, powernumber, trignumber, explognumber, fnumber, deronenumber
 
 
 def count_meta_features(voc, state):
@@ -163,7 +190,21 @@ def count_meta_features(voc, state):
         if char in voc.explognumbers:
             explognumber += 1
 
-    return scalar_numbers, L, function_number, powernumber, trignumber, explognumber
+    fnumber, deronenumber = 0, 0
+    for char in state.reversepolish:
+        if voc.modescalar == 'noA':
+            if char == 6:
+                fnumber=1
+            if char == 5:
+                deronenumber = 1
+        else:
+            if char == 5:
+                fnumber=1
+            if char == 4:
+                deronenumber = 1
+
+
+    return scalar_numbers, L, function_number, powernumber, trignumber, explognumber, fnumber, deronenumber
     #
     # except (ValueError, IndexError, AttributeError, RuntimeError, RuntimeWarning):
     #     #print(state.formulas, state.reversepolish)
@@ -245,20 +286,30 @@ def exec(which_target, train_target, test_target, voc, iteration, tolerance, gp,
             #print('lenpool', len(pool))
             for state in pool:
                 reward, scalar_numbers, alla = game_env.game_evaluate(state.reversepolish, state.formulas, tolerance, voc, train_target, 'train')
-                scalar_numbers, L, function_number, powernumber, trignumber, explognumber = count_meta_features(voc, state)
+                scalar_numbers, L, function_number, powernumber, trignumber, explognumber,  fnumber, deronenumber = count_meta_features(voc, state)
                 #print(state.formulas)
                 #print(L, function_number, powernumber, trignumber, explognumber)
-                results.append([reward, state, alla, scalar_numbers, L, function_number, powernumber, trignumber, explognumber])
+                results.append([reward, state, alla, scalar_numbers, L, function_number, powernumber, trignumber, explognumber, fnumber, deronenumber])
                 if str(state.reversepolish) not in local_alleqs:
                     local_alleqs.update({str(state.reversepolish): results[-1]})
             #print('yo', len(results))
+
+
         results_by_bin = gp.bin_pool(results)
 
         # init
         if gp.QD_pool is None:
             gp.QD_pool = results_by_bin
 
+        if voc.modescalar == 'A':
+            type = '_a_'
+        else:
+            type = '_no_a_'
+
+
         newbin, replacements = gp.update_qd_pool(results_by_bin)
+
+        save_qd_pool(gp.QD_pool, type, which_target)
 
         print('QD pool size', len(gp.QD_pool))
         print('alleqsseen', len(local_alleqs))
@@ -551,8 +602,12 @@ def eval_previous_eqs(which_target, train_target, test_target, voc_a, tolerance,
 # -----------------------------------------------#
 def init_everything_else(which_target):
     # init targets
-    train_target = Target(which_target, 'train')
-    test_target = Target(which_target, 'test')
+    if not config.fromfile:
+        train_target = Target(which_target, 'train')
+        test_target = Target(which_target, 'test')
+    else:
+        train_target = Target(which_target, 'train', 'targetfromfile/fig1-waveform-H.txt')
+        test_target = Target(which_target, 'test', 'targetfromfile/fig1-waveform-H.txt')
 
     # init dictionnaries
     voc_with_a = Voc(train_target, 'A')
@@ -598,26 +653,25 @@ def init_everything_else(which_target):
     maxtrig = new
     binexp = new # number of bins for number of exp-functions (exp or log)
     maxexp = new
-
+    derzero, derone = 1 , 1 #absence ou presence de fo et ou de fo'
     #add rd eqs at each iteration
     addrandom = False
 
 
     return poolsize, delete_ar1_ratio, extend_ratio, p_mutate, p_cross, bina, maxa, binl_no_a, maxl_no_a, binl_a, maxl_a, binf, maxf, \
-           binp, maxp, bintrig, maxtrig, binexp, maxexp, addrandom, train_target, test_target, voc_with_a, voc_no_a, diff
+           binp, maxp, bintrig, derzero, derone, maxtrig, binexp, maxexp, addrandom, train_target, test_target, voc_with_a, voc_no_a, diff
 
 # -----------------------------------------------#
 def main():
     id = str(int(10000000 * time.time()))
-    uu=[15,21]
+    uu=[0]
     for u in uu:
 
         # init target, dictionnaries, and meta parameters
         which_target = u
         poolsize, delete_ar1_ratio, extend_ratio, p_mutate, p_cross, bina, maxa,  binl_no_a, maxl_no_a, binl_a, maxl_a, binf, maxf, \
-        binp, maxp, bintrig, maxtrig, binexp, maxexp, addrandom, train_target, test_target, voc_with_a, voc_no_a, diff = init_everything_else(
+        binp, maxp, bintrig,  derzero, derone,  maxtrig, binexp, maxexp, addrandom, train_target, test_target, voc_with_a, voc_no_a, diff = init_everything_else(
             which_target)
-
         #init csv file
         mytarget = train_target.mytarget
         if config.uselocal:
@@ -633,11 +687,19 @@ def main():
             writer.writerow('\n')
         myfile.close()
 
+        print('ezeez')
+        tolerance = 1000
+        print('ezeez')
+
+        reward, scalar_numbers, alla = game_env.game_evaluate([], 'A*np.cos(x0)', tolerance, voc_no_a,
+                                                              train_target, 'train')
+        print('degtsg', reward)
+        time.sleep(2)
         for runs in range(1):
 
             # init qd grid
-            reinit_grid = True
-            qdpool = init_grid(reinit_grid, which_target)
+            reinit_grid = False
+            qdpool = init_grid(reinit_grid, '_no_a_', which_target)
 
 
             # ------------------- step 1 -----------------------#
@@ -649,14 +711,14 @@ def main():
 
             #init gp class:
             gp = GP_QD(which_target, delete_ar1_ratio, p_mutate, p_cross, poolsize, voc_no_a, tolerance,
-                       extend_ratio, maxa, bina, maxl_no_a, binl_no_a, maxf, binf, maxp, binp, maxtrig, bintrig, maxexp, binexp,
-                       addrandom, None, None)
+                       extend_ratio, maxa, bina, maxl_no_a, binl_no_a, maxf, binf, maxp, binp, maxtrig, bintrig,  derzero, derone, maxexp, binexp,
+                       addrandom, qdpool, None)
 
             # trick for unique id of results file
             prefix = str(int(10000000 * time.time()))
 
             # run evolution :
-            iteration_no_a = 150
+            iteration_no_a = 30
             stop, qdpool, alleqs_no_a, iter_no_a, valrmse = exec(which_target, train_target, test_target, voc_no_a, iteration_no_a, tolerance, gp, prefix)
 
             test = False
@@ -684,13 +746,20 @@ def main():
                         # re-adjust tolerance in the case where free scalars are allowed :
                         tolerance = init_tolerance(train_target, voc_with_a)
                         # convert noA eqs into A eqs:
-                        initpool = convert_eqs(qdpool, voc_with_a, voc_no_a, diff)
+                        if config.saveqd:
+                            initpool = init_grid(False, '_a_', which_target)
+                            QD_pool = initpool
+                        else:
+                            initpool = convert_eqs(qdpool, voc_with_a, voc_no_a, diff)
 
                         # reinit gp class with a:
                         gp = GP_QD(which_target, delete_ar1_ratio, p_mutate, p_cross, poolsize,
-                                   voc_with_a, tolerance, extend_ratio, maxa, bina, maxl_a, binl_a, maxf, binf, maxp, binp, maxtrig, bintrig, maxexp, binexp,
-                                   addrandom, None, initpool)
-                        alleqs_change_mode, QD_pool, stop, valrmse = eval_previous_eqs(which_target, train_target, test_target, voc_with_a, tolerance, initpool, gp, prefix)
+                                   voc_with_a, tolerance, extend_ratio, maxa, bina, maxl_a, binl_a, maxf, binf, maxp, binp, maxtrig, bintrig,  derzero, derone, maxexp, binexp,
+                                   addrandom, initpool, None)
+                        if not config.saveqd:
+                            alleqs_change_mode, QD_pool, stop, valrmse = eval_previous_eqs(which_target, train_target, test_target, voc_with_a, tolerance, initpool, gp, prefix)
+                        else:
+                            stop = None
 
                         if stop is not None:
                             with open(filepath, mode='a') as myfile:
@@ -702,7 +771,7 @@ def main():
                         # this might directly provide the exact solution : if not, stop is None, and thus, run evolution
                         if stop is None:
                             gp.QD_pool = QD_pool
-                            iteration_a = 150
+                            iteration_a = 15
 
                             stop, qdpool, alleqs_a, iter_a, valrmse = exec(which_target, train_target, test_target, voc_with_a, iteration_a, tolerance, gp, prefix)
 
@@ -749,7 +818,7 @@ if __name__ == '__main__':
     if test:
         which_target = 0
         poolsize, delete_ar1_ratio, extend_ratio, p_mutate, p_cross, bina, maxa, binl_no_a, maxl_no_a, binl_a, maxl_a, binf, maxf, \
-        binp, maxp, bintrig, maxtrig, binexp, maxexp, addrandom, train_target, test_target, voc_with_a, voc_no_a, diff = init_everything_else(
+        binp, maxp, bintrig,  derzero, derone, maxtrig, binexp, maxexp, addrandom, train_target, test_target, voc_with_a, voc_no_a, diff = init_everything_else(
              which_target)
         for u in range(10000):
             newgame = game_env.randomeqs(voc_no_a)
