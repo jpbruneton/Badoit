@@ -13,7 +13,6 @@
 import numpy as np
 import Build_dictionnaries
 import Simplification_rules
-import matplotlib.pyplot as plt
 import config
 # ============================================================================ #
 
