@@ -15,7 +15,6 @@ import config
 from scipy.optimize import least_squares
 import copy
 import cma
-import matplotlib.pyplot as plt
 
 import sys
 # ============================ CLASS: Evaluate_Fit ================================ #
@@ -30,27 +29,21 @@ class Evaluatefit:
         self.mode = mode
         self.scalar_numbers = 0
         self.n_targets, self.n_variables, self.variables, self.targets, self.f_renormalization, self.ranges, self.maximal_size = target.target
-
         self.xsize = self.variables[0].shape[0]
         self.step = (self.ranges[0])/self.xsize
-
         if self.n_variables > 1:
             self.ysize = self.variables[0].shape[1]
         if self.n_variables > 2:
             self.zsize = self.variables[0].shape[2]
 
-
     # ---------------------------------------------------------------------------- #
     def rename_formulas(self):
         ''' index all the scalar 'A' by a A1, A2, etc, rename properly the differentials, and finally resize as it must '''
-        #print(self.formulas)
         neweq = ''
         # rename the A's
         self.scalar_numbers = self.formulas.count('A')
 
         if self.scalar_numbers == 1:
-            # cant use CMAES since in this case it returns : "ValueError: optimization in 1-D is not supported (code was never tested)"
-            # then just make a trick : add one new scalar!
             self.formulas += '+ A'
             self.scalar_numbers = 2
 
@@ -62,8 +55,6 @@ class Evaluatefit:
             else:
                 neweq += char
 
-        # count derivatives
-        # #only works with one var here and one target
         highest_der = 0
         for u in range(1,config.max_derivative):
             if 'd'*u in neweq:
@@ -71,38 +62,26 @@ class Evaluatefit:
 
         if highest_der != 0 :
 
-            #print('yo, bf', neweq)
-            #handle derivatives
             for u in range(1, highest_der+1):
                 if highest_der-u > 0:
                     arr = '[:-' + str(highest_der-u) + ']'
                 else:
                     arr = '[:]'
                 look_for = 'd'*u + '_x0'*u + '_f0'
-                replace_by = 'np.diff(f[0]' + arr + ',' +str(u) +')/('  + str(self.step) +'**2)'
+                replace_by = 'np.diff(f[0]' + arr + ',' +str(u) +')/('  + str(self.step) +'**' +str(u)+')'
                 neweq = neweq.replace(look_for, replace_by)
 
-                #print('yo, af', neweq)
-
-        # must do avant:
-        # rename f0 alone, and not _f0, and idem x0
         if highest_der != 0 :
             base_array = '[:-' + str(highest_der) + ']'
         else:
             base_array = '[:]'
         string_to_replace = 'x0'
-        replace_by = '(x[0]' + base_array + '*' + str(self.ranges[0]) + ')'
+        replace_by = '(x[0]' + base_array +')'#+ '*' + str(self.ranges[0]) + ')'
         neweq = neweq.replace(string_to_replace, replace_by)
 
-        #print('then', neweq)
-
-        # f:
         string_to_replace = 'f0'
         replace_by = 'f[0]' + base_array
         neweq = neweq.replace(string_to_replace, replace_by)
-
-        #print('then', neweq)
-
 
         string_to_replace  = 'one'
         replace_by = '1.0'
@@ -119,14 +98,7 @@ class Evaluatefit:
         string_to_replace = 'zero'
         replace_by = '0.0'
         neweq = neweq.replace(string_to_replace, replace_by)
-        # the update
-        #print('bf', self.formulas)
         self.formulas = neweq
-        #print('af', self.formulas)
-        #print(np.diff(self.targets[0],1).shape)
-        #print(self.variables[0][:].shape)
-        #self.formulas = '2.0'
-
 
     # ---------------------------------------------------------------------------- #
     def reward_formula(self, error_on_target):
@@ -142,9 +114,7 @@ class Evaluatefit:
     # ---------------------------------------------------------------------------- #
     def formula_eval(self, x, f, A) :
         try:
-            #print(self.formulas)
             toreturn = eval(self.formulas)/self.f_renormalization
-            #print('ma', toreturn)
             if type(toreturn) != np.ndarray or np.isnan(np.sum(toreturn)) or np.isinf(np.sum(toreturn)) :
                 return False, None
             else:
@@ -152,33 +122,16 @@ class Evaluatefit:
 
         except (RuntimeWarning, RuntimeError, ValueError, ZeroDivisionError, OverflowError, SystemError, AttributeError):
 
-            # if config.uselocal:
-            #     filepath = './bugreport.txt'
-            # else:
-            #     filepath = '/home/user/results/buggreport.txt'
-            # with open(filepath, 'a') as myfile:
-            #     myfile.write(str(sys.exc_info()))
-            #     myfile.write(self.formulas)
-            #     myfile.write("\n")
-            #     myfile.write("\n")
-            #
-            # myfile.close()
-
-
             return False, None
 
     # ---------------------------------------------------------------------------- #
     def evaluation_target(self, a):
         err = 0
-
         success, eval = self.formula_eval(self.variables, self.targets, a)
 
         if success == True:
             mavraitarget = np.diff(self.targets[0], config.max_derivative) / (self.step ** (config.max_derivative))
-            # print('re', mavraitarget)
-            # plt.plot(mavraitarget, 'r')
             resize_eval = eval[:mavraitarget.size]
-
             diff = resize_eval - mavraitarget
             err += (np.sum(diff**2))
             err /= np.sum(np.ones_like(diff))
@@ -225,19 +178,14 @@ class Evaluatefit:
     # -------------------------------------------------------------------------------  #
     def best_A_cmaes(self):
         # applies the cmaes fit:
-        # randomize initial guess between -1 and 1, and initial sigma between 1 and 5:
         initialguess = 2*np.random.rand(self.scalar_numbers)-1
-        #print(initialguess)
         initialsigma = np.random.randint(1,5)
-        #initialguess = [0]*self.scalar_numbers
-        #initialsigma = 1
 
         try:
             res = cma.CMAEvolutionStrategy(initialguess, initialsigma,
                 {'verb_disp': 0}).optimize(self.evaluation_target).result
 
             reco = res.xfavorite
-            #transforms array into list
             rec = []
 
             for u in range(reco.size):
@@ -276,72 +224,38 @@ class Evaluatefit:
         success, result = self.formula_eval(self.variables, self.targets, A)
 
         if success:
-
             mavraitarget = np.diff(self.targets[0], config.max_derivative)/(self.step**(config.max_derivative))
-            #print('re', mavraitarget.shape)
             resize_result = result[:mavraitarget.size]
-
+            plot = False
             quadratic_cost = np.sum((mavraitarget - resize_result)**2)
-
             n = mavraitarget.size
             rmse = np.sqrt(quadratic_cost / n)
-            nrmse = rmse / np.std(self.targets)
-
+            nrmse = rmse / np.std(mavraitarget)
             return nrmse
 
         else:
-            return 1367
+            return 100000000
     # ---------------------------------------------------------------------------- #
     def eval_reward(self, A):
-        # given A's, compute the distance to taget function, then calls reward formula:
-
         derivative_cost = np.zeros(self.n_variables)
         reward = -1
-
-        # this is because derivative cost gives some more numerical error : for validation set, we only use the distance cost
         if self.mode == 'train':
             usederivativecost = 1
         else:
             usederivativecost = 0
-
-        #print('tt', self.formulas)
-        #print('jj', self.scalar_numbers)
         success, result = self.formula_eval(self.variables, self.targets, A)
-
-        #print('tut', success)
-
-        # can fail from two effects : inf/nan from division by zero, or output is a cst, hence a scalar, and not an array
-
-        # if success == False or type(result) != np.ndarray:
-        #     all_success = False
-        # else:
-        #     results.append(result)
-
         if success:
-            #print('je passe la', self.formulas, self.f_renormalization)
-            #print('step', self.step)
-            #print(self.targets[0])
             mavraitarget = np.diff(self.targets[0], config.max_derivative)/(self.step**(config.max_derivative))
-            #print('re', mavraitarget)
-            #plt.plot(mavraitarget, 'r')
             resize_result = result[:mavraitarget.size]
-
-            #plt.plot(resize_result, 'b')
-            #plt.show()
-
-            #print('re', mavraitarget.shape)
-
             distance_cost = np.sum(np.absolute(mavraitarget - resize_result))
 
-            if config. usederivativecost:
+            if config.usederivativecost:
                 for i in range(self.n_variables):
-
                     differential_along_i = np.diff(mavraitarget - resize_result, axis=i)
                     myvar = self.variables[i]
                     diff_my_var = np.diff(myvar, axis=i)
                     derivative_along_i = np.divide(differential_along_i, diff_my_var)
                     derivative_cost[i] = np.sum(np.absolute(derivative_along_i))
-
                 error_on_target = distance_cost + usederivativecost *config.usederivativecost * np.sum(derivative_cost)
             else:
                 error_on_target = distance_cost
@@ -363,72 +277,29 @@ class Evaluatefit:
     def evaluate(self):
         ''' evaluate the reward of an equation'''
 
-        # Main function:
-        # ---------------------------------------------------------------------------- #
-        #init stuff
         np.seterr(all = 'ignore')
         allA = []
         failure_reward = -1
-
-        # ---------------------------------------------------------------------------- #
-        #rename formulas and return the number of A's
         self.rename_formulas()
-        #print('tut', self.formulas)
-        #----------------------------------------------------------------------------- #
-        # First consider the simple case where there are no generic scalars:
         if self.scalar_numbers == 0:
             reward = self.eval_reward(allA)
-            return reward, self.scalar_numbers, allA
+            rms = self.eval_reward_nrmse(allA)
+            if rms > 100000000:
+                rms = 100000000
+            return reward, self.scalar_numbers, allA, rms
 
         # else: cmaes fit : ---------------------------------------------------------- #
         success, allA = self.best_A_cmaes()
         if success == False:
-            return failure_reward, self.scalar_numbers, [1]*self.scalar_numbers
+            return failure_reward, self.scalar_numbers, [1]*self.scalar_numbers, 100000000
 
         # ---------------------------------------------------------------------------- #
         #else, compute some actual reward:
         reward_cmaes = self.eval_reward(allA)
-        #now we can refine with least squares
-        usels = False
-        if usels:
-            success_ls, allA_ls = self.best_A_least_squares(allA)
-        else:
-            success_ls, allA_ls = success, allA
-
-        if success_ls == False:
-            reward_ls = failure_reward
-            reward_ls_round = failure_reward
-            allA_ls_round = allA_ls
-
-        # try to round numbers like 3.99999996 to 4 (typical of cmaes)
-        else:
-            reward_ls = self.eval_reward(allA_ls)
-
-            # and round to the closest significant digit
-            allA_ls_round = copy.deepcopy(allA_ls)
-            change = False
-
-            c=0
-            for a in allA_ls:
-                if np.abs(round(a) - a) < 0.1:
-                    allA_ls_round[c] = round(a)
-                    change = True
-
-                c+=1
-
-            if change:
-                reward_ls_round = self.eval_reward(allA_ls_round)
-            else:
-                reward_ls_round = -1
+        rms = self.eval_reward_nrmse(allA)
 
         #now compare the three and chose the best
-        allrewards = [reward_cmaes, reward_ls, reward_ls_round]
-        m = max(allrewards)
-        best = [i for i, j in enumerate(allrewards) if j == m][0]
+        if rms > 100000000:
+            rms = 100000000
 
-        if best == 0:
-            return reward_cmaes, self.scalar_numbers, allA
-        elif best == 1 and reward_ls > reward_ls_round:
-            return reward_ls, self.scalar_numbers, allA_ls
-        else:
-            return reward_ls_round, self.scalar_numbers, allA_ls_round
+        return reward_cmaes, self.scalar_numbers, allA, rms

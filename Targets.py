@@ -18,10 +18,11 @@ import config
 
 class Target:
 
-    def __init__(self, which_target, mode, fromfile = None):
+    def __init__(self, which_target, maxsize, mode, fromfile = None):
         self.which_target = which_target
         self.mode = mode #'test' or 'train'
         self.from_file = fromfile
+        self.maxsize = maxsize
         if self.from_file is None:
             self.target = self._define_target()
             self.mytarget = self.returntarget()
@@ -32,7 +33,7 @@ class Target:
     def _definetargetfromfile(self):
         n_targets = 1
         n_variables = 1
-        maximal_size = 40
+        maximal_size = self.maxsize
 
         data = np.loadtxt(self.from_file, delimiter=',')
         L = data.shape[0]
@@ -48,31 +49,33 @@ class Target:
             f0_test = data_test[:,1]
 
         else: # mieux je subsample genre 1 sur 2 quoi
-            data_x = list(data[1933:3200, 0])
-            data_f = list(data[1933:3200,1])
-            x_train = data_x[0::3]
-            x_test = data_x[0::7]
-            f0_train = data_f[0::3]
-            f0_test = data_f[0::7]
-
+            x_train = data[:, 0]
+            f0_train = data[:, 1]
+            x_test = data[:, 0]
+            f0_test = data[:, 1]
+            print('taille target', self.mode, len(x_train))
             #plt.plot(f0_train)
             #plt.show()
             #plt.plot(f0_test)
             #plt.show()
         f_normalization_train = np.amax(np.abs(f0_train))
-        f_normalization_train = 1
+        #f_normalization_train = 1/(0.0006103515625)**2
         #f0_train = f0_train / f_normalization_train
 
-        f_normalization_test = np.amax(np.abs(f0_test))
-        f_normalization_test = 1
+        f_normalization_train = 1
+
+        #f_normalization_test = np.amax(np.abs(f0_test))
+        #f_normalization_test = 1/(0.0006103515625)**2
         #f0_test = f0_test / f_normalization_test
+        f_normalization_test = 1
         range_x_train = x_train[-1] - x_train[0]
         range_x_test = x_test[-1] - x_test[0]
-
+        #range_x_train = 1
+        #range_x_test = 1
         if self.mode == 'train':
-            return n_targets, n_variables, [x_train / range_x_train], [np.asarray(f0_train)], f_normalization_train, [range_x_train], maximal_size
+            return n_targets, n_variables, [x_train], [np.asarray(f0_train)], f_normalization_train, [range_x_train], maximal_size
         else:
-            return n_targets, n_variables, [x_test / range_x_test], [np.asarray(f0_test)], f_normalization_test, [range_x_test], maximal_size
+            return n_targets, n_variables, [x_test], [np.asarray(f0_test)], f_normalization_test, [range_x_test], maximal_size
 
 
     def returntarget(self):

@@ -220,7 +220,7 @@ class GP_QD():
         # rescale and print which bin
         for oneresult in results:
             #print(oneresult)
-            reward, state, allA, Anumber, L, function_number, powernumber, trignumber, explognumber, fnumber, deronenumber = oneresult
+            rms, state, allA, Anumber, L, function_number, powernumber, trignumber, explognumber, fnumber, deronenumber = oneresult
             #print(reward, state, allA, Anumber, L, function_number, powernumber, trignumber, explognumber)
             #if state.reversepolish[-1] == 1:
             #    L = L - 1
@@ -304,18 +304,18 @@ class GP_QD():
             ct+=1
             if str([bin_a, bin_l, bin_exp, bin_trig, bin_p, bin_f, bin_fzero, bin_fone]) not in results_by_bin:
                 cif+=1
-                results_by_bin.update({str([bin_a, bin_l, bin_exp, bin_trig, bin_p, bin_f, bin_fzero, bin_fone]): [reward, state, allA]})
+                results_by_bin.update({str([bin_a, bin_l, bin_exp, bin_trig, bin_p, bin_f, bin_fzero, bin_fone]): [rms, state, allA]})
                 #print(results_by_bin)
             else:
                 cnotif+=1
                 #print('happening', [bin_a, bin_l, bin_exp, bin_trig, bin_p, bin_f])
                 #time.sleep(.2)
                 #print(state.formulas)
-                prev_reward = results_by_bin[str([bin_a, bin_l, bin_exp, bin_trig, bin_p, bin_f, bin_fzero, bin_fone])][0]
+                prev_rms = results_by_bin[str([bin_a, bin_l, bin_exp, bin_trig, bin_p, bin_f, bin_fzero, bin_fone])][0]
                 #print('prev', results_by_bin[str([bin_a, bin_l, bin_exp, bin_trig, bin_p, bin_f])])
                 #print('prev', results_by_bin[str([bin_a, bin_l, bin_exp, bin_trig, bin_p, bin_f])][1].formulas)
-                if reward > prev_reward:
-                    results_by_bin.update({str([bin_a, bin_l, bin_exp, bin_trig, bin_p, bin_f, bin_fzero, bin_fone]): [reward, state, allA]})
+                if rms < prev_rms:
+                    results_by_bin.update({str([bin_a, bin_l, bin_exp, bin_trig, bin_p, bin_f, bin_fzero, bin_fone]): [rms, state, allA]})
         #print(results_by_bin)
         #print('me', len(results_by_bin))
         print(ct, cif, cnotif)
@@ -333,9 +333,9 @@ class GP_QD():
                 newbin += 1
 
             else:
-                prev_reward = self.QD_pool[binid][0]
-                reward = newresults_by_bin[binid][0]
-                if reward > prev_reward:
+                prev_rms = self.QD_pool[binid][0]
+                rms = newresults_by_bin[binid][0]
+                if rms < prev_rms:
                     self.QD_pool.update({binid: newresults_by_bin[binid]})
                     replacement += 1
         print('news', newbin, replacement)
@@ -403,6 +403,8 @@ class printresults():
 
         # rank by number of free parameters
         bests = []
+        best_simplified_formulas = []
+
 
         for a in range(maxa):
             eqs = []
@@ -412,38 +414,44 @@ class printresults():
                     eqs.append(QD_pool[str(bin_id)])
 
             if len(eqs) > 0:
-                sort = sorted(eqs, key=itemgetter(0), reverse=True)
+                sort = sorted(eqs, key=itemgetter(0), reverse=False)
                 thebest = sort[0]
                 thebestformula = thebest[1].formulas
                 thebest_as = thebest[2]
-                bests.append([int(1000 * thebest[0]) / 1000, self.finalrename(thebestformula, thebest_as)])
+                simple = game_env.simplif_eq(self.voc, thebest[1])
+                best_simplified_formulas.append(simple.formulas)
+                bests.append([thebest[0], self.finalrename(thebestformula, thebest_as)])
 
         # best of all
         all_states = []
         for bin_id in QD_pool:
             all_states.append(QD_pool[str(bin_id)])
 
-        rank = sorted(all_states, key=itemgetter(0), reverse=True)
+        rank = sorted(all_states, key=itemgetter(0), reverse=False)
         best_state = rank[0][1]
         with_a_best = rank[0][2]
         best_formula = best_state.formulas
         bestreward = rank[0][0]
+        print('wtf', bestreward)
 
         if np.isnan(bestreward) or np.isinf(bestreward):
-            bestreward=-1
+            bestreward=100000000
 
         evaluate = Evaluatefit(best_formula, self.voc, self.target, tolerance, 'test')
         evaluate.rename_formulas()
 
         validation_reward = evaluate.eval_reward(with_a_best)
         validation_reward1 = evaluate.eval_reward_nrmse(with_a_best)
+        print('zez', validation_reward1)
+        if validation_reward1 > 100000000:
+            validation_reward1 = 100000000
 
         if np.isnan(validation_reward) or np.isinf(validation_reward):
             validation_reward = -1
 
         useful_form = self.finalrename(best_formula, with_a_best)
 
-        if bestreward > 0.999:
+        if bestreward < 0.00000001:
             print(best_formula, with_a_best)
             print(evaluate.formulas)
             print(validation_reward)
@@ -452,14 +460,14 @@ class printresults():
             if np.isnan(validation_reward) or np.isinf(validation_reward):
                 validation_reward = -1
             print('val2', validation_reward)
-        if bestreward == 1.0:
-            validation_reward = 1.0
+        if bestreward < 0.00000001:
+            validation_reward = 0.
         #other statistics
         avgreward = 0
         for x in rank:
             reward = x[0]
             if np.isnan(reward) or np.isinf(reward):
-                reward=-1
+                reward=100000000
             avgreward += reward
 
         avgreward = avgreward / len(rank)
@@ -494,8 +502,7 @@ class printresults():
             myfile.write(' new avg validation reward: ' + str(int(1000 * avg_validation_reward) / 1000))
             myfile.write("\n")
 
-            myfile.write('best reward: ' + str(int(10000 * bestreward) / 10000) + ' with validation reward: ' + str(
-                validation_reward) + ' and nrmse' + str(validation_reward1))
+            myfile.write('best reward: ' + str(bestreward) + ' with validation reward: ' + str(validation_reward) + ' and nrmse' + str(validation_reward1))
             myfile.write("\n")
             myfile.write("\n")
 
@@ -516,5 +523,5 @@ class printresults():
 
             myfile.close()
 
-        return validation_reward, validation_reward1
+        return validation_reward, validation_reward1, best_simplified_formulas
 

@@ -16,7 +16,7 @@ from Evaluate_fit import Evaluatefit
 from AST import AST, Node
 import numpy as np
 import copy
-
+import time
 
 # =============================== CLASS: Game ================================ #
 
@@ -312,7 +312,7 @@ def complete_eq_with_random(voc, state):
 def game_evaluate(rpn, formulas, tolerance, voc, target, mode):
 
         if voc.infinite_number in rpn:
-            return -1, 0, []
+            return -1, 0, [], 100000000
 
         else:
             myfit = Evaluatefit(formulas, voc, target, tolerance, mode)
@@ -327,32 +327,35 @@ def calculatetolerance(initialguess, target, voc):
     budget = 60
     count = 0
     if voc.modescalar == 'noA':
-        tolerance = initialguess*1000
+        tolerance = 260000000
     else:
-        tolerance = initialguess * 100000
-    meanreward = -1
-    print('initial guess', initialguess)
+        tolerance = 5000000
+    if False:
+        meanreward = -1
+        print('initial guess', initialguess)
 
-    while (meanreward < -0.8 or meanreward > -0.4) and count < budget:
-        meanreward = 0
-        p = 20
+        while (meanreward < -0.8 or meanreward > -0.4) and count < budget:
+            meanreward = 0
+            p = 100
 
-        for i in range(p):
-            game = randomeqs(voc)
-            newrdeq = game.state
-            if voc.infinite_number not in newrdeq.reversepolish :
-                newreward, _, _ =  game_evaluate(game.state.reversepolish, game.state.formulas, tolerance, voc, target, 'train')
-                meanreward += newreward
-        meanreward /= p
+            for i in range(p):
+                game = randomeqs(voc)
+                newrdeq = game.state
+                if voc.infinite_number not in newrdeq.reversepolish :
+                    newreward, _, _ =  game_evaluate(game.state.reversepolish, game.state.formulas, tolerance, voc, target, 'train')
+                    meanreward += newreward
+            meanreward /= p
 
-        if meanreward < -0.8:
-            tolerance *= np.sqrt(2)
-        if meanreward > -0.4:
-            tolerance /= np.sqrt(3)
-        count+=1
-        print(count, meanreward, tolerance)
+            if meanreward < -0.8:
+                tolerance *= np.sqrt(2)
+            if meanreward > -0.4:
+                tolerance /= np.sqrt(3)
+            count+=1
+            print(count, meanreward, tolerance)
 
-    if count >= budget -1:
-        print('fail to converge')
-    print('working with tolerance: ', tolerance, meanreward)
+        if count >= budget -1:
+            print('fail to converge')
+        print('working with tolerance: ', tolerance, meanreward)
+        time.sleep(5)
+
     return tolerance
