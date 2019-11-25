@@ -19,7 +19,7 @@ import pickle
 # -------------------------------------------------------------------------- #
 def init_grid(reinit_grid, type, u):
     if type == '_no_a_':
-        file_path = 'home/user/results/QD_pool_no_a_.txt'
+        file_path = '/home/user/results/QD_pool_no_a_.txt'
     else:
         file_path = '/home/user/results/QD_megapool_a_.txt'
 
