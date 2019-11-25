@@ -483,7 +483,7 @@ def init_everything_else(which_target, maxsize):
     delete_ar1_ratio = 0.2
 
     # pool extension by mutation and crossovers
-    extend_ratio = 0.5
+    extend_ratio = 0.05
 
     # probabilities of mutation = p_mutate, crossovers
     p_mutate = 0.4
