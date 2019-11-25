@@ -19,12 +19,7 @@ import pickle
 # -------------------------------------------------------------------------- #
 def init_grid(reinit_grid, type, u):
     if type == '_no_a_':
-        if config.uselocal:
-            if config.mixgrids:
-                file_path = './gpdata/QD_pool' + type + '.txt'
-            else:
-                file_path = './gpdata/QD_pool' + type + str(u) + '.txt'
-
+        file_path = 'QD_pool_no_a_.txt'
     else:
         file_path = 'QD_megapool_a_.txt'
 
@@ -51,14 +46,7 @@ def init_grid(reinit_grid, type, u):
 def save_qd_pool(pool, type, u):
     timeur = int(time.time()*1000000)
 
-
-    if config.uselocal:
-        if config.mixgrids:
-            file_path = './gpdata/QD_pool' + type + '.txt'
-        else:
-            file_path = './gpdata/QD_pool' + type + str(u) + '.txt'
-    else:
-        file_path = '/home/user/results/QD_pool' + type + str(u) + str(timeur) + '.txt'
+    file_path = '/home/user/results/QD_pool' + type + str(u) + str(timeur) + '.txt'
 
     with open(file_path, 'wb') as file:
         pickle.dump(pool, file)
@@ -472,8 +460,8 @@ def init_everything_else(which_target, maxsize):
         test_target = Target(which_target, maxsize, 'test')
     else:
         #train_target = Target(which_target, maxsize, 'train', 'targetfromfile/H_subsample_' + str(which_target)+'.csv')
-        train_target = Target(which_target,maxsize, 'train', 'targetfromfile/fig1-waveform-H.txt')
-        test_target = Target(which_target,maxsize, 'test', 'targetfromfile/fig1-waveform-H.txt')
+        train_target = Target(which_target,maxsize, 'train', 'fig1-waveform-H.txt')
+        test_target = Target(which_target,maxsize, 'test', 'fig1-waveform-H.txt')
 
     # init dictionnaries
     voc_with_a = Voc(train_target, 'A')
