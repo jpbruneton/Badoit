@@ -9,7 +9,7 @@ else
 	sudoCMD=""
 fi
 dockerCMD="$sudoCMD docker"
-dockerParams="--no-cache"
+#dockerParams="--no-cache"
 
 $dockerCMD build $dockerParams -t $imageName .
 
