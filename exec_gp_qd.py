@@ -29,17 +29,20 @@ def init_grid(reinit_grid, type, u):
 
     if os.path.exists(file_path) and config.saveqd:
         print('loading already trained model')
+        print('i found the file', file_path)
         time.sleep(10)
-
-        with open(file_path, 'rb') as file:
-            qdpool = pickle.load(file)
-            file.close()
-        print(len(qdpool))
-        time.sleep(1)
-
+    
     else:
         print('grid doesnt exist')
         qdpool = None
+        
+    with open(file_path, 'rb') as file:
+        qdpool = pickle.load(file)
+        file.close()
+    print('tut', len(qdpool))
+    time.sleep(1)
+
+    
 
     return qdpool
 
