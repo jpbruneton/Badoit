@@ -11,12 +11,22 @@ import time
 import csv
 import sys
 import numpy as np
+#import matplotlib
 from Evaluate_fit import Evaluatefit
+
+#import matplotlib.pyplot as plt
 import pickle
 # -------------------------------------------------------------------------- #
-def init_grid(reinit_grid, type):
+def init_grid(reinit_grid, type, u):
+    if type == '_no_a_':
+        if config.uselocal:
+            if config.mixgrids:
+                file_path = './gpdata/QD_pool' + type + '.txt'
+            else:
+                file_path = './gpdata/QD_pool' + type + str(u) + '.txt'
 
-    file_path = 'QD_pool' + type +'.txt'
+    else:
+        file_path = 'QD_megapool_a_.txt'
 
     if reinit_grid:
         if os.path.exists(file_path):
@@ -24,10 +34,13 @@ def init_grid(reinit_grid, type):
 
     if os.path.exists(file_path) and config.saveqd:
         print('loading already trained model')
+        time.sleep(10)
 
         with open(file_path, 'rb') as file:
             qdpool = pickle.load(file)
             file.close()
+        print(len(qdpool))
+        time.sleep(1)
 
     else:
         print('grid doesnt exist')
@@ -35,13 +48,17 @@ def init_grid(reinit_grid, type):
 
     return qdpool
 
-############
-def save_qd_pool(pool, type):
+def save_qd_pool(pool, type, u):
     timeur = int(time.time()*1000000)
+
+
     if config.uselocal:
-        file_path = 'QD_pool' + type + '.txt'
+        if config.mixgrids:
+            file_path = './gpdata/QD_pool' + type + '.txt'
+        else:
+            file_path = './gpdata/QD_pool' + type + str(u) + '.txt'
     else:
-        file_path = '/home/user/results/QD_pool' + type + str(timeur) + '.txt'
+        file_path = '/home/user/results/QD_pool' + type + str(u) + str(timeur) + '.txt'
 
     with open(file_path, 'wb') as file:
         pickle.dump(pool, file)
@@ -50,10 +67,12 @@ def save_qd_pool(pool, type):
 # -------------------------------------------------------------------------- #
 def init_tolerance(target, voc):
 
+    # initial guess of tolerance:
     n_var = target.target[1]
     number_of_points = target.target[2][0].size
     ranges = target.target[-2]
     multfactor = 0.5
+
     initialguess = 0
 
     if n_var == 1:
@@ -76,10 +95,21 @@ def init_tolerance(target, voc):
 # -------------------------------------------------------------------------- #
 def evalme(onestate):
     test_target, voc, state, tolerance = onestate[0], onestate[1], onestate[2], onestate[3]
+    #failurestate = State(voc, [voc.neutral_element,1])
 
+    #print(state.reversepolish, state.formulas)
+    #if len(state.reversepolish) == 0 or len(state.reversepolish) == 1:
+        #print('oui', state.reversepolish, state.formulas)
+    #    return -1, failurestate, [], 0, 2, 0, 0, 0, 0
+
+    #run 1:
     results = []
+    #try:
     _, scalar_numbers, alla, rms = game_env.game_evaluate(state.reversepolish, state.formulas, tolerance, voc, test_target, 'test')
     results.append([rms, scalar_numbers, alla])
+    #except (ValueError, IndexError, AttributeError, RuntimeError, RuntimeWarning):
+    #    print('happening')
+    #    reward, state, scalar_numbers, alla = -1, failurestate, 0, []
 
     if config.tworunsineval and voc.modescalar == 'A':
         # run 2:
@@ -91,6 +121,9 @@ def evalme(onestate):
         else:
             rms, scalar_numbers, alla = results[1]
 
+
+    #try:
+        # print('y', L)
     if state.reversepolish[-1] == voc.terminalsymbol:
         L = len(state.reversepolish) -1
     else:
@@ -102,6 +135,7 @@ def evalme(onestate):
             scalar_numbers += state.reversepolish.count(char)
 
         scalar_numbers += state.reversepolish.count(voc.neutral_element)
+
 
     function_number = 0
     for char in voc.arity1symbols:
@@ -135,6 +169,7 @@ def evalme(onestate):
             if char == 4:
                 deronenumber = 1
 
+    #print('t',state.reversepolish, state.formulas, 'k', reward, state, alla, scalar_numbers, L, function_number, powernumber, trignumber, explognumber)
     return rms, state, alla, scalar_numbers, L, function_number, powernumber, trignumber, explognumber, fnumber, deronenumber
 
 
@@ -183,11 +218,26 @@ def count_meta_features(voc, state):
             if char == 4:
                 deronenumber = 1
 
+
     return scalar_numbers, L, function_number, powernumber, trignumber, explognumber, fnumber, deronenumber
+    #
+    # except (ValueError, IndexError, AttributeError, RuntimeError, RuntimeWarning):
+    #     #print(state.formulas, state.reversepolish)
+    #     print('happening')
+    #     if config.uselocal:
+    #         filepath = './bureport.txt'
+    #     else:
+    #         filepath = '/home/user/results/bureport.txt'
+    #     with open(filepath, 'a') as myfile:
+    #         myfile.write(str(state.formulas) + str(state.reversepolish))
+    #     myfile.close()
+    #     return -1, failurestate, [], 0, 2, 0, 0, 0, 0
 
 # -------------------------------------------------------------------------- #
 def exec(which_target, train_target, test_target, voc, iteration, tolerance, gp, prefix):
 
+    # init all eqs seen so far
+    #mp_pool = mp.Pool(config.cpus)
     local_alleqs = {}
     monocore = True
     for i in range(iteration):
@@ -245,17 +295,27 @@ def exec(which_target, train_target, test_target, voc, iteration, tolerance, gp,
                         local_alleqs.update({str(result[1].reversepolish): result})
                 else:
                     local_alleqs.update({str(result[1].reversepolish): result})
+
+
         else:
+            #mono core eval
+            #print('monocore eval')
             results = []
+            #print('lenpool', len(pool))
             for state in pool:
                 _, scalar_numbers, alla, rms = game_env.game_evaluate(state.reversepolish, state.formulas, tolerance, voc, test_target, 'test')
+                #todo
                 evaluate = Evaluatefit(state.formulas, voc, test_target, tolerance, 'test')
                 evaluate.rename_formulas()
                 rms = evaluate.eval_reward_nrmse(alla)
                 scalar_numbers, L, function_number, powernumber, trignumber, explognumber,  fnumber, deronenumber = count_meta_features(voc, state)
+                #print(state.formulas)
+                #print(L, function_number, powernumber, trignumber, explognumber)
                 results.append([rms, state, alla, scalar_numbers, L, function_number, powernumber, trignumber, explognumber, fnumber, deronenumber])
                 if str(state.reversepolish) not in local_alleqs:
                     local_alleqs.update({str(state.reversepolish): results[-1]})
+            #print('yo', len(results))
+
 
         results_by_bin = gp.bin_pool(results)
 
@@ -271,7 +331,7 @@ def exec(which_target, train_target, test_target, voc, iteration, tolerance, gp,
 
         newbin, replacements = gp.update_qd_pool(results_by_bin)
 
-        save_qd_pool(gp.QD_pool, type)
+        save_qd_pool(gp.QD_pool, type, which_target)
 
         print('QD pool size', len(gp.QD_pool))
         print('alleqsseen', len(local_alleqs))
@@ -280,8 +340,21 @@ def exec(which_target, train_target, test_target, voc, iteration, tolerance, gp,
         # save results and print
         saveme = printresults(test_target, voc)
         valreward, valrmse, bf = saveme.saveresults(newbin, replacements, i, gp.QD_pool, gp.maxa, tolerance, which_target, local_alleqs, prefix)
+    #    if config.uselocal:
+     #       filename = './gpdata/QD_pool'+ str(which_target) + '.txt'
+     #   else:
+     #       filename = '/home/user/QD_pool' + str(which_target) + '.txt'
+     #   with open(filename, 'wb') as file:
+     #       pickle.dump(gp.QD_pool, file)
+     #   file.close()
 
         if valrmse <0.00000000001:
+            #mp_pool.close()
+            #mp_pool.join()
+     #       del mp_pool
+      #      del asyncResult
+            #plotme(gp.QD_pool)
+
             del results
             print('early stopping')
             return 'es', gp.QD_pool, local_alleqs, i, valrmse
@@ -290,6 +363,11 @@ def exec(which_target, train_target, test_target, voc, iteration, tolerance, gp,
             print(' stopping bcs too many eqs seen')
             return 'stop', gp.QD_pool, local_alleqs, i, valrmse
 
+    #mp_pool.close()
+    #mp_pool.join()
+   # del mp_pool
+    #del asyncResult
+    #del results
     return None, gp.QD_pool, local_alleqs, i, valrmse, bf
 
 # -----------------------------------------------#
@@ -367,6 +445,13 @@ def eval_previous_eqs(which_target, train_target, test_target, voc_a, tolerance,
     # save results and print
     saveme = printresults(test_target, voc_a)
     valreward, valrmse, bf = saveme.saveresults(newbin, replacements, -1, gp.QD_pool, gp.maxa, tolerance, which_target, alleqs, prefix)
+    # if config.uselocal:
+    #     filename = './gpdata/QD_pool' + str(which_target) + '.txt'
+    # else:
+    #     filename = '/home/user/QD_pool' + str(which_target) + '.txt'
+    # with open(filename, 'wb') as file:
+    #     pickle.dump(gp.QD_pool, file)
+    # file.close()
 
     del mp_pool
     del asyncResult
@@ -386,8 +471,9 @@ def init_everything_else(which_target, maxsize):
         train_target = Target(which_target, maxsize, 'train')
         test_target = Target(which_target, maxsize, 'test')
     else:
-        train_target = Target(which_target,maxsize, 'train', 'fig1-waveform-H.txt')
-        test_target = Target(which_target,maxsize, 'test', 'fig1-waveform-H.txt')
+        #train_target = Target(which_target, maxsize, 'train', 'targetfromfile/H_subsample_' + str(which_target)+'.csv')
+        train_target = Target(which_target,maxsize, 'train', 'targetfromfile/fig1-waveform-H.txt')
+        test_target = Target(which_target,maxsize, 'test', 'targetfromfile/fig1-waveform-H.txt')
 
     # init dictionnaries
     voc_with_a = Voc(train_target, 'A')
@@ -399,13 +485,26 @@ def init_everything_else(which_target, maxsize):
     sizea = len(voc_with_a.numbers_to_formula_dict)
     sizenoa = len(voc_no_a.numbers_to_formula_dict)
     diff = sizenoa - sizea
+
+    # initial pool size of rd eqs at iteration 0
     poolsize = 4000
-    delete_ar1_ratio = 0.3
-    extend_ratio = 2
+    # probability of dropping a function : cos(x) -> x
+    delete_ar1_ratio = 0.2
+
+    # pool extension by mutation and crossovers
+    extend_ratio = 0.5
+
+    # probabilities of mutation = p_mutate, crossovers
     p_mutate = 0.4
+    # probabilities of crossovers = p_cross - p_mutate
     p_cross = 0.8
+    # probability of mutate and cross = 1 - p_cross
+
+
+    #QD grid parameters
 
     binl_no_a = voc_no_a.maximal_size # number of bins for length of an eq
+    #print('checkme', binl_no_a)
     maxl_no_a = voc_no_a.maximal_size
     bina = maxl_no_a  # number of bins for number of free scalars
     maxa = bina
@@ -421,7 +520,9 @@ def init_everything_else(which_target, maxsize):
     binexp = new # number of bins for number of exp-functions (exp or log)
     maxexp = new
     derzero, derone = 1 , 1 #absence ou presence de fo et ou de fo'
+    #add rd eqs at each iteration
     addrandom = False
+
 
     return poolsize, delete_ar1_ratio, extend_ratio, p_mutate, p_cross, bina, maxa, binl_no_a, maxl_no_a, binl_a, maxl_a, binf, maxf, \
            binp, maxp, bintrig, derzero, derone, maxtrig, binexp, maxexp, addrandom, train_target, test_target, voc_with_a, voc_no_a, diff
@@ -430,16 +531,18 @@ def init_everything_else(which_target, maxsize):
 def main():
     id = str(int(10000000 * time.time()))
 
-    for maxsize in [40]:#, 35, 40, 45]:
+
+    for maxsize in [50]:#, 35, 40, 45]:
         best_formulas_of_this_size = []
 
         for u in range(1):
+
             # init target, dictionnaries, and meta parameters
             which_target = u
             poolsize, delete_ar1_ratio, extend_ratio, p_mutate, p_cross, bina, maxa,  binl_no_a, maxl_no_a, binl_a, maxl_a, binf, maxf, \
             binp, maxp, bintrig,  derzero, derone,  maxtrig, binexp, maxexp, addrandom, train_target, test_target, voc_with_a, voc_no_a, diff = init_everything_else(
                 which_target, maxsize)
-            #init csv file4000
+            #init csv file
             mytarget = train_target.mytarget
             if config.uselocal:
                 filepath = './localdata/' + str(id)+'resultcsv_file.csv'
@@ -456,7 +559,7 @@ def main():
 
             # init qd grid
             reinit_grid = False
-            qdpool = init_grid(reinit_grid, '_no_a_')
+            qdpool = init_grid(reinit_grid, '_no_a_', which_target)
 
             # ------------------- step 1 -----------------------#
             # first make a fast run with integers scalars to generate good equations for starting
@@ -511,7 +614,7 @@ def main():
                 tolerance = init_tolerance(train_target, voc_with_a)
                 # convert noA eqs into A eqs:
                 if config.saveqd:
-                    initpool = init_grid(False, '_a_')
+                    initpool = init_grid(False, '_a_', which_target)
                     QD_pool = initpool
                 else:
                     initpool = convert_eqs(qdpool, voc_with_a, voc_no_a, diff)
@@ -535,7 +638,7 @@ def main():
                 # this might directly provide the exact solution : if not, stop is None, and thus, run evolution
                 if stop is None:
                     gp.QD_pool = QD_pool
-                    iteration_a = 50
+                    iteration_a = 100
 
                     stop, qdpool, alleqs_a, iter_a, valrmse, bf = exec(which_target, train_target, test_target, voc_with_a, iteration_a, tolerance, gp, prefix)
 
@@ -551,6 +654,16 @@ def main():
                             [str(0), str(iter_no_a), str(len(alleqs_no_a)), str(success), str(len(alleqs_a)), str(iter_a+1),  str(valrmse), str(timespent)])
                     myfile.close()
             best_formulas_of_this_size.append(bf)
+        filepath = './localdata/' + str(id) + 'bestanalyticalformulasofsize' + str(maxsize) +'.csv'
+        with open(filepath, mode='a') as myfile:
+            writer = csv.writer(myfile, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+            writer.writerow(best_formulas_of_this_size)
+        myfile.close()
+            #del alleqs_change_mode
+            #del alleqs_a
+            #del alleqs_no_a
+            #del gp
+            #del initpool
 
 # -----------------------------------------------#
 if __name__ == '__main__':
