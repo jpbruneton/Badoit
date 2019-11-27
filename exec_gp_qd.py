@@ -525,8 +525,8 @@ def eval_and_aggregate_pool_on_subtarget(target, u):
                voc_with_a, tolerance, extend_ratio, maxa, bina, maxl_a, binl_a, maxf, binf, maxp, binp, maxtrig, bintrig,  derzero, derone, maxexp, binexp,
                addrandom, None, None)
 
-
-    with open('QD_pool_a_'+str(u)+'.txt', 'rb') as file:
+    filepath = 'QD_pool_a_'+str(u)+'.txt'
+    with open(filepath, 'rb') as file:
         dat = pickle.load(file)
     file.close()
 
