@@ -44,10 +44,10 @@ def init_grid(reinit_grid, type, u):
 
     return qdpool
 
-def save_qd_pool(pool, type, u):
+def save_qd_pool(pool, type, u, phase):
     timeur = int(time.time()*1000000)
 
-    file_path = '/home/user/results/QD_pool' + type + str(u) + str(timeur) + '.txt'
+    file_path = '/home/user/results/QD_pool' + type + str(u) + phase + '.txt'
 
     with open(file_path, 'wb') as file:
         pickle.dump(pool, file)
@@ -526,7 +526,7 @@ def eval_and_aggregate_pool_on_subtarget(target, u):
                addrandom, None, None)
 
 
-    with open('home/user/results/QD_pool_a_'+str(u)+'.txt', 'rb') as file:
+    with open('QD_pool_a_'+str(u)+'.txt', 'rb') as file:
         dat = pickle.load(file)
     file.close()
 
