@@ -11,10 +11,8 @@ import time
 import csv
 import sys
 import numpy as np
-#import matplotlib
 from Evaluate_fit import Evaluatefit
 
-#import matplotlib.pyplot as plt
 import pickle
 # -------------------------------------------------------------------------- #
 def init_grid(reinit_grid, type, u):
@@ -724,7 +722,8 @@ if __name__ == '__main__':
 
     if False:
         main()
-     p=1
+    else:
+        p=1
         for u in range(p,p+1):
             for target in ['fig1-waveform-H_phase1.txt', 'fig1-waveform-H_phase2.txt', 'fig1-waveform-H_phase3.txt']:
                 eval_and_aggregate_pool_on_subtarget(target, u)
