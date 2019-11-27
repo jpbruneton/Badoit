@@ -517,7 +517,54 @@ def init_everything_else(which_target, maxsize):
 
     return poolsize, delete_ar1_ratio, extend_ratio, p_mutate, p_cross, bina, maxa, binl_no_a, maxl_no_a, binl_a, maxl_a, binf, maxf, \
            binp, maxp, bintrig, derzero, derone, maxtrig, binexp, maxexp, addrandom, train_target, test_target, voc_with_a, voc_no_a, diff
+#-----------------#
+def eval_and_aggregate_pool_on_subtarget(target, u):
+    poolsize, delete_ar1_ratio, extend_ratio, p_mutate, p_cross, bina, maxa, binl_no_a, maxl_no_a, binl_a, maxl_a, binf, maxf, \
+    binp, maxp, bintrig, derzero, derone, maxtrig, binexp, maxexp, addrandom, train_target, test_target, voc_with_a, voc_no_a, diff = init_everything_else(target, 50)
 
+    tolerance = init_tolerance(train_target, voc_with_a)
+    gp = GP_QD(0, delete_ar1_ratio, p_mutate, p_cross, poolsize,
+               voc_with_a, tolerance, extend_ratio, maxa, bina, maxl_a, binl_a, maxf, binf, maxp, binp, maxtrig, bintrig,  derzero, derone, maxexp, binexp,
+               addrandom, None, None)
+
+
+    with open('home/user/results/QD_pool_a_'+str(u)+'.txt', 'rb') as file:
+        dat = pickle.load(file)
+    file.close()
+
+    pool_to_eval = []
+
+    c = 0
+    for elem in dat:
+        pool_to_eval.append([test_target, voc_with_a, dat[elem][1], tolerance])
+        c+=1
+        if c>40:
+            break
+    ###
+    print('main eval')
+    mp_pool = mp.Pool(config.cpus)
+    asyncResult = mp_pool.map_async(evalme, pool_to_eval)
+    results = asyncResult.get()
+    # close it
+    mp_pool.close()
+    mp_pool.join()
+    print('pool eval done')
+
+    results_by_bin = gp.bin_pool(results)
+    gp.QD_pool = results_by_bin
+
+    newbin, replacements = gp.update_qd_pool(results_by_bin)
+
+    print('QD pool size', gp.QD_pool)
+
+    # save results and print
+    saveme = printresults(test_target, voc_with_a)
+    valreward, valrmse, bf = saveme.saveresults(newbin, replacements, -1, gp.QD_pool, gp.maxa, tolerance, 0,
+                                                {}, '125')
+
+    save_qd_pool(gp.QD_pool, type, u, target)
+    
+    
 # -----------------------------------------------#
 def main():
     id = str(int(10000000 * time.time()))
@@ -675,8 +722,13 @@ if __name__ == '__main__':
         sys.stdout = logger
         sys.stderr = logger
 
-
-    main()
+    if False:
+        main()
+     p=1
+        for u in range(p,p+1):
+            for target in ['fig1-waveform-H_phase1.txt', 'fig1-waveform-H_phase2.txt', 'fig1-waveform-H_phase3.txt']:
+                eval_and_aggregate_pool_on_subtarget(target, u)
+    
     #     print(newgame.state.formulas)
     #     #newgame.simplif_eq()
     #     #print(newgame.state.formulas)
