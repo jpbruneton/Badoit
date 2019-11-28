@@ -37,7 +37,7 @@ class Target:
 
         data = np.loadtxt(self.from_file, delimiter=',')
         L = data.shape[0]
-        print('opening ok', self.from_file, L)
+
         #si je coupe en deux:
         if False:
             lo = int(L*0.8)

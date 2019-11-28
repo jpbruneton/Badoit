@@ -524,4 +524,3 @@ class printresults():
             myfile.close()
 
         return validation_reward, validation_reward1, best_simplified_formulas
-
