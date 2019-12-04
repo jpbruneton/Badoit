@@ -278,7 +278,8 @@ def exec(which_target, train_target, test_target, voc, iteration, tolerance, gp,
 
         newbin, replacements = gp.update_qd_pool(results_by_bin)
 
-        save_qd_pool(gp.QD_pool, type)
+        if voc.modescalar == 'A':
+            save_qd_pool(gp.QD_pool, type)
 
         print('QD pool size', len(gp.QD_pool))
         print('alleqsseen', len(local_alleqs))
