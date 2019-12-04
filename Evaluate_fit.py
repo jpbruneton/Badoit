@@ -15,6 +15,7 @@ import config
 from scipy.optimize import least_squares
 import copy
 import cma
+#import matplotlib.pyplot as plt
 
 import sys
 # ============================ CLASS: Evaluate_Fit ================================ #
@@ -226,7 +227,14 @@ class Evaluatefit:
         if success:
             mavraitarget = np.diff(self.targets[0], config.max_derivative)/(self.step**(config.max_derivative))
             resize_result = result[:mavraitarget.size]
-            plot = False
+            plot = config.plot
+            if plot:
+                # print(result)
+                # print(resize_result)
+                # print('toi', mavraitarget.size)
+                plt.plot(mavraitarget)
+                plt.plot(result, 'r')
+                plt.show()
             quadratic_cost = np.sum((mavraitarget - resize_result)**2)
             n = mavraitarget.size
             rmse = np.sqrt(quadratic_cost / n)

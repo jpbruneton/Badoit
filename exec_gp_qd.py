@@ -14,18 +14,18 @@ import numpy as np
 from Evaluate_fit import Evaluatefit
 import pickle
 # -------------------------------------------------------------------------- #
-def init_grid(reinit_grid, type):
+def init_grid(reinit_grid, poolname):
 
-    file_path = 'QD_pool' + type +'.txt'
 
-    if reinit_grid:
-        if os.path.exists(file_path):
-            os.remove(file_path)
 
-    if os.path.exists(file_path) and config.saveqd:
+    #if reinit_grid:
+    #    if os.path.exists(poolname):
+    #        os.remove(poolname)
+
+    if os.path.exists(poolname) and config.saveqd:
         print('loading already trained model')
 
-        with open(file_path, 'rb') as file:
+        with open(poolname, 'rb') as file:
             qdpool = pickle.load(file)
             file.close()
 
@@ -386,8 +386,8 @@ def init_everything_else(which_target, maxsize):
         train_target = Target(which_target, maxsize, 'train')
         test_target = Target(which_target, maxsize, 'test')
     else:
-        train_target = Target(which_target,maxsize, 'train', 'fig1-waveform-H.txt')
-        test_target = Target(which_target,maxsize, 'test', 'fig1-waveform-H.txt')
+        train_target = Target(which_target,maxsize, 'train', which_target)
+        test_target = Target(which_target,maxsize, 'test', which_target)
 
     # init dictionnaries
     voc_with_a = Voc(train_target, 'A')
@@ -401,7 +401,7 @@ def init_everything_else(which_target, maxsize):
     diff = sizenoa - sizea
     poolsize = 4000
     delete_ar1_ratio = 0.3
-    extend_ratio = 2
+    extend_ratio = config.extendpoolfactor
     p_mutate = 0.4
     p_cross = 0.8
 
@@ -411,9 +411,9 @@ def init_everything_else(which_target, maxsize):
     maxa = bina
     binl_a = voc_with_a.maximal_size # number of bins for length of an eq
     maxl_a = voc_with_a.maximal_size
-    binf = 8 # number of bins for number of fonctions
-    maxf = 8
-    new = 0
+    binf = 16 # number of bins for number of fonctions
+    maxf = 16
+    new = 1
     binp = new  # number of bins for number of powers
     maxp = new
     bintrig = new # number of bins for number of trigonometric functions (sine and cos)
@@ -427,130 +427,78 @@ def init_everything_else(which_target, maxsize):
            binp, maxp, bintrig, derzero, derone, maxtrig, binexp, maxexp, addrandom, train_target, test_target, voc_with_a, voc_no_a, diff
 
 # -----------------------------------------------#
-def main():
-    id = str(int(10000000 * time.time()))
+def main(which_target, poolname):
 
-    for maxsize in [40]:#, 35, 40, 45]:
-        best_formulas_of_this_size = []
+    # init target, dictionnaries, and meta parameters
+    poolsize, delete_ar1_ratio, extend_ratio, p_mutate, p_cross, bina, maxa,  binl_no_a, maxl_no_a, binl_a, maxl_a, binf, maxf, \
+    binp, maxp, bintrig,  derzero, derone,  maxtrig, binexp, maxexp, addrandom, train_target, test_target, voc_with_a, voc_no_a, diff \
+        = init_everything_else(which_target, config.maxsize)
 
-        for u in range(1):
-            # init target, dictionnaries, and meta parameters
-            which_target = u
-            poolsize, delete_ar1_ratio, extend_ratio, p_mutate, p_cross, bina, maxa,  binl_no_a, maxl_no_a, binl_a, maxl_a, binf, maxf, \
-            binp, maxp, bintrig,  derzero, derone,  maxtrig, binexp, maxexp, addrandom, train_target, test_target, voc_with_a, voc_no_a, diff = init_everything_else(
-                which_target, maxsize)
-            #init csv file4000
-            mytarget = train_target.mytarget
-            if config.uselocal:
-                filepath = './localdata/' + str(id)+'resultcsv_file.csv'
-            else:
-                filepath = '/home/user/results/' + str(id)+'resultcsv_file.csv'
-            with open(filepath, mode='a') as myfile:
-                writer = csv.writer(myfile, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+    #init csv file4000
+    mytarget = train_target.mytarget
 
-                writer.writerow(['target number' + str(which_target), mytarget])
-                writer.writerow(['succes interger', 'iter (integer)', 'n_eq', 'succes_cma', 'n_eq', 'iter_cma',
-                                 'total time (min)'])
-                writer.writerow('\n')
-            myfile.close()
+    # init qd grid
+    reinit_grid = False
+    qdpool = init_grid(reinit_grid,  'QD_pool_no_a_.txt')
 
-            # init qd grid
-            reinit_grid = False
-            qdpool = init_grid(reinit_grid, '_no_a_')
+    # ------------------- step 1 -----------------------#
+    tolerance = init_tolerance(test_target, voc_no_a)
+    gp = GP_QD(which_target, delete_ar1_ratio, p_mutate, p_cross, poolsize, voc_no_a, tolerance,
+               extend_ratio, maxa, bina, maxl_no_a, binl_no_a, maxf, binf, maxp, binp, maxtrig, bintrig,  derzero, derone, maxexp, binexp,
+               addrandom, qdpool, None)
+    prefix = str(int(10000000 * time.time()))
 
-            # ------------------- step 1 -----------------------#
-            # first make a fast run with integers scalars to generate good equations for starting
-            # the real run with free scalars 'A' precompute without 'A' : use it as initial grid
+    if config.plot:
+        #formm22 = '((((((d_x0_f0)*(49.746576))-(69.914573))/((0.209011)/(np.sin((x0)-(9.847268)))))+((np.sin((18.853701)))*((np.exp((10.663986)))+(-166.75883))))-' \
+        #        '((-149.276147)-((f0)*((-30.305333)/(np.cos((-4.716783)))))))/(((np.sin((-7.777854)))-(63.70873))-((-65.709208)+(np.cos((x0)*(-14.665166)))))'
+        #formm21  = '(((f0)*(np.exp((12.07992))))/(((np.cos(((54.871451)*(x0))-(11.075981)))+(-0.373353))-(((-78.102263)+((603.347966)+(np.exp((f0)*(-4.967299)))))*((x0)/((298.530341)-((f0)*(7.946753)))))))-((((np.cos((14.771823)/((x0)/(-11.829798))))/(2.340901))*(-38.751358))*((-633.53597)/(x0)))'
+        #formm3 = '(x0)-((np.sin(((-265.747425)+((118.102741)/(x0)))/(x0)))*((((np.exp(x0))*((np.log((x0)+(x0)))-(x0)))*((x0)+(((np.exp((259.780332)))**((0.229831)+(np.sin((x0)*(-0.39444)))))*(np.sin((-1.569401)/((x0)/((x0)-(1.33829))))))))*(-0.878942)))'
+        formm1 = '((((f0)-((x0)*(((x0)+(((x0)/(x0))*(x0)))**(((0.683627)/(x0))+(-11.080003)))))*(f0))-(((26.193383)-(((4.206742)-(np.cos(((56.690486)/((-27.736556)+((26.447422)+((0.880481)/(x0)))))+(-65.357668))))*(6.150606)))*(0.323299)))/(((x0)*(0.002572))-((0.002161)+((-0.00045)/(x0))))'
 
-            #init tolerance :
-            tolerance = init_tolerance(test_target, voc_no_a)
+        evall = Evaluatefit(formm1, voc_with_a, test_target, tolerance, 'test')
+        print('re', evall.formulas)
 
-            #init gp class:
-            gp = GP_QD(which_target, delete_ar1_ratio, p_mutate, p_cross, poolsize, voc_no_a, tolerance,
-                       extend_ratio, maxa, bina, maxl_no_a, binl_no_a, maxf, binf, maxp, binp, maxtrig, bintrig,  derzero, derone, maxexp, binexp,
-                       addrandom, qdpool, None)
+        evall.rename_formulas()
+        print(evall.formulas)
+        rew, scalar_numbers, alla, rms = game_env.game_evaluate([1], evall.formulas, tolerance, voc_no_a, test_target, 'test')
+        print('donne:', rew, scalar_numbers, alla, rms)
+        time.sleep(500)
+    # run evolution :
+    iteration_no_a = 1
+    stop, qdpool, alleqs_no_a, iter_no_a, valrmse, bf = exec(which_target, train_target, test_target, voc_no_a, iteration_no_a, tolerance, gp, prefix)
 
-            # trick for unique id of results file
-            prefix = str(int(10000000 * time.time()))
+    # ------------------- step 2 -----------------------#
+    #if target has not already been found, stop is None; then launch evoltion with free scalars A:
+    if stop is None:
 
-            if False:
-                formm = '((f0)/(((np.log(x0))+(0.742001))+(((-2.709957)+(x0))*(np.cos((2.045489)-(x0))))))/(0.004552)'
-                evall = Evaluatefit(formm, voc_with_a, test_target, tolerance, 'test')
-                print('re', evall.formulas)
+        # re-adjust tolerance in the case where free scalars are allowed :
+        tolerance = init_tolerance(train_target, voc_with_a)
+        # convert noA eqs into A eqs:
+        if config.saveqd:
+            initpool = init_grid(False, poolname)
+            QD_pool = initpool
+        else:
+            initpool = convert_eqs(qdpool, voc_with_a, voc_no_a, diff)
 
-                evall.rename_formulas()
-                print(evall.formulas)
-                rew, scalar_numbers, alla, rms = game_env.game_evaluate([1], evall.formulas, tolerance, voc_no_a, test_target, 'test')
-                print('donne:', rew, scalar_numbers, alla, rms)
-                time.sleep(500)
-            # run evolution :
-            iteration_no_a = 1
-            stop, qdpool, alleqs_no_a, iter_no_a, valrmse, bf = exec(which_target, train_target, test_target, voc_no_a, iteration_no_a, tolerance, gp, prefix)
+        # reinit gp class with a:
+        gp = GP_QD(which_target, delete_ar1_ratio, p_mutate, p_cross, poolsize,
+                   voc_with_a, tolerance, extend_ratio, maxa, bina, maxl_a, binl_a, maxf, binf, maxp, binp, maxtrig, bintrig,  derzero, derone, maxexp, binexp,
+                   addrandom, initpool, None)
+        if not config.saveqd:
+            alleqs_change_mode, QD_pool, stop, valrmse, bf = eval_previous_eqs(which_target, train_target, test_target, voc_with_a, tolerance, initpool, gp, prefix)
+        else:
+            stop = None
 
+        if stop is not None:
+           pass
 
-            if stop is not None:
-                if stop == 'es':
-                    with open(filepath, mode='a') as myfile:
-                        writer = csv.writer(myfile, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-                        timespent = (time.time() - eval(prefix) / 10000000)/60
-                        writer.writerow([str(1), str(iter_no_a), str(len(alleqs_no_a)), '0', '0', '0', str(valrmse), str(timespent)])
-                    myfile.close()
-                else:
-                    with open(filepath, mode='a') as myfile:
-                        writer = csv.writer(myfile, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-                        timespent = (time.time() - eval(prefix) / 10000000)/60
-                        writer.writerow([str(0), str(iter_no_a), str(len(alleqs_no_a)), '0', '0', '0', str(valrmse), str(timespent)])
-                    myfile.close()
+        # this might directly provide the exact solution : if not, stop is None, and thus, run evolution
+        if stop is None:
+            gp.QD_pool = QD_pool
+            iteration_a = config.iterationa
 
+            stop, qdpool, alleqs_a, iter_a, valrmse, bf = exec(which_target, train_target, test_target, voc_with_a, iteration_a, tolerance, gp, prefix)
 
-            # ------------------- step 2 -----------------------#
-            #if target has not already been found, stop is None; then launch evoltion with free scalars A:
-            if stop is None:
-
-                # re-adjust tolerance in the case where free scalars are allowed :
-                tolerance = init_tolerance(train_target, voc_with_a)
-                # convert noA eqs into A eqs:
-                if config.saveqd:
-                    initpool = init_grid(False, '_a_')
-                    QD_pool = initpool
-                else:
-                    initpool = convert_eqs(qdpool, voc_with_a, voc_no_a, diff)
-
-                # reinit gp class with a:
-                gp = GP_QD(which_target, delete_ar1_ratio, p_mutate, p_cross, poolsize,
-                           voc_with_a, tolerance, extend_ratio, maxa, bina, maxl_a, binl_a, maxf, binf, maxp, binp, maxtrig, bintrig,  derzero, derone, maxexp, binexp,
-                           addrandom, initpool, None)
-                if not config.saveqd:
-                    alleqs_change_mode, QD_pool, stop, valrmse, bf = eval_previous_eqs(which_target, train_target, test_target, voc_with_a, tolerance, initpool, gp, prefix)
-                else:
-                    stop = None
-
-                if stop is not None:
-                    with open(filepath, mode='a') as myfile:
-                        writer = csv.writer(myfile, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-                        timespent = (time.time() - eval(prefix) / 10000000) / 60
-                        writer.writerow([str(0), str(iter_no_a), str(len(alleqs_no_a)), '1', str(len(alleqs_change_mode)), '0',  str(valrmse), str(timespent)])
-                    myfile.close()
-
-                # this might directly provide the exact solution : if not, stop is None, and thus, run evolution
-                if stop is None:
-                    gp.QD_pool = QD_pool
-                    iteration_a = 50
-
-                    stop, qdpool, alleqs_a, iter_a, valrmse, bf = exec(which_target, train_target, test_target, voc_with_a, iteration_a, tolerance, gp, prefix)
-
-                    if stop is None:
-                        success = 0
-                    else:
-                        success = 1
-
-                    with open(filepath, mode='a') as myfile:
-                        writer = csv.writer(myfile, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-                        timespent = (time.time() - eval(prefix) / 10000000) / 60
-                        writer.writerow(
-                            [str(0), str(iter_no_a), str(len(alleqs_no_a)), str(success), str(len(alleqs_a)), str(iter_a+1),  str(valrmse), str(timespent)])
-                    myfile.close()
-            best_formulas_of_this_size.append(bf)
 
 # -----------------------------------------------#
 if __name__ == '__main__':
@@ -571,9 +519,4 @@ if __name__ == '__main__':
         sys.stdout = logger
         sys.stderr = logger
 
-
-    main()
-    #     print(newgame.state.formulas)
-    #     #newgame.simplif_eq()
-    #     #print(newgame.state.formulas)
-    #     game_env.simplif_eq(voc_no_a, newgame.state)
+    main(config.which_target, config.savedqdpool)

@@ -6,6 +6,13 @@ saveqd = True
 use_derivative = True
 max_derivative = 2 #will look for f'' -- eventuellement derivees croisees = stuff
 
+
+extendpoolfactor = 0.001
+maxsize = 50
+iterationa = 100
+which_target = 'fig1-waveform-H_phase2_2.txt'
+savedqdpool = 'megapoolphase2_2.txt'
+plot = False
 # --------------------- SPECIAL SYNTAXIC RULES -------------- #
 # how many nested functions I authorize
 MAX_DEPTH = 1
@@ -31,7 +38,7 @@ use_simplif = False
 #after some tests, its better to use both the distance cost AND the derivative cost
 usederivativecost = 0  #or 0
 
-uselocal = False
+uselocal = True
 fromfile = True
 
 
