@@ -2,7 +2,7 @@ cpus = 40
 
 # --------------  Taget related ---------------- #
 findtolerance = True
-saveqd = False
+saveqd = True
 use_derivative = True
 max_derivative = 2 #will look for f'' -- eventuellement derivees croisees = stuff
 
@@ -12,7 +12,7 @@ tryoscamorti = False
 
 extendpoolfactor = 0.1
 maxsize = 50
-iterationa = 100
+iterationa = 1000
 which_target = 'fig1-waveform-H_phase2_2.txt'
 savedqdpool = 'megapoolphase2_2.txt'
 plot = False

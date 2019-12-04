@@ -14,7 +14,7 @@ import numpy as np
 import config
 import copy
 import cma
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 
 import sys
 # ============================ CLASS: Evaluate_Fit ================================ #
@@ -244,8 +244,8 @@ class Evaluatefit:
                 #mavraitarget = mavraitarget * (0.04189318 + 1.39177054 * np.cos(1.80152565 * x0) - 1.06877709 * np.sin(
                 #    1.20986685 * x0) - 0.16845738 * self.targets[0][:-2]) * 10 ** (-12)
                 mavraitarget = mavraitarget +10*self.targets[0][:-2]+2*np.diff(self.targets[0], 1)[:-1]/self.step-8
-                plt.plot(mavraitarget)
-                plt.show()
+                #plt.plot(mavraitarget)
+                #plt.show()
             resize_result = result[:mavraitarget.size]
             plot = config.plot
             if plot:
