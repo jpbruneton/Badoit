@@ -16,22 +16,29 @@ import pickle
 # -------------------------------------------------------------------------- #
 def init_grid(reinit_grid, poolname):
 
-
-
-    #if reinit_grid:
-    #    if os.path.exists(poolname):
-    #        os.remove(poolname)
-
-    if os.path.exists(poolname) and config.saveqd:
-        print('loading already trained model')
-
-        with open(poolname, 'rb') as file:
+    if config.uselocal == False:
+        filepath = 'home/user' + poolname
+        with open(filepath, 'rb') as file:
             qdpool = pickle.load(file)
             file.close()
-
+            print('loading already trained model')
     else:
-        print('grid doesnt exist')
-        qdpool = None
+        if reinit_grid:
+            if os.path.exists(poolname):
+                os.remove(poolname)
+
+        if os.path.exists(poolname) and config.saveqd:
+            print('loading already trained model')
+
+            with open(poolname, 'rb') as file:
+                qdpool = pickle.load(file)
+                file.close()
+
+        else:
+            print('grid doesnt exist')
+            qdpool = None
+
+    time.sleep(10)
 
     return qdpool
 
