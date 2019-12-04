@@ -60,7 +60,7 @@ def init_tolerance(target, voc):
 
     n_var = target.target[1]
     number_of_points = target.target[2][0].size
-    ranges = target.target[-2]
+    ranges = target.target[-3]
     multfactor = 0.5
     initialguess = 0
 

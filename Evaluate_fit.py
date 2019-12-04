@@ -28,7 +28,7 @@ class Evaluatefit:
         self.voc = voc
         self.mode = mode
         self.scalar_numbers = 0
-        self.n_targets, self.n_variables, self.variables, self.targets, self.f_renormalization, self.ranges, self.maximal_size = target.target
+        self.n_targets, self.n_variables, self.variables, self.targets, self.f_renormalization, self.ranges, self.maximal_size ,self.derivatives = target.target
         self.xsize = self.variables[0].shape[0]
         self.step = (self.ranges[0])/self.xsize
         if self.n_variables > 1:
@@ -66,14 +66,17 @@ class Evaluatefit:
             for u in range(1, highest_der+1):
                 if highest_der-u > 0:
                     arr = '[:-' + str(highest_der-u) + ']'
+                    arr = '[:]'
                 else:
                     arr = '[:]'
                 look_for = 'd'*u + '_x0'*u + '_f0'
                 replace_by = 'np.diff(f[0]' + arr + ',' +str(u) +')/('  + str(self.step) +'**' +str(u)+')'
+                replace_by = 'f'+'p'*u
                 neweq = neweq.replace(look_for, replace_by)
 
         if highest_der != 0 :
             base_array = '[:-' + str(highest_der) + ']'
+            base_array = '[:]'
         else:
             base_array = '[:]'
         string_to_replace = 'x0'
@@ -113,7 +116,7 @@ class Evaluatefit:
         return reward
 
     # ---------------------------------------------------------------------------- #
-    def formula_eval(self, x, f, A) :
+    def formula_eval(self, x, f, fp, A) :
         try:
             toreturn = eval(self.formulas)/self.f_renormalization
             if type(toreturn) != np.ndarray or np.isnan(np.sum(toreturn)) or np.isinf(np.sum(toreturn)) :
@@ -128,11 +131,11 @@ class Evaluatefit:
     # ---------------------------------------------------------------------------- #
     def evaluation_target(self, a):
         err = 0
-        success, eval = self.formula_eval(self.variables, self.targets, a)
+        success, eval = self.formula_eval(self.variables, self.targets, self.derivatives[0], a)
 
         if success == True:
             mavraitarget = np.diff(self.targets[0], config.max_derivative) / (self.step ** (config.max_derivative))
-
+            mavraitarget = self.derivatives[1] #valable dersecondes uniquement
             if config.trytrick:
                 x0 = self.variables[0][:-2]
                 #mavraitarget = mavraitarget * (0.04189318 + 1.39177054*np.cos(1.80152565*x0)-1.06877709*np.sin(1.20986685*x0) - 0.16845738*self.targets[0][:-2])*10**(-12)
@@ -229,12 +232,13 @@ class Evaluatefit:
     def eval_reward_nrmse(self, A):
     #for validation only
 
-        success, result = self.formula_eval(self.variables, self.targets, A)
+        success, result = self.formula_eval(self.variables, self.targets, self.derivatives[0], A)
 
         if success:
             mavraitarget = np.diff(self.targets[0], config.max_derivative)/(self.step**(config.max_derivative))
-            plt.plot(mavraitarget)
-            plt.show()
+            mavraitarget = self.derivatives[1]
+            #plt.plot(mavraitarget)
+            #plt.show()
             if config.trytrick:
                 x0 = self.variables[0][:-2]
                 #mavraitarget = mavraitarget * (0.04189318 + 1.39177054 * np.cos(1.80152565 * x0) - 1.06877709 * np.sin(
@@ -264,7 +268,7 @@ class Evaluatefit:
             usederivativecost = 1
         else:
             usederivativecost = 0
-        success, result = self.formula_eval(self.variables, self.targets, A)
+        success, result = self.formula_eval(self.variables, self.targets, self.derivatives[0], A)
         if success:
             mavraitarget = np.diff(self.targets[0], config.max_derivative)/(self.step**(config.max_derivative))
             resize_result = result[:mavraitarget.size]

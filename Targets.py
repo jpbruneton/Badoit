@@ -14,6 +14,8 @@ import numpy as np
 import Build_dictionnaries
 import Simplification_rules
 import config
+from scipy import interpolate
+
 # ============================================================================ #
 
 class Target:
@@ -56,10 +58,16 @@ class Target:
             x_test = data[:, 0]
             f0_test = data[:, 1]
             print('taille target', self.mode, len(x_train))
-            #plt.plot(f0_train)
-            #plt.show()
-            #plt.plot(f0_test)
-            #plt.show()
+
+            tck = interpolate.splrep(x_test, f0_test, s=0)
+            yder_test = interpolate.splev(x_test, tck, der=1)
+            ysec_test = interpolate.splev(x_test, tck, der=2)
+
+            tck = interpolate.splrep(x_train, f0_train, s=0)
+            yder_train = interpolate.splev(x_train, tck, der=1)
+            ysec_train = interpolate.splev(x_train, tck, der=2)
+
+        print('check important', x_train.size, f0_train.size, yder_train.size, ysec_train.size)
         f_normalization_train = np.amax(np.abs(f0_train))
         #f_normalization_train = 1/(0.0006103515625)**2
         #f0_train = f0_train / f_normalization_train
@@ -75,9 +83,9 @@ class Target:
         #range_x_train = 1
         #range_x_test = 1
         if self.mode == 'train':
-            return n_targets, n_variables, [x_train], [np.asarray(f0_train)], f_normalization_train, [range_x_train], maximal_size
+            return n_targets, n_variables, [x_train], [np.asarray(f0_train)], f_normalization_train, [range_x_train], maximal_size, [yder_train, ysec_train]
         else:
-            return n_targets, n_variables, [x_test], [np.asarray(f0_test)], f_normalization_test, [range_x_test], maximal_size
+            return n_targets, n_variables, [x_test], [np.asarray(f0_test)], f_normalization_test, [range_x_test], maximal_size, [yder_test, ysec_test]
 
 
     def returntarget(self):
@@ -360,9 +368,9 @@ class Voc():
         self.target = target.target
 
         if self.modescalar == 'noA':
-            self.maximal_size = 10+ self.target[-1]
+            self.maximal_size = 10+ self.target[-2]
         else:
-            self.maximal_size = self.target[-1]
+            self.maximal_size = self.target[-2]
 
         self.numbers_to_formula_dict, self.arity0symbols, self.arity1symbols, self.arity2symbols, self.true_zero_number, self.neutral_element, \
         self.infinite_number, self.terminalsymbol, self.OUTPUTDIM, self.pure_numbers, self.arity2symbols_no_power, self.power_number, \

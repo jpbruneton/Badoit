@@ -6,12 +6,12 @@ saveqd = False
 use_derivative = True
 max_derivative = 2 #will look for f'' -- eventuellement derivees croisees = stuff
 
-trytrick = True
-tryoscamorti = True
+trytrick = False
+tryoscamorti = False
 
 
-extendpoolfactor = 1
-maxsize = 15
+extendpoolfactor = 0.1
+maxsize = 50
 iterationa = 100
 which_target = 'fig1-waveform-H_phase2_2.txt'
 savedqdpool = 'megapoolphase2_2.txt'
@@ -41,7 +41,7 @@ use_simplif = False
 #after some tests, its better to use both the distance cost AND the derivative cost
 usederivativecost = 0  #or 0
 
-uselocal = True
+uselocal = False
 fromfile = True
 
 
