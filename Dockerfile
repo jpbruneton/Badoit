@@ -7,7 +7,8 @@ RUN \
     rm -rf /var/lib/apt/lists/*
 
 # Install python dependencies
-RUN pip3 --no-cache-dir install numpy scoop scipy cma
+#RUN pip3 --no-cache-dir install numpy scoop scipy cma
+RUN pip3 install numpy scoop scipy cma
 
 RUN mkdir -p /home/user
 
