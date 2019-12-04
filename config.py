@@ -38,7 +38,7 @@ use_simplif = False
 #after some tests, its better to use both the distance cost AND the derivative cost
 usederivativecost = 0  #or 0
 
-uselocal = True
+uselocal = False
 fromfile = True
 
 
