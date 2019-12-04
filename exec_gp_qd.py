@@ -17,7 +17,7 @@ import pickle
 def init_grid(reinit_grid, poolname):
 
     if config.uselocal == False:
-        filepath = '/home/user' + poolname
+        filepath = '/home/user/' + poolname
         with open(filepath, 'rb') as file:
             qdpool = pickle.load(file)
             file.close()
