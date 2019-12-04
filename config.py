@@ -7,7 +7,7 @@ use_derivative = True
 max_derivative = 2 #will look for f'' -- eventuellement derivees croisees = stuff
 
 
-extendpoolfactor = 0.001
+extendpoolfactor = 0.005
 maxsize = 50
 iterationa = 100
 which_target = 'fig1-waveform-H_phase2_2.txt'
