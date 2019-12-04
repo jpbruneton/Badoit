@@ -39,7 +39,7 @@ def init_grid(reinit_grid, poolname):
             print('grid doesnt exist')
             qdpool = None
 
-    time.sleep(10)
+    time.sleep(1)
 
     return qdpool
 
@@ -463,7 +463,7 @@ def main(which_target, poolname):
         #formm21  = '(((f0)*(np.exp((12.07992))))/(((np.cos(((54.871451)*(x0))-(11.075981)))+(-0.373353))-(((-78.102263)+((603.347966)+(np.exp((f0)*(-4.967299)))))*((x0)/((298.530341)-((f0)*(7.946753)))))))-((((np.cos((14.771823)/((x0)/(-11.829798))))/(2.340901))*(-38.751358))*((-633.53597)/(x0)))'
         #formm3 = '(x0)-((np.sin(((-265.747425)+((118.102741)/(x0)))/(x0)))*((((np.exp(x0))*((np.log((x0)+(x0)))-(x0)))*((x0)+(((np.exp((259.780332)))**((0.229831)+(np.sin((x0)*(-0.39444)))))*(np.sin((-1.569401)/((x0)/((x0)-(1.33829))))))))*(-0.878942)))'
         formm1 = '((((f0)-((x0)*(((x0)+(((x0)/(x0))*(x0)))**(((0.683627)/(x0))+(-11.080003)))))*(f0))-(((26.193383)-(((4.206742)-(np.cos(((56.690486)/((-27.736556)+((26.447422)+((0.880481)/(x0)))))+(-65.357668))))*(6.150606)))*(0.323299)))/(((x0)*(0.002572))-((0.002161)+((-0.00045)/(x0))))'
-
+        formm1 = '(x0)/(np.exp((26.550064)+((f0)**(-21.047723))))'
         evall = Evaluatefit(formm1, voc_with_a, test_target, tolerance, 'test')
         print('re', evall.formulas)
 
@@ -473,6 +473,14 @@ def main(which_target, poolname):
         print('donne:', rew, scalar_numbers, alla, rms)
         time.sleep(500)
     # run evolution :
+
+    #try exact sol:
+    if False:
+        form =  'A*d_x0_f0 + A * f0 + A'
+        evall = Evaluatefit(form, voc_with_a, test_target, tolerance, 'test')
+        reward_cmaes, _, allA, rms = evall.evaluate()
+        print(reward_cmaes, allA, rms)
+
     iteration_no_a = 1
     stop, qdpool, alleqs_no_a, iter_no_a, valrmse, bf = exec(which_target, train_target, test_target, voc_no_a, iteration_no_a, tolerance, gp, prefix)
 

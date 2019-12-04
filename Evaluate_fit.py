@@ -14,7 +14,7 @@ import numpy as np
 import config
 import copy
 import cma
-#import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 
 import sys
 # ============================ CLASS: Evaluate_Fit ================================ #
@@ -40,6 +40,7 @@ class Evaluatefit:
     def rename_formulas(self):
         ''' index all the scalar 'A' by a A1, A2, etc, rename properly the differentials, and finally resize as it must '''
         neweq = ''
+
         # rename the A's
         self.scalar_numbers = self.formulas.count('A')
 
@@ -131,6 +132,12 @@ class Evaluatefit:
 
         if success == True:
             mavraitarget = np.diff(self.targets[0], config.max_derivative) / (self.step ** (config.max_derivative))
+
+            if config.trytrick:
+                x0 = self.variables[0][:-2]
+                #mavraitarget = mavraitarget * (0.04189318 + 1.39177054*np.cos(1.80152565*x0)-1.06877709*np.sin(1.20986685*x0) - 0.16845738*self.targets[0][:-2])*10**(-12)
+                mavraitarget = mavraitarget +9.75024*self.targets[0][:-2]+2.22983*np.diff(self.targets[0], 1)-7.79562
+
             resize_eval = eval[:mavraitarget.size]
             diff = resize_eval - mavraitarget
             err += (np.sum(diff**2))
@@ -221,16 +228,23 @@ class Evaluatefit:
 
     def eval_reward_nrmse(self, A):
     #for validation only
+
         success, result = self.formula_eval(self.variables, self.targets, A)
 
         if success:
             mavraitarget = np.diff(self.targets[0], config.max_derivative)/(self.step**(config.max_derivative))
+            plt.plot(mavraitarget)
+            plt.show()
+            if config.trytrick:
+                x0 = self.variables[0][:-2]
+                #mavraitarget = mavraitarget * (0.04189318 + 1.39177054 * np.cos(1.80152565 * x0) - 1.06877709 * np.sin(
+                #    1.20986685 * x0) - 0.16845738 * self.targets[0][:-2]) * 10 ** (-12)
+                mavraitarget = mavraitarget +10*self.targets[0][:-2]+2*np.diff(self.targets[0], 1)[:-1]/self.step-8
+                plt.plot(mavraitarget)
+                plt.show()
             resize_result = result[:mavraitarget.size]
             plot = config.plot
             if plot:
-                # print(result)
-                # print(resize_result)
-                # print('toi', mavraitarget.size)
                 plt.plot(mavraitarget)
                 plt.plot(result, 'r')
                 plt.show()

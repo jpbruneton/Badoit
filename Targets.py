@@ -34,8 +34,10 @@ class Target:
         n_targets = 1
         n_variables = 1
         maximal_size = self.maxsize
-
-        data = np.loadtxt(self.from_file, delimiter=',')
+        if config.tryoscamorti:
+            data = np.loadtxt('oscamorti.txt', delimiter=',')
+        else:
+            data = np.loadtxt(self.from_file, delimiter=',')
         L = data.shape[0]
 
         #si je coupe en deux:
