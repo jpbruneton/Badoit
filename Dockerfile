@@ -7,7 +7,7 @@ RUN \
     rm -rf /var/lib/apt/lists/*
 
 # Install python dependencies
-RUN pip3 --no-cache-dir install numpy cma
+RUN pip3 --no-cache-dir install numpy scipy cma
 
 RUN mkdir -p /home/user
 
