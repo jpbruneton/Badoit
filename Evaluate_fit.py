@@ -12,7 +12,6 @@
 # Packages
 import numpy as np
 import config
-from scipy.optimize import least_squares
 import copy
 import cma
 #import matplotlib.pyplot as plt
