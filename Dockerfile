@@ -8,7 +8,7 @@ RUN \
 
 # Install python dependencies
 #RUN pip3 --no-cache-dir install numpy scoop scipy cma
-RUN pip3 install numpy scoop scipy cma
+RUN pip3 install numpy cma
 
 RUN mkdir -p /home/user
 
