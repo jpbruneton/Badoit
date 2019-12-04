@@ -17,11 +17,12 @@ import pickle
 def init_grid(reinit_grid, poolname):
 
     if config.uselocal == False:
-        filepath = poolname
+        filepath = '/home/user/results/'+poolname
         with open(filepath, 'rb') as file:
             qdpool = pickle.load(file)
             file.close()
             print('loading already trained model')
+            print('with', len(qdpool))
     else:
         if reinit_grid:
             if os.path.exists(poolname):
