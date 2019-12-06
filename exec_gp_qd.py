@@ -409,7 +409,7 @@ def init_everything_else(which_target, maxsize):
     sizenoa = len(voc_no_a.numbers_to_formula_dict)
     diff = sizenoa - sizea
     poolsize = 4000
-    delete_ar1_ratio = 0.3
+    delete_ar1_ratio = 0.1
     extend_ratio = config.extendpoolfactor
     p_mutate = 0.4
     p_cross = 0.8
@@ -420,8 +420,8 @@ def init_everything_else(which_target, maxsize):
     maxa = bina
     binl_a = voc_with_a.maximal_size # number of bins for length of an eq
     maxl_a = voc_with_a.maximal_size
-    binf = 16 # number of bins for number of fonctions
-    maxf = 16
+    binf = 160 # number of bins for number of fonctions
+    maxf = 160
     new = 1
     binp = new  # number of bins for number of powers
     maxp = new
