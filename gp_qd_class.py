@@ -304,7 +304,8 @@ class GP_QD():
             ct+=1
             if str([bin_a, bin_l, bin_exp, bin_trig, bin_p, bin_f, bin_fzero, bin_fone]) not in results_by_bin:
                 cif+=1
-                results_by_bin.update({str([bin_a, bin_l, bin_exp, bin_trig, bin_p, bin_f, bin_fzero, bin_fone]): [rms, state, allA]})
+                if rms < 1:
+                    results_by_bin.update({str([bin_a, bin_l, bin_exp, bin_trig, bin_p, bin_f, bin_fzero, bin_fone]): [rms, state, allA]})
                 #print(results_by_bin)
             else:
                 cnotif+=1
