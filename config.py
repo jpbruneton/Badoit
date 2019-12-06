@@ -13,8 +13,8 @@ tryoscamorti = False
 extendpoolfactor = 0.1
 maxsize = 70
 iterationa = 1000
-which_target = 'fig1-waveform-H_phase2_2.txt'
-savedqdpool = 'megapoolphase2_2.txt'
+which_target = 'fig1-waveform-H_phase2_1.txt'
+savedqdpool = 'megapoolphase2_1.txt'
 plot = False
 # --------------------- SPECIAL SYNTAXIC RULES -------------- #
 # how many nested functions I authorize
@@ -41,7 +41,7 @@ use_simplif = False
 #after some tests, its better to use both the distance cost AND the derivative cost
 usederivativecost = 0  #or 0
 
-uselocal = False
+uselocal = True
 fromfile = True
 
 
