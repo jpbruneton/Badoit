@@ -18,9 +18,9 @@ list_scalars = ['one', 'two'] #if running only on some integers
 operators = ['+', '-', '*', '/']
 
 #____________termination stuff_______________
-iterationa = 5
-iterationnoa = 5
-termination_nmrse = 3e-8
+iterationa = 15
+iterationnoa = 10
+termination_nmrse = 1e-8
 
 loglog = False #fit loglog instead of the given target, default False
 
@@ -83,8 +83,8 @@ max_A_number = 1200
 usederivativecost = 0  #or 0
 
 #misc
-uselocal = True
-cpus = 8
+uselocal = False
+cpus = 40
 
 specialgal = False
 extend_using_smooth_interpolate = False
