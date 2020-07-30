@@ -1,9 +1,8 @@
-#  ======================== MONTE CARLO TREE SEARCH ========================== #
-# Project:          Symbolic regression tests
-# Name:             EvaluateFit.py
-# Description:      Tentative implementation of a basic MCTS
-# Authors:          Vincent Reverdy & Jean-Philippe Bruneton
-# Date:             2018
+#  ======================== CMA-Based Symbolic Regressor ========================== #
+# Project:          Symbolic regression for physics
+# Name:             AST.py
+# Authors:          Jean-Philippe Bruneton
+# Date:             2020
 # License:          BSD 3-Clause License
 # ============================================================================ #
 
@@ -11,375 +10,195 @@
 # ================================= PREAMBLE ================================= #
 # Packages
 import numpy as np
-import Build_dictionnaries
+import Build_dictionnaries_v2 as Build_dictionnaries
+#import Build_dictionnaries
 import Simplification_rules
+import pickle
 import config
 from scipy import interpolate
 
 # ============================================================================ #
 
-class Target:
+class Target():
 
-    def __init__(self, which_target, maxsize, mode, fromfile = None):
-        self.which_target = which_target
-        self.mode = mode #'test' or 'train'
-        self.from_file = fromfile
-        self.maxsize = maxsize
-        if self.from_file is None:
-            self.target = self._define_target()
-            self.mytarget = self.returntarget()
-        else: #define target from file
-            self.target = self._definetargetfromfile()
-            self.mytarget = 'dummytarget'
+    def __init__(self, filenames):
+        self.filenames = filenames
+        self.targets = []
+        self.diffmode = filenames[-1]
+        self.calculus_mode = filenames[-2]
+        self.maxsize = []
 
-    def _definetargetfromfile(self):
-        n_targets = 1
-        n_variables = 1
-        maximal_size = self.maxsize
-        if config.tryoscamorti:
-            data = np.loadtxt('oscamorti.txt', delimiter=',')
+        for u in range(len(filenames) - 2):
+            if self.diffmode == 'no_diff':
+                self.targets.append(self._define_nondiff_targetfromfile(u))
+            else:
+                self.targets.append(self._define_diff_targetfromfile(u))
+
+    # -----------------------------------------
+    def _define_nondiff_targetfromfile(self, u):
+        '''
+        Relevant for finding a symbolic eq for the data, not using any diff operator
+        This assumes the file having the form (in scalar mode) : first p columns : the variables (max supported : 3), then one target (more not supported yet)
+        eg. x, y, z, f(x,y,z) ; if vectorial, it must be t, x, y, z; objective function is \vec{x}(t) = ...
+        :return: the list of [variable, the vector of targets (\vec x, vec y \vec z), the vector of its first derivatives, and the vector of its second derivatives]
+        '''
+        file = open(self.filenames[u], 'rb')
+        my_dict = pickle.load(file)
+        self.maxsize.append(my_dict['maxlen'])
+        if self.calculus_mode == 'vectorial':
+            # file must be :  variable (named t) , x, y, z
+            self.n_variables = 1
+            x0 = my_dict['x0']
+            rangex = np.max(x0) - np.min(x0)
+            x0 = x0 / rangex
+
+            f0 = my_dict['f0']
+            rangef0 = np.max(f0) - np.min(f0)
+            f0 = f0 / rangef0
+
+            f1 = my_dict['f1']
+            rangef1 = np.max(f1) - np.min(f1)
+            f1 = f1 / rangef1
+
+            f2 = my_dict['f2']
+            rangef2 = np.max(f2) - np.min(f2)
+            f2 = f2 / rangef2
+            return [[x0], np.transpose(np.array([f0, f1, f2])), None, None, [rangex, rangef0, rangef1, rangef2]]
+
         else:
-            data = np.loadtxt(self.from_file, delimiter=',')
-        L = data.shape[0]
+            self.n_variables = my_dict['n_variables']
+            # ------------------------------------------------#
+            if self.n_variables == 1:
+                x = my_dict['x0']
+                f0 = my_dict['f0']
+                #print(x)
+                #print(f0)
+                rangef = np.max(f0) - np.min(f0)
+                rangex = np.max(x) - np.min(x)
+                f0 = f0/rangef
+                x = x/rangex
+                tck = interpolate.splrep(x, f0, s=0)
+                # even if in a non diff mode, the comparison between target and first derivatives can enter the cost to speed up convergence
 
-        #si je coupe en deux:
+                f_first_der = interpolate.splev(x, tck, der=1)
+                f_sec_der = interpolate.splev(x, tck, der=2)
+                return [[x], np.transpose(np.array([f0])), np.transpose(np.array([f_first_der])), np.transpose(np.array([f_sec_der])), [rangex, rangef]]
+
+            # ------------------------------------------------#
+            # for more than 1 variable we dont provide the gradients
+            elif self.n_variables == 2:
+                X = my_dict['x0']
+                Y = my_dict['x1'] # these are meshgrids
+                rangex = np.max(X) - np.min(X)
+                rangey = np.max(Y) - np.min(Y)
+                f0 = my_dict['f0']
+                rangef = np.max(f0) - np.min(f0)
+
+                return [[X/rangex, Y/rangey], f0/rangef, None, None, [rangex, rangey, rangef]]
+
+            # ------------------------------------------------#
+            elif self.n_variables == 3:
+                X = my_dict['x0']
+                Y = my_dict['x1']  # these are meshgrids
+                Z = my_dict['x2']  # these are meshgrids
+                f0 = my_dict['f0']
+                rangex = np.max(X) - np.min(X)
+                rangey = np.max(Y) - np.min(Y)
+                rangez = np.max(Z) - np.min(Z)
+                f0 = my_dict['f0']
+                rangef = np.max(f0) - np.min(f0)
+                return [[X/rangex, Y/rangey, Z/rangez], f0/rangef, None, None, [rangex, rangey, rangez, rangef]]
+
+    # ----------------------------------------------
+    def _define_diff_targetfromfile(self, u):
+        '''
+        Relevant for finding a diff eq on the data (of one variable only, more is not supported)
+        This assumes the file having the form : column 0 : the variable, and then 1,2, or 3 columns for the target functions : eg. x(t), y(t), z(t)
+        works both for scalar or vectorial mode
+        :return: the list of [variable, the vector of targets (\vec x, vec y \vec z), the vector of its first derivatives, and the vector of its second derivatives]
+        '''
+
+        file = open(self.filenames[u], 'rb')
+        my_dict = pickle.load(file)
+        self.maxsize.append(my_dict['maxlen'])
+        self.n_variables = 1 #diff are always mono var
+        t = my_dict['x0']
+        ranget = np.max(t) - np.min(t)
+        f0 = my_dict['f0']
+        rangef0 = np.max(f0) - np.min(f0)
+        target_functions = [f0]
+        t = t/ranget
+        f0 = f0/rangef0
         if False:
-            lo = int(L*0.8)
-            data_train = data[:lo, :]
-            data_test = data[lo:, :]
-            x_train = data_train[:, 0]
-            x_test = data_test[:,0]
-            f0_train = data_train[:,1]
-            f0_test = data_test[:,1]
+            tck = interpolate.splrep(t, f0, s=0)
+            new_x = np.linspace(t[0], t[-1], num=20000)  # todo pourquoi entre pemier x et 1?? mond spec i guess
+            new_f = interpolate.splev(new_x, tck)
+            tck = interpolate.splrep(new_x, new_f, s=0)
+            f_first_der = interpolate.splev(new_x, tck, der=1)
+            f_sec_der = interpolate.splev(new_x, tck, der=2)
+            return [[new_x], np.transpose(np.array([new_f])), np.transpose(np.array([f_first_der])),
+                    np.transpose(np.array([f_sec_der])),[ranget, rangef0]]
 
-        else: # mieux je subsample genre 1 sur 2 quoi
-            x_train = data[:, 0]
-            f0_train = data[:, 1]
-            x_test = data[:, 0]
-            f0_test = data[:, 1]
-            print('taille target', self.mode, len(x_train))
+        # derivatives are computed by using an interpolation of the target #these are derivatives of the scaled functions, it needs appropriate descaling later
+        tck = interpolate.splrep(t, f0, s=0)
+        f0_first_der = interpolate.splev(t, tck, der=1)
+        f0_second_der = interpolate.splev(t, tck, der=2)
+        first_derivatives = [f0_first_der]
+        second_derivatives = [f0_second_der]
 
-            tck = interpolate.splrep(x_test, f0_test, s=0)
-            yder_test = interpolate.splev(x_test, tck, der=1)
-            ysec_test = interpolate.splev(x_test, tck, der=2)
+        if self.calculus_mode == 'vectorial':
+            f1 = my_dict['f1']
+            rangef1 = np.max(f1) - np.min(f1)
+            f1 = f1/rangef1
+            target_functions.append(f1)
+            tck = interpolate.splrep(t, f1, s=0)
+            f1_first_der = interpolate.splev(t, tck, der=1)
+            f1_sec_der = interpolate.splev(t, tck, der=2)
+            first_derivatives.append(f1_first_der)
+            second_derivatives.append(f1_sec_der)
 
-            tck = interpolate.splrep(x_train, f0_train, s=0)
-            yder_train = interpolate.splev(x_train, tck, der=1)
-            ysec_train = interpolate.splev(x_train, tck, der=2)
+            f2 = my_dict['f2']
+            rangef2 = np.max(f2) - np.min(f2)
+            f2 = f2/rangef2
+            target_functions.append(f2)
+            tck = interpolate.splrep(t, f2, s=0)
+            f2_first_der = interpolate.splev(t, tck, der=1)
+            f2_sec_der = interpolate.splev(t, tck, der=2)
+            first_derivatives.append(f2_first_der)
+            second_derivatives.append(f2_sec_der)
 
-        print('check important', x_train.size, f0_train.size, yder_train.size, ysec_train.size)
-        f_normalization_train = np.amax(np.abs(f0_train))
-        #f_normalization_train = 1/(0.0006103515625)**2
-        #f0_train = f0_train / f_normalization_train
-
-        f_normalization_train = 1
-
-        #f_normalization_test = np.amax(np.abs(f0_test))
-        #f_normalization_test = 1/(0.0006103515625)**2
-        #f0_test = f0_test / f_normalization_test
-        f_normalization_test = 1
-        range_x_train = x_train[-1] - x_train[0]
-        range_x_test = x_test[-1] - x_test[0]
-        #range_x_train = 1
-        #range_x_test = 1
-        if self.mode == 'train':
-            return n_targets, n_variables, [x_train], [np.asarray(f0_train)], f_normalization_train, [range_x_train], maximal_size, [yder_train, ysec_train]
+            return [[t], np.transpose(np.array(target_functions)), np.transpose(np.array(first_derivatives)),
+                    np.transpose(np.array(second_derivatives)), [ranget, rangef0, rangef1, rangef2]]
         else:
-            return n_targets, n_variables, [x_test], [np.asarray(f0_test)], f_normalization_test, [range_x_test], maximal_size, [yder_test, ysec_test]
+            return [[t], np.transpose(np.array(target_functions)), np.transpose(np.array(first_derivatives)),
+                    np.transpose(np.array(second_derivatives)), [ranget, rangef0]]
 
-
-    def returntarget(self):
-        with open('target_list.txt') as myfile:
-            count = 0
-            for line in myfile:
-                if line[0] != '#' and line[0] != '\n':
-                    if count == self.which_target:
-                        mytarget = line
-                        count+=1
-                    else:
-                        count+=1
-        return mytarget
-
-    def _define_target(self):
-        ''' Initialize game : builds the target given by its number (of line) in target_list.txt '''
-        # format of target_list.txt must be one target per line, and of the form:
-        # n_targets, n_variables, expr1, train_set_type, train_set_range, test_set_type, test_set_range
-        #todo : only works for one target now (not a system of eq)
-
-        with open('target_list.txt') as myfile:
-            count = 0
-            for line in myfile:
-                if line[0] != '#' and line[0] != '\n':
-                    if count == self.which_target:
-                        mytarget = line
-                        count+=1
-                    else:
-                        count+=1
-        print('Target function is: ', mytarget)
-        mytarget = mytarget.replace(' ', '')
-        mytarget = mytarget.replace('\n', '')
-        mytarget = mytarget.split(',')
-        n_targets = int(mytarget[0])
-        n_variables = int(mytarget[1])
-        target_function = mytarget[2] #is a string, ok
-        maximal_size = int(mytarget[-1])
-
-        # ----------------------------------#
-        train_set_type_x = mytarget[3]
-
-        # ----------------------------------#
-        if train_set_type_x == 'E':
-            train_set_range_x = [float(mytarget[4]), float(mytarget[5]), float(mytarget[6])]
-            range_x_train = train_set_range_x[1] - train_set_range_x[0]
-
-            x_train = np.linspace(train_set_range_x[0], train_set_range_x[1], num = int(range_x_train/train_set_range_x[2]))
-            #following arxiv.1805.10365 where they give the spacing, not the number of points
-        # or randomly sampled
-        elif train_set_type_x == 'U':
-            train_set_range_x = [float(mytarget[4]), float(mytarget[5]), int(mytarget[6])]
-            range_x_train = train_set_range_x[1] - train_set_range_x[0]
-
-            x_train = np.random.uniform(train_set_range_x[0], train_set_range_x[1], train_set_range_x[2])
-            #re-order it!
-            x_train = np.sort(x_train)
-        else:
-            print('training dataset not understood for target number', count -1)
-            raise ValueError
-
-        test_set_type_x = mytarget[7]
-
-        if test_set_type_x == 'E':
-            test_set_range_x = [float(mytarget[8]), float(mytarget[9]), float(mytarget[10])]
-            range_x_test = test_set_range_x[1] - test_set_range_x[0]
-
-            x_test = np.linspace(test_set_range_x[0], test_set_range_x[1], num=int((test_set_range_x[1]-test_set_range_x[0])/test_set_range_x[2]))
-        # or randomly sampled
-        elif test_set_type_x == 'U':
-            test_set_range_x = [float(mytarget[8]), float(mytarget[9]), int(mytarget[10])]
-            range_x_test = test_set_range_x[1] - test_set_range_x[0]
-
-            x_test = np.random.uniform(test_set_range_x[0], test_set_range_x[1], test_set_range_x[2])
-            x_test = np.sort(x_test)
-        else:
-            print('testing dataset not understood for target number', count - 1)
-            raise ValueError
-
-        # ----------------------------------#
-        if n_variables > 1:
-            train_set_type_y = mytarget[11]
-            test_set_type_y = mytarget[15]
-
-            if train_set_type_y == 'E':
-                train_set_range_y = [float(mytarget[12]), float(mytarget[13]), float(mytarget[14])]
-                range_y_train = train_set_range_y[1] - train_set_range_y[0]
-
-                y_train = np.linspace(train_set_range_y[0], train_set_range_y[1], num=int(range_y_train/train_set_range_y[2]))
-            # or randomly sampled
-            elif train_set_type_y == 'U':
-                train_set_range_y = [float(mytarget[12]), float(mytarget[13]), int(mytarget[14])]
-                range_y_train = train_set_range_y[1] - train_set_range_y[0]
-
-                y_train = np.random.uniform(train_set_range_y[0], train_set_range_y[1], train_set_range_y[2])
-                y_train = np.sort(y_train)
-
-            else:
-                print('training dataset not understood for target number', count)
-                raise ValueError
-
-            if test_set_type_y == 'E':
-                test_set_range_y = [float(mytarget[16]), float(mytarget[17]), float(mytarget[18])]
-                range_y_test = test_set_range_y[1] - test_set_range_y[0]
-
-                y_test = np.linspace(test_set_range_y[0], test_set_range_y[1], num=int((test_set_range_y[1]-test_set_range_y[0])/test_set_range_y[2]))
-                # or randomly sampled
-            elif test_set_type_y == 'U':
-                test_set_range_y = [float(mytarget[16]), float(mytarget[17]), int(mytarget[18])]
-                range_y_test = test_set_range_y[1] - test_set_range_y[0]
-
-                y_test = np.random.uniform(test_set_range_y[0], test_set_range_y[1], test_set_range_y[2])
-                y_test = np.sort(y_test)
-
-            elif test_set_type_y == 'None':
-                y_test = y_train
-            else:
-                print('testing dataset not understood for target number', count)
-                raise ValueError
-
-        # ----------------------------------#
-
-        if n_variables > 2:
-            train_set_type_z = mytarget[19]
-            test_set_type_z = mytarget[23]
-
-
-            if train_set_type_z == 'E':
-                train_set_range_z = [float(mytarget[20]), float(mytarget[21]), float(mytarget[22])]
-                range_z_train = train_set_range_z[1] - train_set_range_z[0]
-
-                z_train = np.linspace(train_set_range_z[0], train_set_range_z[1], num=int(range_z_train/train_set_range_z[2]))
-            # or randomly sampled
-            elif train_set_type_z == 'U':
-                train_set_range_z = [float(mytarget[20]), float(mytarget[21]), int(mytarget[22])]
-                range_z_train = train_set_range_z[1] - train_set_range_z[0]
-                z_train = np.random.uniform(train_set_range_z[0], train_set_range_z[1], train_set_range_z[2])
-                z_train = np.sort(z_train)
-
-            else:
-                print('training dataset not understood for target number', count)
-                raise ValueError
-
-            if test_set_type_z == 'E':
-                test_set_range_z = [float(mytarget[24]), float(mytarget[25]), float(mytarget[26])]
-                range_z_test = test_set_range_z[1] - test_set_range_z[0]
-
-                z_test = np.linspace(test_set_range_z[0], test_set_range_z[1], num=int((test_set_range_z[1]-test_set_range_z[0])/test_set_range_z[2]))
-                # or randomly sampled
-            elif test_set_type_z == 'U':
-                test_set_range_z = [float(mytarget[24]), float(mytarget[25]), int(mytarget[26])]
-                range_z_test = test_set_range_z[1] - test_set_range_z[0]
-
-                z_test = np.random.uniform(test_set_range_z[0], test_set_range_z[1], test_set_range_z[2])
-                z_test = np.sort(z_test)
-
-            elif test_set_type_z == 'None':
-                z_test = z_train
-            else:
-                print('testing dataset not understood for target number', count)
-                raise ValueError
-
-        # ------------------------------------------------#
-        if n_variables == 1:
-            x = x_train
-            #print(x)
-            #then i can eval f0
-            f0_train = eval(target_function)
-            f_normalization_train = np.amax(np.abs(f0_train))
-            f_normalization_train = 1
-            f0_train = f0_train/f_normalization_train
-
-            x = x_test
-            # then i can eval f0
-            f0_test = eval(target_function)
-            f_normalization_test = np.amax(np.abs(f0_test))
-            f_normalization_test  = 1
-
-            f0_test = f0_test/f_normalization_test
-
-            #also schrink the x interval to -1, 1
-            if self.mode == 'train':
-                #return n_targets, n_variables, [x_train/range_x], [x_test/range_x], [f0_train], [f0_test], f_normalization, [range_x]
-                return n_targets, n_variables, [x_train / range_x_train], [f0_train], f_normalization_train, [range_x_train], maximal_size
-            else:
-                return n_targets, n_variables,  [x_test/range_x_test], [f0_test], f_normalization_test, [range_x_test], maximal_size
-        # ------------------------------------------------#
-        elif n_variables == 2:
-
-            # xtrain is a 1D array of x values
-            # ytrain as well
-            # but its easier to build variables X and Y as both arrays:
-
-            X_train = np.zeros((x_train.size, y_train.size))
-            Y_train = np.zeros((x_train.size, y_train.size))
-
-            for i in range(x_train.size):
-                X_train[i, :] = x_train[i]
-            for j in range(y_train.size):
-                Y_train[:, j] = y_train[j]
-
-            X_test = np.zeros((x_test.size, y_test.size))
-            Y_test = np.zeros((x_test.size, y_test.size))
-
-            for i in range(x_test.size):
-                X_test[i, :] = x_test[i]
-            for j in range(y_test.size):
-                Y_test[:, j] = y_test[j]
-
-            x = X_train
-            y = Y_train
-            f0_train = eval(target_function)
-            f_normalization_train = np.amax(np.abs(f0_train))
-            f0_train = f0_train/f_normalization_train
-
-
-            x = X_test
-            y = Y_test
-            f0_test = eval(target_function)
-            f_normalization_test = np.amax(np.abs(f0_test))
-
-            f0_test = f0_test/f_normalization_test
-
-            if self.mode == 'train':
-                #return n_targets, n_variables, [X_train/range_x, Y_train/range_y], [X_test/range_x, Y_test/range_y], [f0_train], [f0_test], f_normalization, [range_x, range_y]
-                return n_targets, n_variables, [X_train/range_x_train, Y_train/range_y_train], f0_train, f_normalization_train, [range_x_train, range_y_train], maximal_size
-            else:
-                return n_targets, n_variables, [X_test/range_x_test, Y_test/range_y_test], f0_test, f_normalization_test, [range_x_test, range_y_test], maximal_size
-
-
-
-        # ------------------------------------------------#
-        elif n_variables == 3:
-
-            X_train = np.zeros((x_train.size, y_train.size, z_train.size))
-            Y_train = np.zeros((x_train.size, y_train.size, z_train.size))
-            Z_train = np.zeros((x_train.size, y_train.size, z_train.size))
-
-            for i in range(x_train.size):
-                X_train[i, :, :] = x_train[i]
-            for j in range(y_train.size):
-                Y_train[:, j, :] = y_train[j]
-            for k in range(z_train.size):
-                Z_train[:, :, k] = z_train[k]
-
-            X_test = np.zeros((x_test.size, y_test.size, z_test.size))
-            Y_test = np.zeros((x_test.size, y_test.size, z_test.size))
-            Z_test = np.zeros((x_test.size, y_test.size, z_test.size))
-
-            for i in range(x_test.size):
-                X_test[i, :, :] = x_test[i]
-            for j in range(y_test.size):
-                Y_test[:, j, :] = y_test[j]
-            for k in range(z_test.size):
-                Z_test[:, :, k] = z_test[k]
-
-            x = X_train
-            y = Y_train
-            z = Z_train
-            f0_train = eval(target_function)
-            f_normalization_train = np.amax(np.abs(f0_train))
-            f0_train = f0_train / f_normalization_train
-
-            x = X_test
-            y = Y_test
-            z = Z_test
-            f0_test = eval(target_function)
-            f_normalization_test = np.amax(np.abs(f0_test))
-            f0_test = f0_test / f_normalization_test
-            if self.mode == 'train':
-            #return n_targets, n_variables, [X_train/range_x, Y_train/range_y, Z_train/range_z], [X_test/range_x, Y_test/range_y, Z_test/range_z], [f0_train], [f0_test], f_normalization, [range_x, range_y, range_z]
-                return n_targets, n_variables, [X_train / range_x_train, Y_train / range_y_train, Z_train / range_z_train], f0_train, f_normalization_train, [range_x_train, range_y_train, range_z_train], maximal_size
-            else:
-                return n_targets, n_variables, [X_test/range_x_test, Y_test/range_y_test, Z_test/range_z_test], f0_test, f_normalization_test, [range_x_test, range_y_test, range_z_test], maximal_size
-
+# ============================================================================ #
+# ============================================================================ #
 
 class Voc():
-    def __init__(self, target, modescalar):
-
-        self.modescalar = modescalar
-        self.target = target.target
-
-        if self.modescalar == 'noA':
-            self.maximal_size = 10+ self.target[-2]
-        else:
-            self.maximal_size = self.target[-2]
+    def __init__(self, u, n_variables, all_targets_name, calculus_mode,
+                 maximal_size, look_for, expert_knowledge, modescalar):
+        self.calculus_mode = calculus_mode
+        self.maximal_size = maximal_size
+        self.all_targets_name = all_targets_name
+        self.n_targets = len(all_targets_name)
+        self.look_for = look_for
+        self.expert_knowledge = expert_knowledge
+        self.n_variables = n_variables
+        self.modescalar = modescalar # 'A', 'no_A'
 
         self.numbers_to_formula_dict, self.arity0symbols, self.arity1symbols, self.arity2symbols, self.true_zero_number, self.neutral_element, \
-        self.infinite_number, self.terminalsymbol, self.OUTPUTDIM, self.pure_numbers, self.arity2symbols_no_power, self.power_number, \
-        self.arity0symbols_var_and_tar, self.var_numbers, self.plusnumber, self.minusnumber, self.multnumber, self.divnumber, self.log_number, \
-        self.exp_number, self.explognumbers, self.trignumbers, self.sin_number, self.cos_number \
-            = Build_dictionnaries.get_dic(self.target[0], self.target[1], modescalar)
-        self.outputdim = len(self.numbers_to_formula_dict) - 3
+        self.infinite_number, self.terminalsymbol, self.pure_numbers, self.arity2symbols_no_power, self.power_number, self.var_numbers, \
+        self.plusnumber, self.minusnumber, self.multnumber, self.divnumber, self.norm_number, self.dot_number, self.wedge_number, \
+        self.vectorial_numbers, self.arity0_vec, self.arity0_novec, self.arity1_vec, self.arity2_vec, self.arity2novec, self.arity1_novec,\
+            self.targetfunction_number, self.first_der_number\
+            = Build_dictionnaries.get_dic(self.modescalar, self.n_targets, self.n_variables,
+                                          self.all_targets_name, u, self.calculus_mode, self.look_for, self.expert_knowledge)
 
-        self.mysimplificationrules, self.maxrulesize = self.create_dic_of_simplifs()
+
+        #todo redo later
+        #self.mysimplificationrules, self.maxrulesize = self.create_dic_of_simplifs()
 
     def replacemotor(self, toreplace,replaceby, k):
         firstlist = []
@@ -411,14 +230,6 @@ class Voc():
                 firstlist.append(self.arity2symbols[k])
             elif elem == 'power':
                 firstlist.append(self.power_number)
-            elif elem == 'log':
-                firstlist.append(self.log_number)
-            elif elem == 'exp':
-                firstlist.append(self.exp_number)
-            elif elem == 'sin':
-                firstlist.append(self.sin_number)
-            elif elem == 'cos':
-                firstlist.append(self.cos_number)
             elif elem == 'one':
                 firstlist.append(self.pure_numbers[0])
             elif elem == 'two':
@@ -455,14 +266,6 @@ class Voc():
                 secondlist=[]
             elif elem == 'power':
                 secondlist.append(self.power_number)
-            elif elem == 'log':
-                secondlist.append(self.log_number)
-            elif elem == 'exp':
-                secondlist.append(self.exp_number)
-            elif elem == 'sin':
-                secondlist.append(self.sin_number)
-            elif elem == 'cos':
-                secondlist.append(self.cos_number)
             elif elem == 'one':
                 secondlist.append(self.pure_numbers[0])
             elif elem == 'two':
@@ -471,80 +274,3 @@ class Voc():
                 print('bug2', elem)
 
         return firstlist, secondlist
-
-
-
-    def create_dic_of_simplifs(self):
-
-        if self.modescalar == 'A':
-            mydic_simplifs = {}
-            for x in Simplification_rules.mysimplificationrules_with_A:
-                toreplace = x[0]
-                replaceby = x[1]
-
-                if 'variable' in toreplace:
-                    for k in range(self.target[1]):
-                        firstlist, secondlist = self.replacemotor(toreplace, replaceby, k)
-                        mydic_simplifs.update(({str(firstlist): secondlist}))
-
-                elif 'arity0' in toreplace:
-                    for k in range(len(self.arity0symbols)):
-                        firstlist, secondlist = self.replacemotor(toreplace, replaceby, k)
-                        mydic_simplifs.update(({str(firstlist): secondlist}))
-
-                elif 'fonction' in toreplace:
-                    for k in range(len(self.arity1symbols)):
-                        firstlist, secondlist = self.replacemotor(toreplace, replaceby, k)
-                        mydic_simplifs.update(({str(firstlist): secondlist}))
-
-                elif 'allops' in toreplace:
-                    for k in range(len(self.arity2symbols)):
-                        firstlist, secondlist = self.replacemotor(toreplace, replaceby, k)
-                        mydic_simplifs.update(({str(firstlist): secondlist}))
-                else:
-                    firstlist, secondlist = self.replacemotor(toreplace, replaceby, 0)
-                    mydic_simplifs.update(({str(firstlist): secondlist}))
-
-            maxrulesize = 0
-            for i in range(len(Simplification_rules.mysimplificationrules_with_A)):
-                if len(Simplification_rules.mysimplificationrules_with_A[i][0]) > maxrulesize:
-                    maxrulesize = len(Simplification_rules.mysimplificationrules_with_A[i][0])
-
-            return mydic_simplifs, maxrulesize
-
-        if self.modescalar == 'noA':
-            mydic_simplifs = {}
-            for x in Simplification_rules.mysimplificationrules_no_A:
-                toreplace = x[0]
-                replaceby = x[1]
-                if 'variable' in toreplace:
-                    for k in range(self.target[1]):
-                        firstlist, secondlist = self.replacemotor(toreplace, replaceby, k)
-                        mydic_simplifs.update(({str(firstlist): secondlist}))
-
-                elif 'arity0' in toreplace:
-                    for k in range(len(self.arity0symbols)):
-                        firstlist, secondlist = self.replacemotor(toreplace, replaceby, k)
-                        mydic_simplifs.update(({str(firstlist): secondlist}))
-
-                elif 'fonction' in toreplace:
-                    for k in range(len(self.arity1symbols)):
-                        firstlist, secondlist = self.replacemotor(toreplace, replaceby, k)
-                        mydic_simplifs.update(({str(firstlist): secondlist}))
-
-                elif 'allops' in toreplace:
-                    for k in range(len(self.arity2symbols)):
-                        firstlist, secondlist = self.replacemotor(toreplace, replaceby, k)
-                        mydic_simplifs.update(({str(firstlist): secondlist}))
-
-                else:
-                    firstlist, secondlist = self.replacemotor(toreplace, replaceby, 0)
-                    mydic_simplifs.update(({str(firstlist): secondlist}))
-
-            maxrulesize = 0
-
-            for i in range(len(Simplification_rules.mysimplificationrules_no_A)):
-                if len(Simplification_rules.mysimplificationrules_no_A[i][0]) > maxrulesize:
-                    maxrulesize = len(Simplification_rules.mysimplificationrules_no_A[i][0])
-
-            return mydic_simplifs, maxrulesize

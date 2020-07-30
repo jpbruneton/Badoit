@@ -1,5 +1,11 @@
-import config
-from State import State
+#  ======================== CMA-Based Symbolic Regressor ========================== #
+# Project:          Symbolic regression for physics
+# Name:             AST.py
+# Authors:          Jean-Philippe Bruneton
+# Date:             2020
+# License:          BSD 3-Clause License
+# ============================================================================ #
+
 
 # =============================== CLASS: AST NODE ================================ #
 
@@ -32,8 +38,8 @@ class AST:
         node = Node(newsymbol, arity, children, parent, label)
         return node
 
-# --------------------------------------------------------------------------- #
-# recursive way of getting the rpn from the ast, starting from topnode:
+    # --------------------------------------------------------------------------- #
+    # recursive way of getting the rpn from the ast, starting from topnode:
     def from_ast_to_rpn(self, node, rpn = None):
         if rpn == None:
             rpn = []
@@ -44,8 +50,8 @@ class AST:
         rpn.append(node.symbol)
         return rpn
 
-# --------------------------------------------------------------------------- #
-# recursive way of getting the polish from the ast, starting from topnode:
+    # --------------------------------------------------------------------------- #
+    # recursive way of getting the prefix from the ast, starting from topnode:
     def from_ast_to_prefix(self, node, pn = None):
         if pn == None:
             pn = []
@@ -57,8 +63,8 @@ class AST:
 
         return pn
 
-# --------------------------------------------------------------------------- #
-# recursive way of getting the polish from the ast, starting from topnode:
+    # --------------------------------------------------------------------------- #
+    # recursive way of getting the node of interest:
     def from_ast_get_node(self, node, n, result = None):
         if result == None:
             result = []

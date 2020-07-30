@@ -1,4 +1,15 @@
+#  ======================== CMA-Based Symbolic Regressor ========================== #
+# Project:          Symbolic regression for physics
+# Name:             AST.py
+# Authors:          Jean-Philippe Bruneton
+# Date:             2020
+# License:          BSD 3-Clause License
+# ============================================================================ #
 
+
+# ================================= PREAMBLE ================================= #
+# Packages
+# this is obsolete : works only for scalar mode : in fact the algo seems to work better without simplification
 mysimplificationrules_with_A = \
  [
  #size 2
