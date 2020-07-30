@@ -6,7 +6,7 @@ executionMode=$2 #${2:-"normal"}
 shift; shift;
 
 baseDir="/home/user/Badoit"
-baseCmd="python3 exec_gp_qd.py $@"
+baseCmd="python3 run_all_targets.py $@"
 
 useradd -d /home/user -Ms /bin/bash -u $uid user
 chown -R $uid /home/user
