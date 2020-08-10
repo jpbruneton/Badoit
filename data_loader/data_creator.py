@@ -215,17 +215,17 @@ def targets_paper_one():
 
     f = x**6 -2 * x ** 4 + x ** 2
     file = open('Koza3.txt', mode='wb')
-    dict = {'n_variables': 1, 'x0': x, 'f0': f, 'maxlen': 15, 'name': 'Koza3'}
+    dict = {'n_variables': 1, 'x0': x, 'f0': f, 'maxlen': 20, 'name': 'Koza3'}
     pickle.dump(dict, file)
 
     f = np.sin(x ** 2) * np.cos(x) - 1
     file = open('Nguyen5.txt', mode='wb')
-    dict = {'n_variables': 1, 'x0': x, 'f0': f, 'maxlen': 15, 'name': 'Nguyen5'}
+    dict = {'n_variables': 1, 'x0': x, 'f0': f, 'maxlen': 20, 'name': 'Nguyen5'}
     pickle.dump(dict, file)
 
     f = np.sin(x + x ** 2) + np.sin(x)
     file = open('Nguyen6.txt', mode='wb')
-    dict = {'n_variables': 1, 'x0': x, 'f0': f, 'maxlen': 15, 'name': 'Nguyen6'}
+    dict = {'n_variables': 1, 'x0': x, 'f0': f, 'maxlen': 20, 'name': 'Nguyen6'}
     pickle.dump(dict, file)
 
     f = x**5 - 2*x**3 + x
@@ -254,19 +254,19 @@ def targets_paper_one():
     x = np.linspace(0, 6.2, 1+1/0.1)
     f = np.sin(x + x ** 2) + np.sin(x)
     file = open('Sine.txt', mode='wb')
-    dict = {'n_variables': 1, 'x0': x, 'f0': f, 'maxlen': 15, 'name': 'Sine'}
+    dict = {'n_variables': 1, 'x0': x, 'f0': f, 'maxlen': 20, 'name': 'Sine'}
     pickle.dump(dict, file)
 
     x = np.linspace(0, 1, 1+1/0.05)
     f = 0.3*x*np.sin(2*np.pi*x)
     file = open('Keijzer1.txt', mode='wb')
-    dict = {'n_variables': 1, 'x0': x, 'f0': f, 'maxlen': 15, 'name': 'Keijzer1'}
+    dict = {'n_variables': 1, 'x0': x, 'f0': f, 'maxlen': 20, 'name': 'Keijzer1'}
     pickle.dump(dict, file)
 
     x = np.linspace(0, 2, 1+1/0.05)
     f = 0.3 * x * np.sin(2 * np.pi * x)
     file = open('Keijzer2.txt', mode='wb')
-    dict = {'n_variables': 1, 'x0': x, 'f0': f, 'maxlen': 15, 'name': 'Keijzer2'}
+    dict = {'n_variables': 1, 'x0': x, 'f0': f, 'maxlen': 20, 'name': 'Keijzer2'}
     pickle.dump(dict, file)
 
     x = np.linspace(0, 2, 1+1/0.1)
@@ -309,12 +309,12 @@ def targets_paper_one():
 
     f = X ** 5 / Y ** 3
     file = open('Meier4.txt', mode='wb')
-    dict = {'n_variables': 2, 'x0': X, 'x1': Y, 'f0': f, 'maxlen': 12, 'name': 'Meier4'}
+    dict = {'n_variables': 2, 'x0': X, 'x1': Y, 'f0': f, 'maxlen': 20, 'name': 'Meier4'}
     pickle.dump(dict, file)
 
     f = np.sin(X) + np.sin(Y ** 2)
     file = open('Nguyen9.txt', mode='wb')
-    dict = {'n_variables': 2, 'x0': X, 'x1': Y, 'f0': f, 'maxlen': 12, 'name': 'Nguyen9'}
+    dict = {'n_variables': 2, 'x0': X, 'x1': Y, 'f0': f, 'maxlen': 20, 'name': 'Nguyen9'}
     pickle.dump(dict, file)
 
     x = np.random.uniform(0, 3, 20)
