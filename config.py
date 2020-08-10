@@ -18,9 +18,9 @@ list_scalars = ['one', 'two'] #if running only on some integers
 operators = ['+', '-', '*', '/']
 
 #____________termination stuff_______________
-iterationa = 15
-iterationnoa = 10
-termination_nmrse = 1e-8
+iterationa = 100
+iterationnoa = 100
+termination_nmrse = 1e-9
 
 loglog = False #fit loglog instead of the given target, default False
 
@@ -59,7 +59,7 @@ def get_size(iteration):
 
 verifonegivenfunction = False
 minrms = 10000 # do not update the grid if rms is greater than this value
-qd_init_pool_size = 40
+qd_init_pool_size = 4000
 extendpoolfactor = 1.5
 #which_target = 'fig1-waveform-H_phase2_1.txt'
 smallgrid = False
